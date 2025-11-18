@@ -20,7 +20,7 @@ export default function ActionBar() {
 			<Container size={new UDim2(1, 0, 0, 36)} position={new UDim2(0, 0, 0, 42)}>
 				<ActionButton layoutOrder={1} id="navigatePrevious" icon="rbxassetid://9887696242" />
 				<ActionButton layoutOrder={2} id="navigateNext" icon="rbxassetid://9887978919" />
-				<ActionButton layoutOrder={3} id="pause" icon="rbxassetid://9887697099" caption="Pause" />
+				<ActionButton layoutOrder={3} id="pause" icon="rbxassetid://12200106191" caption="Pause" />
 
 				<ActionLine order={4} />
 
@@ -30,26 +30,26 @@ export default function ActionBar() {
 
 				<ActionLine order={8} />
 
-				<ActionButton layoutOrder={9} id="pauseRemote" icon="rbxassetid://9887697099" caption="Pause Remote" />
-				<ActionButton layoutOrder={10} id="blockRemote" icon="rbxassetid://9904640917" caption="Block Remote" />
-				<ActionButton layoutOrder={11} id="blockAll" icon="rbxassetid://9904640917" caption="Block All" />
-				<ActionButton layoutOrder={12} id="viewScript" icon="rbxassetid://9887697255" caption="View Script" />
+				<ActionButton layoutOrder={9} id="pauseRemote" icon="rbxassetid://12232335564" caption="Pause Remote" />
+				<ActionButton layoutOrder={10} id="blockRemote" icon="rbxassetid://6561004010" caption="Block Remote" />
+				<ActionButton layoutOrder={11} id="blockAll" icon="rbxassetid://7456902439" caption="Block All" />
+				<ActionButton layoutOrder={12} id="viewScript" icon="rbxassetid://9913356706" caption="View Script" />
 
 				<ActionLine order={13} />
 
 				<ActionButton layoutOrder={14} id="traceback" icon="rbxassetid://9887697255" caption="Traceback" />
-				<ActionButton layoutOrder={15} id="copyPath" icon="rbxassetid://9887697099" caption="Copy as path" />
-				<ActionButton layoutOrder={16} id="copyScript" icon="rbxassetid://9887697099" caption="Copy Script" />
+				<ActionButton layoutOrder={15} id="copyPath" icon="rbxassetid://12381370332" caption="Copy as path" />
+				<ActionButton layoutOrder={16} id="copyScript" icon="rbxassetid://12233010147" caption="Copy Script" />
 
 				<uilistlayout
 					SortOrder={Enum.SortOrder.LayoutOrder}
-					Padding={new UDim(0, 4)}
+					Padding={new UDim(0, 2)}
 					FillDirection="Horizontal"
 					HorizontalAlignment="Left"
 					VerticalAlignment="Center"
 				/>
 
-				<uipadding PaddingLeft={new UDim(0, 8)} />
+				<uipadding PaddingLeft={new UDim(0, 5)} />
 			</Container>
 
 		</>

@@ -73,7 +73,7 @@ function WindowTitleBar({
 			{/* Icon */}
 			<imagelabel
 				Image={icon}
-				Size={new UDim2(0, 16, 0, 16)}
+				Size={new UDim2(0, 21, 0, 21)}
 				Position={new UDim2(0, 16, 0.5, 0)}
 				AnchorPoint={new Vector2(0, 0.5)}
 				BackgroundTransparency={1}

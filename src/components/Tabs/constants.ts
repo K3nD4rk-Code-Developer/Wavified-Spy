@@ -5,4 +5,5 @@ export const tabIcons: Record<TabType, string> = {
 	[TabType.Event]: "rbxassetid://9896665149",
 	[TabType.Function]: "rbxassetid://9896665330",
 	[TabType.Script]: "rbxassetid://9896665034",
+	[TabType.Settings]: "rbxassetid://9896665034",
 };

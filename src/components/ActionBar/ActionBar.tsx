@@ -30,13 +30,13 @@ export default function ActionBar() {
 
 				<ActionLine order={8} />
 
-				<ActionButton layoutOrder={9} id="pauseRemote" icon="rbxassetid://12232335564" caption="Pause Remote" />
-				<ActionButton layoutOrder={10} id="blockRemote" icon="rbxassetid://6561004010" caption="Block Remote" />
-				<ActionButton layoutOrder={11} id="blockAll" icon="rbxassetid://7456902439" caption="Block All" />
-				<ActionButton layoutOrder={12} id="viewScript" icon="rbxassetid://9913356706" caption="View Script" />
+				<ActionButton layoutOrder={9} id="pauseRemote" caption="Pause Remote" />
+				<ActionButton layoutOrder={10} id="blockRemote" caption="Block Remote" />
+				<ActionButton layoutOrder={11} id="blockAll" caption="Block All" />
 
-				<ActionLine order={13} />
+				<ActionLine order={12} />
 
+				<ActionButton layoutOrder={13} id="viewScript" icon="rbxassetid://9913356706" caption="View Script" />
 				<ActionButton layoutOrder={14} id="traceback" icon="rbxassetid://9887697255" caption="Traceback" />
 				<ActionButton layoutOrder={15} id="copyPath" icon="rbxassetid://12381370332" caption="Copy as path" />
 				<ActionButton layoutOrder={16} id="copyScript" icon="rbxassetid://12233010147" caption="Copy Script" />

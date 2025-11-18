@@ -13,7 +13,10 @@ const initialState: ActionBarState = {
 		copyPath: { id: "copyPath", disabled: false, active: false },
 		copyScript: { id: "copyScript", disabled: true, active: false, },
 		pause: { id: "pause", disabled: false, active: false },
-
+		pauseRemote: { id: "pauseRemote", disabled: true, active: false },
+		blockRemote: { id: "blockRemote", disabled: true, active: false },
+		blockAll: { id: "blockAll", disabled: false, active: false },
+		viewScript: { id: "viewScript", disabled: true, active: false },
 	},
 };
 

@@ -37,9 +37,15 @@ local function onReceive(self, params, returns)
 	end
 
 	task.defer(function()
+		local remoteId = getInstanceId(self)
+
+		-- Check if this specific remote is allowed (not paused/blocked)
+		if not store.isRemoteAllowed(remoteId) then
+			return
+		end
+
 		local script = getcallingscript() or (callback and getFunctionScript(callback))
 		local signal = logger.createOutgoingSignal(self, script, callback, traceback, params, returns)
-		local remoteId = getInstanceId(self)
 
 		if store.get(function(state)
 			return selectRemoteLog(state, remoteId)

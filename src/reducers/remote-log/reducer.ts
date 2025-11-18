@@ -4,6 +4,8 @@ import { RemoteLogState } from "./model";
 const initialState: RemoteLogState = {
 	logs: [],
 	paused: false,
+	pausedRemotes: new Set(),
+	blockedRemotes: new Set(),
 };
 
 export default function remoteLogReducer(state = initialState, action: RemoteLogActions): RemoteLogState {
@@ -86,6 +88,38 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				...state,
 				paused: !state.paused,
 			};
+		case "TOGGLE_REMOTE_PAUSED": {
+			const pausedRemotes = new Set(state.pausedRemotes);
+			if (pausedRemotes.has(action.id)) {
+				pausedRemotes.delete(action.id);
+			} else {
+				pausedRemotes.add(action.id);
+			}
+			return {
+				...state,
+				pausedRemotes,
+			};
+		}
+		case "TOGGLE_REMOTE_BLOCKED": {
+			const blockedRemotes = new Set(state.blockedRemotes);
+			if (blockedRemotes.has(action.id)) {
+				blockedRemotes.delete(action.id);
+			} else {
+				blockedRemotes.add(action.id);
+			}
+			return {
+				...state,
+				blockedRemotes,
+			};
+		}
+		case "BLOCK_ALL_REMOTES": {
+			const blockedRemotes = new Set<string>();
+			state.logs.forEach((log) => blockedRemotes.add(log.id));
+			return {
+				...state,
+				blockedRemotes,
+			};
+		}
 		default:
 			return state;
 	}

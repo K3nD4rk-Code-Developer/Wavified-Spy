@@ -30,9 +30,16 @@ export default function ActionBar() {
 
 				<ActionLine order={8} />
 
-				<ActionButton layoutOrder={9} id="traceback" icon="rbxassetid://9887697255" caption="Traceback" />
-				<ActionButton layoutOrder={10} id="copyPath" icon="rbxassetid://9887697099" caption="Copy as path" />
-				<ActionButton layoutOrder={11} id="copyScript" icon="rbxassetid://9887697099" caption="Copy Script" />
+				<ActionButton layoutOrder={9} id="pauseRemote" icon="rbxassetid://9887697099" caption="Pause Remote" />
+				<ActionButton layoutOrder={10} id="blockRemote" icon="rbxassetid://9904640917" caption="Block Remote" />
+				<ActionButton layoutOrder={11} id="blockAll" icon="rbxassetid://9904640917" caption="Block All" />
+				<ActionButton layoutOrder={12} id="viewScript" icon="rbxassetid://9887697255" caption="View Script" />
+
+				<ActionLine order={13} />
+
+				<ActionButton layoutOrder={14} id="traceback" icon="rbxassetid://9887697255" caption="Traceback" />
+				<ActionButton layoutOrder={15} id="copyPath" icon="rbxassetid://9887697099" caption="Copy as path" />
+				<ActionButton layoutOrder={16} id="copyScript" icon="rbxassetid://9887697099" caption="Copy Script" />
 
 				<uilistlayout
 					SortOrder={Enum.SortOrder.LayoutOrder}

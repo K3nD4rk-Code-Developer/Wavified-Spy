@@ -1,6 +1,6 @@
 import Rodux from "@rbxts/rodux";
 import rootReducer, { RootState } from "reducers";
-import { selectPaused } from "reducers/remote-log";
+import { selectPaused, selectPausedRemotes, selectBlockedRemotes } from "reducers/remote-log";
 
 let store: Rodux.Store<RootState, Rodux.Action>;
 let isDestructed = false;
@@ -24,6 +24,25 @@ export function isActive() {
 	if (!store || isDestructed) return false;
 	const paused = selectPaused(store.getState());
 	return !paused;
+}
+
+export function isRemoteAllowed(remoteId: string) {
+	if (!store || isDestructed) return false;
+	const state = store.getState();
+	const paused = selectPaused(state);
+	const pausedRemotes = selectPausedRemotes(state);
+	const blockedRemotes = selectBlockedRemotes(state);
+
+	// If globally paused, don't allow any remote
+	if (paused) return false;
+
+	// If remote is blocked, don't allow it
+	if (blockedRemotes.has(remoteId)) return false;
+
+	// If remote is individually paused, don't allow it
+	if (pausedRemotes.has(remoteId)) return false;
+
+	return true;
 }
 
 export function dispatch(action: Rodux.AnyAction) {

@@ -13,6 +13,10 @@ export interface ActionBarStates {
 	copyPath: ActionState;
 	copyScript: ActionState;
 	pause: ActionState;
+	pauseRemote: ActionState;
+	blockRemote: ActionState;
+	blockAll: ActionState;
+	viewScript: ActionState;
 }
 
 export interface ActionState {

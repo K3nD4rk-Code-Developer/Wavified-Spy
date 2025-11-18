@@ -36,6 +36,18 @@ export function togglePaused() {
 	return { type: "TOGGLE_PAUSED" } as const;
 }
 
+export function toggleRemotePaused(id: string) {
+	return { type: "TOGGLE_REMOTE_PAUSED", id } as const;
+}
+
+export function toggleRemoteBlocked(id: string) {
+	return { type: "TOGGLE_REMOTE_BLOCKED", id } as const;
+}
+
+export function blockAllRemotes() {
+	return { type: "BLOCK_ALL_REMOTES" } as const;
+}
+
 export type RemoteLogActions =
 	| ReturnType<typeof pushRemoteLog>
 	| ReturnType<typeof removeRemoteLog>
@@ -45,4 +57,7 @@ export type RemoteLogActions =
 	| ReturnType<typeof setRemoteSelected>
 	| ReturnType<typeof setSignalSelected>
 	| ReturnType<typeof toggleSignalSelected>
-	| ReturnType<typeof togglePaused>;
+	| ReturnType<typeof togglePaused>
+	| ReturnType<typeof toggleRemotePaused>
+	| ReturnType<typeof toggleRemoteBlocked>
+	| ReturnType<typeof blockAllRemotes>;

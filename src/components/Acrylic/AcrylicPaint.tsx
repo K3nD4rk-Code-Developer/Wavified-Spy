@@ -37,21 +37,9 @@ export default function AcrylicPaint() {
 			</frame>
 
 			<imagelabel
-				Image="rbxassetid://9968344105"
+				Image="rbxassetid://98449888558787"
 				ImageTransparency={0.98}
-				ScaleType="Tile"
-				TileSize={new UDim2(0, 128, 0, 128)}
-				Size={new UDim2(1, 0, 1, 0)}
-				BackgroundTransparency={1}
-			>
-				<uicorner CornerRadius={new UDim(0, 8)} />
-			</imagelabel>
-
-			<imagelabel
-				Image="rbxassetid://9968344227"
-				ImageTransparency={0.85}
-				ScaleType="Tile"
-				TileSize={new UDim2(0, 128, 0, 128)}
+				ScaleType="Fit"
 				Size={new UDim2(1, 0, 1, 0)}
 				BackgroundTransparency={1}
 			>

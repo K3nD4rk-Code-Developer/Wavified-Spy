@@ -1,6 +1,6 @@
 {
   "name": "remote-spy",
-  "version": "0.2.0-alpha",
+  "version": "1.0.0 Alpha",
   "scripts": {
     "compile": "npx rbxtsc --verbose --type=model",
     "watch": "npx rbxtsc -w",

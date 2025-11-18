@@ -29,7 +29,7 @@ function MainWindow() {
 					onClose={() => dispatch(activateAction("close"))}
 					caption={`<font color="#FFFFFF">Wavified Spy</font>    <font color="#B2B2B2">${PKG_VERSION}</font>`}
 					captionTransparency={0.1}
-					icon="rbxassetid://9886981409"
+					icon="rbxassetid://133291240952158"
 				/>
 				<Window.Resize minSize={new Vector2(650, 450)} />
 			</Window.Root>

@@ -6,6 +6,8 @@ export interface RemoteLogState {
 	signalSelected?: string;
 	remoteForSignalSelected?: string;
 	paused: boolean;
+	pausedRemotes: Set<string>;
+	blockedRemotes: Set<string>;
 }
 
 export interface RemoteLog {

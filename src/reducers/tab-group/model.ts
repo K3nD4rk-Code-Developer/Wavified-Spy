@@ -8,6 +8,7 @@ export interface TabGroupColumn {
 	caption: string;
 	type: TabType;
 	canClose: boolean;
+	scriptContent?: string;
 }
 
 export enum TabType {

@@ -1,5 +1,5 @@
 import Roact from "@rbxts/roact";
-import { TabType, deleteTab, selectActiveTab } from "reducers/tab-group";
+import { TabType, deleteTab, selectActiveTab, pushTab, setActiveTab, createTabColumn } from "reducers/tab-group";
 import { codifyOutgoingSignal, stringifyRemote } from "./utils";
 import { getInstanceFromId, getInstancePath } from "utils/instance-util";
 import {
@@ -8,6 +8,11 @@ import {
 	selectRemoteIdSelected,
 	selectSignalSelected,
 	togglePaused,
+	selectRemoteLogIds,
+	setRemoteSelected,
+	toggleRemotePaused,
+	toggleRemoteBlocked,
+	blockAllRemotes,
 } from "reducers/remote-log";
 import { removeRemoteLog } from "reducers/remote-log";
 import { setActionEnabled } from "reducers/action-bar";
@@ -15,6 +20,7 @@ import { useActionEffect } from "hooks/use-action-effect";
 import { useEffect, withHooksPure } from "@rbxts/roact-hooked";
 import { useRootDispatch, useRootSelector, useRootStore } from "hooks/use-root-store";
 import { genScript } from "utils/gen-script";
+import { HttpService } from "@rbxts/services";
 
 
 const selectRemoteLog = makeSelectRemoteLog();
@@ -91,6 +97,64 @@ function ActionBarEffects() {
 		dispatch(togglePaused());
 	});
 
+	const remoteIds = useRootSelector(selectRemoteLogIds);
+
+	useActionEffect("navigatePrevious", () => {
+		if (remoteId !== undefined) {
+			const currentIndex = remoteIds.indexOf(remoteId);
+			if (currentIndex > 0) {
+				dispatch(setRemoteSelected(remoteIds[currentIndex - 1]));
+			}
+		} else if (remoteIds.size() > 0) {
+			dispatch(setRemoteSelected(remoteIds[remoteIds.size() - 1]));
+		}
+	});
+
+	useActionEffect("navigateNext", () => {
+		if (remoteId !== undefined) {
+			const currentIndex = remoteIds.indexOf(remoteId);
+			if (currentIndex < remoteIds.size() - 1) {
+				dispatch(setRemoteSelected(remoteIds[currentIndex + 1]));
+			}
+		} else if (remoteIds.size() > 0) {
+			dispatch(setRemoteSelected(remoteIds[0]));
+		}
+	});
+
+	useActionEffect("pauseRemote", () => {
+		if (remoteId !== undefined) {
+			dispatch(toggleRemotePaused(remoteId));
+		}
+	});
+
+	useActionEffect("blockRemote", () => {
+		if (remoteId !== undefined) {
+			dispatch(toggleRemoteBlocked(remoteId));
+		}
+	});
+
+	useActionEffect("blockAll", () => {
+		dispatch(blockAllRemotes());
+	});
+
+	useActionEffect("viewScript", () => {
+		if (signal) {
+			// Convert Record<number, unknown> to array
+			const parameters: unknown[] = [];
+			for (const [key, value] of pairs(signal.parameters)) {
+				parameters[key as number] = value;
+			}
+			const scriptText = genScript(signal.remote, parameters);
+
+			// Create a unique ID for the script tab
+			const scriptTabId = HttpService.GenerateGUID(false);
+			const tab = createTabColumn(scriptTabId, `Script - ${signal.name}`, TabType.Script, true, scriptText);
+
+			dispatch(pushTab(tab));
+			dispatch(setActiveTab(scriptTabId));
+		}
+	});
+
 	// Remote & Signal actions
 	useEffect(() => {
 		const remoteEnabled = remoteId !== undefined;
@@ -104,7 +168,18 @@ function ActionBarEffects() {
 		dispatch(setActionEnabled("traceback", signalEnabled));
 		dispatch(setActionEnabled("copyPath", remoteEnabled || !isHome));
 		dispatch(setActionEnabled("copyScript", signalEnabled));
-	}, [remoteId === undefined, signal, currentTab]);
+
+		// Enable navigate buttons when there are remotes
+		const hasRemotes = remoteIds.size() > 0;
+		dispatch(setActionEnabled("navigatePrevious", hasRemotes));
+		dispatch(setActionEnabled("navigateNext", hasRemotes));
+
+		// Enable new remote control buttons
+		dispatch(setActionEnabled("pauseRemote", remoteEnabled));
+		dispatch(setActionEnabled("blockRemote", remoteEnabled));
+		dispatch(setActionEnabled("blockAll", hasRemotes));
+		dispatch(setActionEnabled("viewScript", signalEnabled));
+	}, [remoteId === undefined, signal, currentTab, remoteIds]);
 
 	return <></>;
 }

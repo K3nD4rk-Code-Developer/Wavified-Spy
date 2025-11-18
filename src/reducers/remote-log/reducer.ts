@@ -3,6 +3,7 @@ import { RemoteLogState } from "./model";
 
 const initialState: RemoteLogState = {
 	logs: [],
+	paused: false,
 };
 
 export default function remoteLogReducer(state = initialState, action: RemoteLogActions): RemoteLogState {
@@ -80,6 +81,11 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				remoteForSignalSelected: signalSelected !== undefined ? action.remote : undefined,
 			};
 		}
+		case "TOGGLE_PAUSED":
+			return {
+				...state,
+				paused: !state.paused,
+			};
 		default:
 			return state;
 	}

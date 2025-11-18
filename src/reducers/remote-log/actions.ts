@@ -32,6 +32,10 @@ export function toggleSignalSelected(remote: string, id: string) {
 	return { type: "TOGGLE_SIGNAL_SELECTED", remote, id } as const;
 }
 
+export function togglePaused() {
+	return { type: "TOGGLE_PAUSED" } as const;
+}
+
 export type RemoteLogActions =
 	| ReturnType<typeof pushRemoteLog>
 	| ReturnType<typeof removeRemoteLog>
@@ -40,4 +44,5 @@ export type RemoteLogActions =
 	| ReturnType<typeof clearOutgoingSignals>
 	| ReturnType<typeof setRemoteSelected>
 	| ReturnType<typeof setSignalSelected>
-	| ReturnType<typeof toggleSignalSelected>;
+	| ReturnType<typeof toggleSignalSelected>
+	| ReturnType<typeof togglePaused>;

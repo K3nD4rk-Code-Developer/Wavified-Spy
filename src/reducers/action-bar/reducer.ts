@@ -17,6 +17,7 @@ const initialState: ActionBarState = {
 		blockRemote: { id: "blockRemote", disabled: true, active: false },
 		blockAll: { id: "blockAll", disabled: false, active: false },
 		viewScript: { id: "viewScript", disabled: true, active: false },
+		runRemote: { id: "runRemote", disabled: true, active: false },
 	},
 };
 

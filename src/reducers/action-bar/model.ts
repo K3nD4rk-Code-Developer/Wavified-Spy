@@ -17,6 +17,7 @@ export interface ActionBarStates {
 	blockRemote: ActionState;
 	blockAll: ActionState;
 	viewScript: ActionState;
+	runRemote: ActionState;
 }
 
 export interface ActionState {

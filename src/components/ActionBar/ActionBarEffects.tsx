@@ -172,15 +172,16 @@ function ActionBarEffects() {
 			const scriptText = genScript(signal.remote, parameters, pathNotation);
 			
 			// Execute the script
-			const [success, result] = pcall(() => {
-				const func = loadstring?.(scriptText);
+			if (loadstring) {
+				const [func, err] = loadstring(scriptText);
 				if (func) {
-					return func();
+					const [success, result] = pcall(func);
+					if (!success) {
+						warn("Failed to run remote:", result);
+					}
+				} else {
+					warn("Failed to load remote script:", err);
 				}
-			});
-			
-			if (!success) {
-				warn("Failed to run remote:", result);
 			}
 		}
 	});

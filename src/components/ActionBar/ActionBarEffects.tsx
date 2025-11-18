@@ -119,8 +119,9 @@ function ActionBarEffects() {
 
 			// Create sequential array starting from index 1 (Lua convention)
 			const parameters: unknown[] = [];
+			let index = 1;
 			for (const [_, value] of paramEntries) {
-				parameters.push(value);
+				parameters[index++] = value;
 			}
 
 			const scriptText = genScript(signal.remote, parameters, pathNotation);
@@ -257,8 +258,9 @@ function ActionBarEffects() {
 
 			// Create sequential array starting from index 1 (Lua convention)
 			const parameters: unknown[] = [];
+			let index = 1;
 			for (const [_, value] of paramEntries) {
-				parameters.push(value);
+				parameters[index++] = value;
 			}
 
 			const scriptText = genScript(signal.remote, parameters, pathNotation);

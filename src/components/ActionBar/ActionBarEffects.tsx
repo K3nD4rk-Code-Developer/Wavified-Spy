@@ -116,7 +116,7 @@ function ActionBarEffects() {
 			}
 			// Sort by key and extract values into sequential array
 			paramEntries.sort((a, b) => a[0] < b[0]);
-			const parameters = paramEntries.map(([_, value]) => value);
+			const parameters = paramEntries.map(([_, value]) => value as defined);
 
 			const scriptText = genScript(signal.remote, parameters, pathNotation);
 			setclipboard?.(scriptText);
@@ -249,7 +249,7 @@ function ActionBarEffects() {
 			}
 			// Sort by key and extract values into sequential array
 			paramEntries.sort((a, b) => a[0] < b[0]);
-			const parameters = paramEntries.map(([_, value]) => value);
+			const parameters = paramEntries.map(([_, value]) => value as defined);
 
 			const scriptText = genScript(signal.remote, parameters, pathNotation);
 

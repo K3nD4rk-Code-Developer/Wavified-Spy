@@ -26,6 +26,7 @@ import { generateUniqueScriptName } from "utils/script-tab-util";
 import { createTabColumn } from "reducers/tab-group/utils";
 import { HttpService } from "@rbxts/services";
 
+declare const decompile: ((script: LuaSourceContainer) => string) | undefined;
 
 const selectRemoteLog = makeSelectRemoteLog();
 

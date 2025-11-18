@@ -1,10 +1,10 @@
 import { ScriptData } from "./model";
 
-export function setScript(id: string, script: ScriptData) {
+export function setScript(id: string, scriptData: ScriptData) {
 	return {
 		type: "SET_SCRIPT",
 		id,
-		script,
+		script: scriptData,
 	} as const;
 }
 

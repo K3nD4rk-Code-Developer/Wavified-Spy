@@ -3,11 +3,13 @@ import Container from "components/Container";
 import Roact from "@rbxts/roact";
 import { Instant, Spring } from "@rbxts/flipper";
 import { TOPBAR_OFFSET } from "constants";
-import { UserInputService } from "@rbxts/services";
+import { UserInputService, HttpService } from "@rbxts/services";
 import { WindowAssets } from "./assets";
 import { useBinding, useEffect, useState, withHooksPure } from "@rbxts/roact-hooked";
 import { useSingleMotor } from "@rbxts/roact-hooked-plus";
 import { useWindowContext } from "./use-window-context";
+import { TabType, pushTab, setActiveTab, createTabColumn } from "reducers/tab-group";
+import { useRootDispatch } from "hooks/use-root-store";
 
 interface Props extends Roact.PropsWithChildren {
 	caption?: string;
@@ -28,10 +30,12 @@ function WindowTitleBar({
 	[Roact.Children]: children,
 }: Props) {
 	const { size, maximized, setMaximized, setPosition } = useWindowContext();
+	const dispatch = useRootDispatch();
 
 	const [closeTransparency, setCloseTransparency] = useSingleMotor(1);
 	const [minimizeTransparency, setMinimizeTransparency] = useSingleMotor(1);
 	const [maximizeTransparency, setMaximizeTransparency] = useSingleMotor(1);
+	const [settingsTransparency, setSettingsTransparency] = useSingleMotor(1);
 
 	const [startPosition, setStartPosition] = useBinding(new Vector2());
 	const [dragStart, setDragStart] = useState<Vector2>();
@@ -94,6 +98,34 @@ function WindowTitleBar({
 				BackgroundTransparency={1}
 			/>
 
+			{/* Settings Button */}
+			<Button
+				onClick={() => {
+					const settingsTabId = "settings";
+					const tab = createTabColumn(settingsTabId, "Settings", TabType.Settings, true);
+					dispatch(pushTab(tab));
+					dispatch(setActiveTab(settingsTabId));
+					setSettingsTransparency(new Spring(0.94, { frequency: 6 }));
+				}}
+				onPress={() => setSettingsTransparency(new Instant(0.96))}
+				onHover={() => setSettingsTransparency(new Spring(0.94, { frequency: 6 }))}
+				onHoverEnd={() => setSettingsTransparency(new Spring(1, { frequency: 6 }))}
+				background={Color3.fromHex("#FFFFFF")}
+				transparency={settingsTransparency}
+				size={new UDim2(0, 28, 0, 28)}
+				position={new UDim2(1, -46 * 3 - 35, 0.5, 0)}
+				anchorPoint={new Vector2(1, 0.5)}
+			>
+				<imagelabel
+					Image="rbxassetid://9886659671"
+					ImageColor3={Color3.fromHex("#E0E0E0")}
+					Size={new UDim2(0, 16, 0, 16)}
+					Position={new UDim2(0.5, 0, 0.5, 0)}
+					AnchorPoint={new Vector2(0.5, 0.5)}
+					BackgroundTransparency={1}
+				/>
+			</Button>
+
 			{/* Drag Handle */}
 			<Button
 				onPress={(rbx, x, y) => {
@@ -108,7 +140,7 @@ function WindowTitleBar({
 					}
 				}}
 				active={false}
-				size={new UDim2(1, -46 * 3, 1, 0)}
+				size={new UDim2(1, -46 * 3 - 35, 1, 0)}
 			/>
 
 			{/* Close */}

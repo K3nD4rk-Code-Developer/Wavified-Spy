@@ -44,7 +44,7 @@ function Settings() {
 				/>
 
 				{/* Actor Detection Setting */}
-				<frame Size={new UDim2(1, 0, 0, 60)} BackgroundTransparency={1}>
+				<frame Size={new UDim2(1, 0, 0, 70)} BackgroundTransparency={1}>
 					<uilistlayout
 						FillDirection={Enum.FillDirection.Horizontal}
 						VerticalAlignment={Enum.VerticalAlignment.Center}
@@ -60,7 +60,7 @@ function Settings() {
 						/>
 
 						<textlabel
-							Text="Disable Actor Detection"
+							Text="Ignore Actor Remotes"
 							TextSize={16}
 							Font="GothamBold"
 							TextColor3={new Color3(1, 1, 1)}
@@ -71,14 +71,14 @@ function Settings() {
 						/>
 
 						<textlabel
-							Text="When enabled, remotes from actors will not be detected or logged"
+							Text="When enabled, remote calls from scripts running inside Actors will be ignored and not logged"
 							TextSize={12}
 							Font="Gotham"
 							TextColor3={new Color3(0.7, 0.7, 0.7)}
-							Size={new UDim2(1, 0, 0, 18)}
+							Size={new UDim2(1, 0, 0, 36)}
 							BackgroundTransparency={1}
 							TextXAlignment="Left"
-							TextYAlignment="Center"
+							TextYAlignment="Top"
 							TextWrapped={true}
 						/>
 					</frame>

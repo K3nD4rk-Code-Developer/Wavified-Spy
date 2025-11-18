@@ -24,17 +24,37 @@ if not getcallingscript then
 	end
 end
 
-local function isFromActor(script)
-	if not script then
-		return false
+local function isFromActor(script, callback)
+	-- Check if the script has an Actor ancestor
+	if script then
+		local parent = script.Parent
+		while parent do
+			if parent:IsA("Actor") then
+				return true
+			end
+			parent = parent.Parent
+		end
 	end
 
-	local parent = script.Parent
-	while parent do
-		if parent:IsA("Actor") then
-			return true
+	-- Check if the callback function's environment indicates it's in an actor
+	if callback and type(callback) == "function" then
+		local success, env = pcall(function()
+			return getfenv(callback)
+		end)
+
+		if success and env then
+			local envScript = rawget(env, "script")
+			if envScript and envScript ~= script then
+				-- Recursively check the environment's script
+				local parent = envScript.Parent
+				while parent do
+					if parent:IsA("Actor") then
+						return true
+					end
+					parent = parent.Parent
+				end
+			end
 		end
-		parent = parent.Parent
 	end
 
 	return false
@@ -63,7 +83,7 @@ local function onReceive(self, params, returns)
 		local script = getcallingscript() or (callback and getFunctionScript(callback))
 
 		-- Check if actor detection is disabled and the calling script is from an actor
-		if store.isNoActors() and isFromActor(script) then
+		if store.isNoActors() and isFromActor(script, callback) then
 			return
 		end
 

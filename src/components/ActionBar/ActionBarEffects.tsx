@@ -13,6 +13,10 @@ import {
 	toggleRemotePaused,
 	toggleRemoteBlocked,
 	toggleBlockAllRemotes,
+	selectPaused,
+	selectPausedRemotes,
+	selectBlockedRemotes,
+	selectPathNotation,
 } from "reducers/remote-log";
 import { removeRemoteLog } from "reducers/remote-log";
 import { setActionEnabled } from "reducers/action-bar";
@@ -27,6 +31,7 @@ import { createTabColumn } from "reducers/tab-group/utils";
 import { HttpService } from "@rbxts/services";
 
 declare const decompile: ((script: LuaSourceContainer) => string) | undefined;
+declare const loadstring: ((source: string) => LuaTuple<[() => void, undefined] | [undefined, string]>) | undefined;
 
 const selectRemoteLog = makeSelectRemoteLog();
 
@@ -41,6 +46,7 @@ function ActionBarEffects() {
 
 	const signal = useRootSelector(selectSignalSelected);
 	const tabs = useRootSelector(selectTabs);
+	const pathNotation = useRootSelector(selectPathNotation);
 
 	useActionEffect("copy", () => {
 		if (remote) {
@@ -222,24 +228,6 @@ function ActionBarEffects() {
 
 	useActionEffect("blockAll", () => {
 		dispatch(toggleBlockAllRemotes());
-	});
-
-	useActionEffect("viewScript", () => {
-		if (signal) {
-			// Convert Record<number, unknown> to array
-			const parameters: unknown[] = [];
-			for (const [key, value] of pairs(signal.parameters)) {
-				parameters[key as number] = value;
-			}
-			const scriptText = genScript(signal.remote, parameters, pathNotation);
-
-			// Create a unique ID for the script tab
-			const scriptTabId = HttpService.GenerateGUID(false);
-			const tab = createTabColumn(scriptTabId, `Script - ${signal.name}`, TabType.Script, true, scriptText);
-
-			dispatch(pushTab(tab));
-			dispatch(setActiveTab(scriptTabId));
-		}
 	});
 
 	useActionEffect("runRemote", () => {

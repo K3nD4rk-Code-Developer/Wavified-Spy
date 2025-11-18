@@ -12,10 +12,10 @@ import {
 	setRemoteSelected,
 	toggleRemotePaused,
 	toggleRemoteBlocked,
-	blockAllRemotes,
+	toggleBlockAllRemotes,
 } from "reducers/remote-log";
-import { removeRemoteLog } from "reducers/remote-log";
-import { setActionEnabled } from "reducers/action-bar";
+import { removeRemoteLog, selectPaused, selectPausedRemotes, selectBlockedRemotes } from "reducers/remote-log";
+import { setActionEnabled, setActionCaption } from "reducers/action-bar";
 import { useActionEffect } from "hooks/use-action-effect";
 import { useEffect, withHooksPure } from "@rbxts/roact-hooked";
 import { useRootDispatch, useRootSelector, useRootStore } from "hooks/use-root-store";
@@ -98,6 +98,9 @@ function ActionBarEffects() {
 	});
 
 	const remoteIds = useRootSelector(selectRemoteLogIds);
+	const paused = useRootSelector(selectPaused);
+	const pausedRemotes = useRootSelector(selectPausedRemotes);
+	const blockedRemotes = useRootSelector(selectBlockedRemotes);
 
 	useActionEffect("navigatePrevious", () => {
 		if (remoteId !== undefined) {
@@ -134,7 +137,7 @@ function ActionBarEffects() {
 	});
 
 	useActionEffect("blockAll", () => {
-		dispatch(blockAllRemotes());
+		dispatch(toggleBlockAllRemotes());
 	});
 
 	useActionEffect("viewScript", () => {
@@ -180,6 +183,33 @@ function ActionBarEffects() {
 		dispatch(setActionEnabled("blockAll", hasRemotes));
 		dispatch(setActionEnabled("viewScript", signalEnabled));
 	}, [remoteId === undefined, signal, currentTab, remoteIds]);
+
+	// Update pause button caption
+	useEffect(() => {
+		dispatch(setActionCaption("pause", paused ? "Resume" : "Pause"));
+	}, [paused]);
+
+	// Update pauseRemote button caption
+	useEffect(() => {
+		if (remoteId !== undefined) {
+			const isPaused = pausedRemotes.has(remoteId);
+			dispatch(setActionCaption("pauseRemote", isPaused ? "Resume Remote" : "Pause Remote"));
+		}
+	}, [remoteId, pausedRemotes]);
+
+	// Update blockRemote button caption
+	useEffect(() => {
+		if (remoteId !== undefined) {
+			const isBlocked = blockedRemotes.has(remoteId);
+			dispatch(setActionCaption("blockRemote", isBlocked ? "Unblock Remote" : "Block Remote"));
+		}
+	}, [remoteId, blockedRemotes]);
+
+	// Update blockAll button caption
+	useEffect(() => {
+		const allBlocked = remoteIds.size() > 0 && remoteIds.every((id) => blockedRemotes.has(id));
+		dispatch(setActionCaption("blockAll", allBlocked ? "Unblock All" : "Block All"));
+	}, [remoteIds, blockedRemotes]);
 
 	return <></>;
 }

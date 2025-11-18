@@ -114,9 +114,17 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				blockedRemotes,
 			};
 		}
-		case "BLOCK_ALL_REMOTES": {
+		case "TOGGLE_BLOCK_ALL_REMOTES": {
+			// Check if all remotes are currently blocked
+			const allBlocked = state.logs.size() > 0 && state.logs.every((log) => state.blockedRemotes.has(log.id));
+
 			const blockedRemotes = new Set<string>();
-			state.logs.forEach((log) => blockedRemotes.add(log.id));
+			if (!allBlocked) {
+				// Block all if not all are blocked
+				state.logs.forEach((log) => blockedRemotes.add(log.id));
+			}
+			// Otherwise leave it empty to unblock all
+
 			return {
 				...state,
 				blockedRemotes,

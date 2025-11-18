@@ -44,8 +44,8 @@ export function toggleRemoteBlocked(id: string) {
 	return { type: "TOGGLE_REMOTE_BLOCKED", id } as const;
 }
 
-export function blockAllRemotes() {
-	return { type: "BLOCK_ALL_REMOTES" } as const;
+export function toggleBlockAllRemotes() {
+	return { type: "TOGGLE_BLOCK_ALL_REMOTES" } as const;
 }
 
 export type RemoteLogActions =
@@ -60,4 +60,4 @@ export type RemoteLogActions =
 	| ReturnType<typeof togglePaused>
 	| ReturnType<typeof toggleRemotePaused>
 	| ReturnType<typeof toggleRemoteBlocked>
-	| ReturnType<typeof blockAllRemotes>;
+	| ReturnType<typeof toggleBlockAllRemotes>;

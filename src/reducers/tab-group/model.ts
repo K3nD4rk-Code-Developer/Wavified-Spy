@@ -16,4 +16,5 @@ export enum TabType {
 	Event = "event",
 	Function = "function",
 	Script = "script",
+	Settings = "settings",
 }

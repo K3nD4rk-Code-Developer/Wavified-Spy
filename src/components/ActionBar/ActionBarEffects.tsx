@@ -158,6 +158,15 @@ function ActionBarEffects() {
 		}
 	});
 
+	useActionEffect("settings", () => {
+		// Check if settings tab already exists
+		const settingsTabId = "settings";
+		const tab = createTabColumn(settingsTabId, "Settings", TabType.Settings, true);
+
+		dispatch(pushTab(tab));
+		dispatch(setActiveTab(settingsTabId));
+	});
+
 	// Remote & Signal actions
 	useEffect(() => {
 		const remoteEnabled = remoteId !== undefined;

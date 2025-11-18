@@ -89,7 +89,8 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				paused: !state.paused,
 			};
 		case "TOGGLE_REMOTE_PAUSED": {
-			const pausedRemotes = new Set(state.pausedRemotes);
+			const pausedRemotes = new Set<string>();
+			state.pausedRemotes.forEach((id) => pausedRemotes.add(id));
 			if (pausedRemotes.has(action.id)) {
 				pausedRemotes.delete(action.id);
 			} else {
@@ -101,7 +102,8 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 			};
 		}
 		case "TOGGLE_REMOTE_BLOCKED": {
-			const blockedRemotes = new Set(state.blockedRemotes);
+			const blockedRemotes = new Set<string>();
+			state.blockedRemotes.forEach((id) => blockedRemotes.add(id));
 			if (blockedRemotes.has(action.id)) {
 				blockedRemotes.delete(action.id);
 			} else {

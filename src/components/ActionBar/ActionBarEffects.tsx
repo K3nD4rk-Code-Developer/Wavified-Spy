@@ -146,8 +146,9 @@ function ActionBarEffects() {
 			let scriptText = "";
 
 			if (signal.caller !== undefined && decompile !== undefined) {
+				const caller = signal.caller;
 				const success = pcall(() => {
-					scriptText = decompile(signal.caller);
+					scriptText = decompile(caller);
 				});
 
 				if (!success[0]) {

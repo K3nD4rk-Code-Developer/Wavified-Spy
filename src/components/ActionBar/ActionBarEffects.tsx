@@ -1,5 +1,5 @@
 import Roact from "@rbxts/roact";
-import { TabType, deleteTab, selectActiveTab, pushTab, setActiveTab, createTabColumn } from "reducers/tab-group";
+import { TabType, deleteTab, pushTab, selectActiveTab, selectTabs, setActiveTab } from "reducers/tab-group";
 import { codifyOutgoingSignal, stringifyRemote } from "./utils";
 import { getInstanceFromId, getInstancePath } from "utils/instance-util";
 import {
@@ -14,12 +14,16 @@ import {
 	toggleRemoteBlocked,
 	toggleBlockAllRemotes,
 } from "reducers/remote-log";
-import { removeRemoteLog, selectPaused, selectPausedRemotes, selectBlockedRemotes, selectPathNotation } from "reducers/remote-log";
-import { setActionEnabled, setActionCaption } from "reducers/action-bar";
+import { removeRemoteLog } from "reducers/remote-log";
+import { setActionEnabled } from "reducers/action-bar";
+import { setScript, removeScript } from "reducers/script";
 import { useActionEffect } from "hooks/use-action-effect";
 import { useEffect, withHooksPure } from "@rbxts/roact-hooked";
 import { useRootDispatch, useRootSelector, useRootStore } from "hooks/use-root-store";
 import { genScript } from "utils/gen-script";
+import { notify } from "utils/notify";
+import { generateUniqueScriptName } from "utils/script-tab-util";
+import { createTabColumn } from "reducers/tab-group/utils";
 import { HttpService } from "@rbxts/services";
 
 
@@ -35,13 +39,15 @@ function ActionBarEffects() {
 	const remote = useRootSelector((state) => (remoteId !== undefined ? selectRemoteLog(state, remoteId) : undefined));
 
 	const signal = useRootSelector(selectSignalSelected);
-	const pathNotation = useRootSelector(selectPathNotation);
+	const tabs = useRootSelector(selectTabs);
 
 	useActionEffect("copy", () => {
 		if (remote) {
 			setclipboard?.(getInstancePath(remote.object));
+			notify("Copied remote path to clipboard");
 		} else if (signal) {
 			setclipboard?.(codifyOutgoingSignal(signal));
+			notify("Copied signal to clipboard");
 		}
 	});
 
@@ -60,6 +66,7 @@ function ActionBarEffects() {
 			const fileContents = stringifyRemote(remote);
 
 			writefile?.(fileName, fileContents);
+			notify(`Saved to ${fileName}`);
 		} else if (signal) {
 			const remote = selectRemoteLog(store.getState(), signal.remoteId)!;
 			const signalOrder = remote.outgoing.findIndex((s) => s.id === signal.id);
@@ -70,6 +77,7 @@ function ActionBarEffects() {
 			const fileContents = stringifyRemote(remote, (s) => signal.id === s.id);
 
 			writefile?.(fileName, fileContents);
+			notify(`Saved to ${fileName}`);
 		}
 	});
 
@@ -77,8 +85,15 @@ function ActionBarEffects() {
 		if (remote) {
 			dispatch(removeRemoteLog(remote.id));
 			dispatch(deleteTab(remote.id));
+			notify("Deleted remote");
 		} else if (signal) {
 			dispatch(removeOutgoingSignal(signal.remoteId, signal.id));
+			notify("Deleted signal");
+		} else if (currentTab?.type === TabType.Script) {
+			// Deleting a script tab
+			dispatch(removeScript(currentTab.id));
+			dispatch(deleteTab(currentTab.id));
+			notify("Deleted script");
 		}
 	});
 
@@ -94,6 +109,70 @@ function ActionBarEffects() {
 			}
 			const scriptText = genScript(signal.remote, parameters, pathNotation);
 			setclipboard?.(scriptText);
+
+			// Also open the script viewer
+			const baseName = signal.name;
+			const uniqueName = generateUniqueScriptName(baseName, tabs);
+			const scriptId = HttpService.GenerateGUID(false);
+
+			// Create tab
+			const tab = createTabColumn(scriptId, uniqueName, TabType.Script, true);
+			dispatch(pushTab(tab));
+			dispatch(setActiveTab(scriptId));
+
+			// Store script content
+			dispatch(
+				setScript(scriptId, {
+					id: scriptId,
+					name: uniqueName,
+					content: scriptText,
+				}),
+			);
+
+			notify("Copied script to clipboard and opened in viewer");
+		}
+	});
+
+	useActionEffect("viewScript", () => {
+		if (signal) {
+			// Decompile the script
+			let scriptText = "";
+
+			if (signal.caller !== undefined && decompile !== undefined) {
+				const success = pcall(() => {
+					scriptText = decompile(signal.caller);
+				});
+
+				if (!success[0]) {
+					scriptText = "-- Failed to decompile script\n-- " + tostring(success[1]);
+					notify("Failed to decompile script", 3, true);
+				}
+			} else if (signal.caller === undefined) {
+				scriptText = "-- No caller script found";
+			} else {
+				scriptText = "-- decompile() function not available";
+			}
+
+			// Create unique tab name
+			const baseName = signal.caller?.Name ?? "Script";
+			const uniqueName = generateUniqueScriptName(baseName, tabs);
+			const scriptId = HttpService.GenerateGUID(false);
+
+			// Create tab
+			const tab = createTabColumn(scriptId, uniqueName, TabType.Script, true);
+			dispatch(pushTab(tab));
+			dispatch(setActiveTab(scriptId));
+
+			// Store script content
+			dispatch(
+				setScript(scriptId, {
+					id: scriptId,
+					name: uniqueName,
+					content: scriptText,
+				}),
+			);
+
+			notify(`Opened ${uniqueName} in script viewer`);
 		}
 	});
 
@@ -191,55 +270,17 @@ function ActionBarEffects() {
 		const remoteEnabled = remoteId !== undefined;
 		const signalEnabled = signal !== undefined && currentTab?.id === signal.remoteId;
 		const isHome = currentTab?.type === TabType.Home;
-		const isScriptTab = currentTab?.type === TabType.Script && currentTab?.scriptContent !== undefined;
+		const isScript = currentTab?.type === TabType.Script;
 
 		dispatch(setActionEnabled("copy", remoteEnabled || signalEnabled));
 		dispatch(setActionEnabled("save", remoteEnabled || signalEnabled));
-		dispatch(setActionEnabled("delete", remoteEnabled || signalEnabled));
+		dispatch(setActionEnabled("delete", remoteEnabled || signalEnabled || isScript));
 
 		dispatch(setActionEnabled("traceback", signalEnabled));
 		dispatch(setActionEnabled("copyPath", remoteEnabled || !isHome));
-		dispatch(setActionEnabled("copyScript", signalEnabled || isScriptTab));
-
-		// Enable navigate buttons when there are remotes
-		const hasRemotes = remoteIds.size() > 0;
-		dispatch(setActionEnabled("navigatePrevious", hasRemotes));
-		dispatch(setActionEnabled("navigateNext", hasRemotes));
-
-		// Enable new remote control buttons
-		dispatch(setActionEnabled("pauseRemote", remoteEnabled));
-		dispatch(setActionEnabled("blockRemote", remoteEnabled));
-		dispatch(setActionEnabled("blockAll", hasRemotes));
+		dispatch(setActionEnabled("copyScript", signalEnabled));
 		dispatch(setActionEnabled("viewScript", signalEnabled));
-		dispatch(setActionEnabled("runRemote", signalEnabled));
-	}, [remoteId === undefined, signal, currentTab, remoteIds]);
-
-	// Update pause button caption
-	useEffect(() => {
-		dispatch(setActionCaption("pause", paused ? "Resume" : "Pause"));
-	}, [paused]);
-
-	// Update pauseRemote button caption
-	useEffect(() => {
-		if (remoteId !== undefined) {
-			const isPaused = pausedRemotes.has(remoteId);
-			dispatch(setActionCaption("pauseRemote", isPaused ? "Resume Remote" : "Pause Remote"));
-		}
-	}, [remoteId, pausedRemotes]);
-
-	// Update blockRemote button caption
-	useEffect(() => {
-		if (remoteId !== undefined) {
-			const isBlocked = blockedRemotes.has(remoteId);
-			dispatch(setActionCaption("blockRemote", isBlocked ? "Unblock Remote" : "Block Remote"));
-		}
-	}, [remoteId, blockedRemotes]);
-
-	// Update blockAll button caption
-	useEffect(() => {
-		const allBlocked = remoteIds.size() > 0 && remoteIds.every((id) => blockedRemotes.has(id));
-		dispatch(setActionCaption("blockAll", allBlocked ? "Unblock All" : "Block All"));
-	}, [remoteIds, blockedRemotes]);
+	}, [remoteId === undefined, signal, currentTab]);
 
 	return <></>;
 }

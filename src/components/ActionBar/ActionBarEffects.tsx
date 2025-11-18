@@ -218,7 +218,7 @@ function ActionBarEffects() {
 	useActionEffect("pauseRemote", () => {
 		if (remoteId !== undefined) {
 			dispatch(toggleRemotePaused(remoteId));
-			const isPaused = pausedRemotes.includes(remoteId);
+			const isPaused = pausedRemotes.has(remoteId);
 			notify(isPaused ? "Unpaused remote" : "Paused remote");
 		}
 	});
@@ -226,7 +226,7 @@ function ActionBarEffects() {
 	useActionEffect("blockRemote", () => {
 		if (remoteId !== undefined) {
 			dispatch(toggleRemoteBlocked(remoteId));
-			const isBlocked = blockedRemotes.includes(remoteId);
+			const isBlocked = blockedRemotes.has(remoteId);
 			notify(isBlocked ? "Unblocked remote" : "Blocked remote");
 		}
 	});

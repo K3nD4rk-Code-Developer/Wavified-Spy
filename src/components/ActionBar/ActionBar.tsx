@@ -35,6 +35,13 @@ export default function ActionBar() {
 				<ActionButton layoutOrder={11} id="copyScript" icon="rbxassetid://9887697099" caption="Copy Script" />
 				<ActionButton layoutOrder={12} id="viewScript" icon="rbxassetid://9887697255" caption="View Script" />
 
+				<ActionLine order={13} />
+
+				<ActionButton layoutOrder={14} id="pauseRemote" icon="rbxassetid://12200106191" caption="Pause Remote" />
+				<ActionButton layoutOrder={15} id="blockRemote" icon="rbxassetid://9887696922" caption="Block Remote" />
+				<ActionButton layoutOrder={16} id="blockAll" icon="rbxassetid://9887696922" caption="Block All" />
+				<ActionButton layoutOrder={17} id="runRemote" icon="rbxassetid://9887978919" caption="Run Remote" />
+
 				<uilistlayout
 					SortOrder={Enum.SortOrder.LayoutOrder}
 					Padding={new UDim(0, 1)}

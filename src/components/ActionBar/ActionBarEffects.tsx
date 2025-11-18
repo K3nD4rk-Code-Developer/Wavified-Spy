@@ -218,17 +218,22 @@ function ActionBarEffects() {
 	useActionEffect("pauseRemote", () => {
 		if (remoteId !== undefined) {
 			dispatch(toggleRemotePaused(remoteId));
+			const isPaused = pausedRemotes.includes(remoteId);
+			notify(isPaused ? "Unpaused remote" : "Paused remote");
 		}
 	});
 
 	useActionEffect("blockRemote", () => {
 		if (remoteId !== undefined) {
 			dispatch(toggleRemoteBlocked(remoteId));
+			const isBlocked = blockedRemotes.includes(remoteId);
+			notify(isBlocked ? "Unblocked remote" : "Blocked remote");
 		}
 	});
 
 	useActionEffect("blockAll", () => {
 		dispatch(toggleBlockAllRemotes());
+		notify("Toggled block all remotes");
 	});
 
 	useActionEffect("runRemote", () => {
@@ -239,18 +244,22 @@ function ActionBarEffects() {
 				parameters[key as number] = value;
 			}
 			const scriptText = genScript(signal.remote, parameters, pathNotation);
-			
+
 			// Execute the script
 			if (loadstring) {
 				const [func, err] = loadstring(scriptText);
 				if (func) {
 					const [success, result] = pcall(func);
 					if (!success) {
-						warn("Failed to run remote:", result);
+						notify("Failed to run remote: " + tostring(result), 3, true);
+					} else {
+						notify("Executed remote successfully");
 					}
 				} else {
-					warn("Failed to load remote script:", err);
+					notify("Failed to load remote script: " + tostring(err), 3, true);
 				}
+			} else {
+				notify("loadstring function not available", 3, true);
 			}
 		}
 	});
@@ -270,6 +279,10 @@ function ActionBarEffects() {
 		dispatch(setActionEnabled("copyPath", remoteEnabled || !isHome));
 		dispatch(setActionEnabled("copyScript", signalEnabled));
 		dispatch(setActionEnabled("viewScript", signalEnabled));
+
+		dispatch(setActionEnabled("pauseRemote", remoteEnabled));
+		dispatch(setActionEnabled("blockRemote", remoteEnabled));
+		dispatch(setActionEnabled("runRemote", signalEnabled));
 	}, [remoteId === undefined, signal, currentTab]);
 
 	return <></>;

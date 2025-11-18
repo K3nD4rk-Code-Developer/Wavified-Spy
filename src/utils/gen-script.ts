@@ -1,16 +1,18 @@
 import { codifyTable } from "./codify";
 import { getInstancePath } from "./instance-util";
 
-export function genScript(remote: RemoteEvent | RemoteFunction, args: unknown[]): string {
+type PathNotationStyle = "dot" | "waitforchild" | "findfirstchild";
+
+export function genScript(remote: RemoteEvent | RemoteFunction, args: unknown[], pathNotation: PathNotationStyle = "dot"): string {
     let gen = "";
 
     const hasArgs = next(args)[0] !== undefined;
 
     if (hasArgs) {
-        gen = `local args = ${codifyTable(args)}\n\n`;
+        gen = `local args = ${codifyTable(args, 0, { pathNotation })}\n\n`;
     }
 
-    gen += `local remote = ${getInstancePath(remote)}\n`;
+    gen += `local remote = ${getInstancePath(remote, pathNotation)}\n`;
 
     if (remote.IsA("RemoteEvent")) {
         if (hasArgs) {

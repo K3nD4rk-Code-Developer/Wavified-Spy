@@ -44,13 +44,13 @@ export default function ActionBar() {
 
 				<uilistlayout
 					SortOrder={Enum.SortOrder.LayoutOrder}
-					Padding={new UDim(0, 2)}
+					Padding={new UDim(0, 1)}
 					FillDirection="Horizontal"
 					HorizontalAlignment="Left"
 					VerticalAlignment="Center"
 				/>
 
-				<uipadding PaddingLeft={new UDim(0, 5)} />
+				<uipadding PaddingLeft={new UDim(0, 3)} />
 			</Container>
 
 		</>

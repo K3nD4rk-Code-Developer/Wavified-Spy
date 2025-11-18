@@ -14,7 +14,7 @@ import {
 	toggleRemoteBlocked,
 	toggleBlockAllRemotes,
 } from "reducers/remote-log";
-import { removeRemoteLog, selectPaused, selectPausedRemotes, selectBlockedRemotes } from "reducers/remote-log";
+import { removeRemoteLog, selectPaused, selectPausedRemotes, selectBlockedRemotes, selectPathNotation } from "reducers/remote-log";
 import { setActionEnabled, setActionCaption } from "reducers/action-bar";
 import { useActionEffect } from "hooks/use-action-effect";
 import { useEffect, withHooksPure } from "@rbxts/roact-hooked";
@@ -35,6 +35,7 @@ function ActionBarEffects() {
 	const remote = useRootSelector((state) => (remoteId !== undefined ? selectRemoteLog(state, remoteId) : undefined));
 
 	const signal = useRootSelector(selectSignalSelected);
+	const pathNotation = useRootSelector(selectPathNotation);
 
 	useActionEffect("copy", () => {
 		if (remote) {
@@ -82,13 +83,16 @@ function ActionBarEffects() {
 	});
 
 	useActionEffect("copyScript", () => {
-		if (signal) {
+		// Check if we're viewing a script tab
+		if (currentTab?.type === TabType.Script && currentTab.scriptContent) {
+			setclipboard?.(currentTab.scriptContent);
+		} else if (signal) {
 			// Convert Record<number, unknown> to array
 			const parameters: unknown[] = [];
 			for (const [key, value] of pairs(signal.parameters)) {
 				parameters[key as number] = value;
 			}
-			const scriptText = genScript(signal.remote, parameters);
+			const scriptText = genScript(signal.remote, parameters, pathNotation);
 			setclipboard?.(scriptText);
 		}
 	});
@@ -147,7 +151,7 @@ function ActionBarEffects() {
 			for (const [key, value] of pairs(signal.parameters)) {
 				parameters[key as number] = value;
 			}
-			const scriptText = genScript(signal.remote, parameters);
+			const scriptText = genScript(signal.remote, parameters, pathNotation);
 
 			// Create a unique ID for the script tab
 			const scriptTabId = HttpService.GenerateGUID(false);
@@ -163,6 +167,7 @@ function ActionBarEffects() {
 		const remoteEnabled = remoteId !== undefined;
 		const signalEnabled = signal !== undefined && currentTab?.id === signal.remoteId;
 		const isHome = currentTab?.type === TabType.Home;
+		const isScriptTab = currentTab?.type === TabType.Script && currentTab?.scriptContent !== undefined;
 
 		dispatch(setActionEnabled("copy", remoteEnabled || signalEnabled));
 		dispatch(setActionEnabled("save", remoteEnabled || signalEnabled));
@@ -170,7 +175,7 @@ function ActionBarEffects() {
 
 		dispatch(setActionEnabled("traceback", signalEnabled));
 		dispatch(setActionEnabled("copyPath", remoteEnabled || !isHome));
-		dispatch(setActionEnabled("copyScript", signalEnabled));
+		dispatch(setActionEnabled("copyScript", signalEnabled || isScriptTab));
 
 		// Enable navigate buttons when there are remotes
 		const hasRemotes = remoteIds.size() > 0;

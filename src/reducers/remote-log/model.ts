@@ -1,5 +1,11 @@
 import { TabType } from "reducers/tab-group";
 
+export enum PathNotation {
+	Dot = "dot",
+	WaitForChild = "waitforchild",
+	FindFirstChild = "findfirstchild",
+}
+
 export interface RemoteLogState {
 	logs: RemoteLog[];
 	remoteSelected?: string;
@@ -9,6 +15,7 @@ export interface RemoteLogState {
 	pausedRemotes: Set<string>;
 	blockedRemotes: Set<string>;
 	noActors: boolean;
+	pathNotation: PathNotation;
 }
 
 export interface RemoteLog {

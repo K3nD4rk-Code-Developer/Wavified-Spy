@@ -1,4 +1,4 @@
-import { OutgoingSignal, RemoteLog } from "./model";
+import { OutgoingSignal, PathNotation, RemoteLog } from "./model";
 
 export function pushRemoteLog(log: RemoteLog) {
 	return { type: "PUSH_REMOTE_LOG", log } as const;
@@ -52,6 +52,10 @@ export function toggleNoActors() {
 	return { type: "TOGGLE_NO_ACTORS" } as const;
 }
 
+export function setPathNotation(notation: PathNotation) {
+	return { type: "SET_PATH_NOTATION", notation } as const;
+}
+
 export type RemoteLogActions =
 	| ReturnType<typeof pushRemoteLog>
 	| ReturnType<typeof removeRemoteLog>
@@ -65,4 +69,5 @@ export type RemoteLogActions =
 	| ReturnType<typeof toggleRemotePaused>
 	| ReturnType<typeof toggleRemoteBlocked>
 	| ReturnType<typeof toggleBlockAllRemotes>
-	| ReturnType<typeof toggleNoActors>;
+	| ReturnType<typeof toggleNoActors>
+	| ReturnType<typeof setPathNotation>;

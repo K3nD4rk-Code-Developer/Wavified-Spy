@@ -1,5 +1,5 @@
 import { RemoteLogActions } from "./actions";
-import { RemoteLogState } from "./model";
+import { PathNotation, RemoteLogState } from "./model";
 
 const initialState: RemoteLogState = {
 	logs: [],
@@ -7,6 +7,7 @@ const initialState: RemoteLogState = {
 	pausedRemotes: new Set(),
 	blockedRemotes: new Set(),
 	noActors: false,
+	pathNotation: PathNotation.Dot,
 };
 
 export default function remoteLogReducer(state = initialState, action: RemoteLogActions): RemoteLogState {
@@ -132,6 +133,11 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 			return {
 				...state,
 				noActors: !state.noActors,
+			};
+		case "SET_PATH_NOTATION":
+			return {
+				...state,
+				pathNotation: action.notation,
 			};
 		default:
 			return state;

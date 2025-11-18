@@ -117,11 +117,10 @@ function ActionBarEffects() {
 			// Sort by key
 			paramEntries.sort((a, b) => a[0] < b[0]);
 
-			// Create sequential array starting from index 1 (Lua convention)
+			// Create sequential array using table.insert to ensure proper Lua array
 			const parameters: unknown[] = [];
-			let index = 1;
 			for (const [_, value] of paramEntries) {
-				parameters[index++] = value;
+				table.insert(parameters, value);
 			}
 
 			const scriptText = genScript(signal.remote, parameters, pathNotation);
@@ -256,11 +255,10 @@ function ActionBarEffects() {
 			// Sort by key
 			paramEntries.sort((a, b) => a[0] < b[0]);
 
-			// Create sequential array starting from index 1 (Lua convention)
+			// Create sequential array using table.insert to ensure proper Lua array
 			const parameters: unknown[] = [];
-			let index = 1;
 			for (const [_, value] of paramEntries) {
-				parameters[index++] = value;
+				table.insert(parameters, value);
 			}
 
 			const scriptText = genScript(signal.remote, parameters, pathNotation);

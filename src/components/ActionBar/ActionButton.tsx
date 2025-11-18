@@ -47,18 +47,27 @@ function ActionButton({ id, icon, caption, layoutOrder }: Props) {
 			onHover={() => setGoal(BUTTON_HOVERED)}
 			onHoverEnd={() => setGoal(BUTTON_DEFAULT)}
 			active={!actionState.disabled}
-			size={new UDim2(0, displayCaption !== undefined ? textSize.X + 16 + MARGIN * 3 : 36, 0, 36)}
+			size={new UDim2(
+				0,
+				displayCaption !== undefined
+					? textSize.X + (icon !== undefined ? 16 + MARGIN * 3 : MARGIN * 2)
+					: 36,
+				0,
+				36,
+			)}
 			transparency={backgroundTransparency}
 			cornerRadius={new UDim(0, 4)}
 		>
-			<imagelabel
-				Image={icon}
-				ImageTransparency={foregroundTransparency}
-				Size={new UDim2(0, 16, 0, 16)}
-				Position={new UDim2(0, MARGIN, 0.5, 0)}
-				AnchorPoint={new Vector2(0, 0.5)}
-				BackgroundTransparency={1}
-			/>
+			{icon !== undefined && (
+				<imagelabel
+					Image={icon}
+					ImageTransparency={foregroundTransparency}
+					Size={new UDim2(0, 16, 0, 16)}
+					Position={new UDim2(0, MARGIN, 0.5, 0)}
+					AnchorPoint={new Vector2(0, 0.5)}
+					BackgroundTransparency={1}
+				/>
+			)}
 
 			{displayCaption !== undefined && (
 				<textlabel
@@ -70,7 +79,7 @@ function ActionButton({ id, icon, caption, layoutOrder }: Props) {
 					TextXAlignment="Left"
 					TextYAlignment="Center"
 					Size={new UDim2(1, 0, 1, 0)}
-					Position={new UDim2(0, MARGIN * 2 + 16, 0, 0)}
+					Position={new UDim2(0, icon !== undefined ? MARGIN * 2 + 16 : MARGIN, 0, 0)}
 					BackgroundTransparency={1}
 				/>
 			)}

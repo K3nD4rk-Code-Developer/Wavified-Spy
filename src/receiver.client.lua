@@ -24,6 +24,22 @@ if not getcallingscript then
 	end
 end
 
+local function isFromActor(script)
+	if not script then
+		return false
+	end
+
+	local parent = script.Parent
+	while parent do
+		if parent:IsA("Actor") then
+			return true
+		end
+		parent = parent.Parent
+	end
+
+	return false
+end
+
 local function onReceive(self, params, returns)
 	local traceback = {}
 	local callback = debug.info(CALLER_STACK_LEVEL, "f")
@@ -45,6 +61,12 @@ local function onReceive(self, params, returns)
 		end
 
 		local script = getcallingscript() or (callback and getFunctionScript(callback))
+
+		-- Check if actor detection is disabled and the calling script is from an actor
+		if store.isNoActors() and isFromActor(script) then
+			return
+		end
+
 		local signal = logger.createOutgoingSignal(self, script, callback, traceback, params, returns)
 
 		if store.get(function(state)

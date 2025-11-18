@@ -41,6 +41,10 @@ export default function ActionBar() {
 				<ActionButton layoutOrder={15} id="copyPath" icon="rbxassetid://12381370332" caption="Copy as path" />
 				<ActionButton layoutOrder={16} id="copyScript" icon="rbxassetid://12233010147" caption="Copy Script" />
 
+				<ActionLine order={17} />
+
+				<ActionButton layoutOrder={18} id="settings" icon="rbxassetid://9886659671" caption="Settings" />
+
 				<uilistlayout
 					SortOrder={Enum.SortOrder.LayoutOrder}
 					Padding={new UDim(0, 2)}

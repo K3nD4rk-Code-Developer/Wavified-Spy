@@ -1,6 +1,6 @@
 import Rodux from "@rbxts/rodux";
 import rootReducer, { RootState } from "reducers";
-import { selectPaused, selectPausedRemotes, selectBlockedRemotes } from "reducers/remote-log";
+import { selectPaused, selectPausedRemotes, selectBlockedRemotes, selectNoActors } from "reducers/remote-log";
 
 let store: Rodux.Store<RootState, Rodux.Action>;
 let isDestructed = false;
@@ -52,6 +52,12 @@ export function isRemoteAllowed(remoteId: string) {
 	if (pausedRemotes.has(remoteId)) return false;
 
 	return true;
+}
+
+export function isNoActors() {
+	if (!store || isDestructed) return false;
+	const state = store.getState();
+	return selectNoActors(state);
 }
 
 export function dispatch(action: Rodux.AnyAction) {

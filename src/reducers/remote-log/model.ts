@@ -8,6 +8,7 @@ export interface RemoteLogState {
 	paused: boolean;
 	pausedRemotes: Set<string>;
 	blockedRemotes: Set<string>;
+	noActors: boolean;
 }
 
 export interface RemoteLog {

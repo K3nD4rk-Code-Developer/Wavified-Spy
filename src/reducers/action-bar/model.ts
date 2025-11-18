@@ -12,6 +12,7 @@ export interface ActionBarStates {
 	traceback: ActionState;
 	copyPath: ActionState;
 	copyScript: ActionState;
+	viewScript: ActionState;
 	pause: ActionState;
 }
 

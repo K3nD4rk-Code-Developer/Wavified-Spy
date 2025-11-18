@@ -12,6 +12,7 @@ const initialState: ActionBarState = {
 		traceback: { id: "traceback", disabled: false, active: false },
 		copyPath: { id: "copyPath", disabled: false, active: false },
 		copyScript: { id: "copyScript", disabled: true, active: false, },
+		viewScript: { id: "viewScript", disabled: true, active: false },
 		pause: { id: "pause", disabled: false, active: false },
 
 	},

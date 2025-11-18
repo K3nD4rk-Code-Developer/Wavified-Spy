@@ -33,6 +33,7 @@ export default function ActionBar() {
 				<ActionButton layoutOrder={9} id="traceback" icon="rbxassetid://9887697255" caption="Traceback" />
 				<ActionButton layoutOrder={10} id="copyPath" icon="rbxassetid://9887697099" caption="Copy as path" />
 				<ActionButton layoutOrder={11} id="copyScript" icon="rbxassetid://9887697099" caption="Copy Script" />
+				<ActionButton layoutOrder={12} id="viewScript" icon="rbxassetid://9887697255" caption="View Script" />
 
 				<uilistlayout
 					SortOrder={Enum.SortOrder.LayoutOrder}

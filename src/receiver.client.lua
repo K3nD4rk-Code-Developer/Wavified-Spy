@@ -38,12 +38,6 @@ local function onReceive(self, params, returns)
 
 	task.defer(function()
 		local remoteId = getInstanceId(self)
-
-		-- Check if this specific remote is allowed (not paused/blocked)
-		if not store.isRemoteAllowed(remoteId) then
-			return
-		end
-
 		local script = getcallingscript() or (callback and getFunctionScript(callback))
 		local signal = logger.createOutgoingSignal(self, script, callback, traceback, params, returns)
 
@@ -62,6 +56,13 @@ end
 
 refs.FireServer = hookfunction(FireServer, function(self, ...)
 	if self and store.isActive() and typeof(self) == "Instance" and self:IsA("RemoteEvent") then
+		local remoteId = getInstanceId(self)
+
+		-- Check if remote is blocked/paused BEFORE firing
+		if not store.isRemoteAllowed(remoteId) then
+			return -- Block the remote from firing
+		end
+
 		onReceive(self, { ... })
 	end
 	return refs.FireServer(self, ...)
@@ -69,6 +70,13 @@ end)
 
 refs.InvokeServer = hookfunction(InvokeServer, function(self, ...)
 	if self and store.isActive() and typeof(self) == "Instance" and self:IsA("RemoteFunction") then
+		local remoteId = getInstanceId(self)
+
+		-- Check if remote is blocked/paused BEFORE firing
+		if not store.isRemoteAllowed(remoteId) then
+			return -- Block the remote from firing
+		end
+
 		onReceive(self, { ... })
 	end
 	return refs.InvokeServer(self, ...)
@@ -81,6 +89,13 @@ refs.__namecall = hookmetamethod(game, "__namecall", function(self, ...)
 		(store.isActive() and method == "FireServer" and IsA(self, "RemoteEvent")) or
 		(store.isActive() and method == "InvokeServer" and IsA(self, "RemoteFunction"))
 	then
+		local remoteId = getInstanceId(self)
+
+		-- Check if remote is blocked/paused BEFORE firing
+		if not store.isRemoteAllowed(remoteId) then
+			return -- Block the remote from firing
+		end
+
 		onReceive(self, { ... })
 	end
 

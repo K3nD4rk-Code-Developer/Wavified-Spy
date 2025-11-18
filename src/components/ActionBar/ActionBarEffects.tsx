@@ -7,6 +7,7 @@ import {
 	removeOutgoingSignal,
 	selectRemoteIdSelected,
 	selectSignalSelected,
+	togglePaused,
 } from "reducers/remote-log";
 import { removeRemoteLog } from "reducers/remote-log";
 import { setActionEnabled } from "reducers/action-bar";
@@ -84,6 +85,10 @@ function ActionBarEffects() {
 			const scriptText = genScript(signal.remote, parameters);
 			setclipboard?.(scriptText);
 		}
+	});
+
+	useActionEffect("pause", () => {
+		dispatch(togglePaused());
 	});
 
 	// Remote & Signal actions

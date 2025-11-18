@@ -8,6 +8,7 @@ export const selectRemoteLogsOutgoing = (state: RootState) => state.remoteLog.lo
 export const selectRemoteIdSelected = (state: RootState) => state.remoteLog.remoteSelected;
 export const selectSignalIdSelected = (state: RootState) => state.remoteLog.signalSelected;
 export const selectSignalIdSelectedRemote = (state: RootState) => state.remoteLog.remoteForSignalSelected;
+export const selectPaused = (state: RootState) => state.remoteLog.paused;
 
 export const makeSelectRemoteLog = () =>
 	createSelector([selectRemoteLogs, (_: unknown, id: string) => id], (logs, id) => logs.find((log) => log.id === id));

@@ -1,5 +1,6 @@
 import Rodux from "@rbxts/rodux";
 import rootReducer, { RootState } from "reducers";
+import { selectPaused } from "reducers/remote-log";
 
 let store: Rodux.Store<RootState, Rodux.Action>;
 let isDestructed = false;
@@ -20,7 +21,9 @@ export function destruct() {
 }
 
 export function isActive() {
-	return store && !isDestructed;
+	if (!store || isDestructed) return false;
+	const paused = selectPaused(store.getState());
+	return !paused;
 }
 
 export function dispatch(action: Rodux.AnyAction) {

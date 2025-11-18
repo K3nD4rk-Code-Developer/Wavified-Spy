@@ -114,14 +114,9 @@ function ActionBarEffects() {
 			for (const [key, value] of pairs(signal.parameters)) {
 				paramEntries.push([key as number, value]);
 			}
-			// Sort by key
+			// Sort by key and extract values into sequential array
 			paramEntries.sort((a, b) => a[0] < b[0]);
-
-			// Create sequential array using table.insert to ensure proper Lua array
-			const parameters: unknown[] = [];
-			for (const [_, value] of paramEntries) {
-				table.insert(parameters, value);
-			}
+			const parameters = paramEntries.map(([_, value]) => value);
 
 			const scriptText = genScript(signal.remote, parameters, pathNotation);
 			setclipboard?.(scriptText);
@@ -252,14 +247,9 @@ function ActionBarEffects() {
 			for (const [key, value] of pairs(signal.parameters)) {
 				paramEntries.push([key as number, value]);
 			}
-			// Sort by key
+			// Sort by key and extract values into sequential array
 			paramEntries.sort((a, b) => a[0] < b[0]);
-
-			// Create sequential array using table.insert to ensure proper Lua array
-			const parameters: unknown[] = [];
-			for (const [_, value] of paramEntries) {
-				table.insert(parameters, value);
-			}
+			const parameters = paramEntries.map(([_, value]) => value);
 
 			const scriptText = genScript(signal.remote, parameters, pathNotation);
 

@@ -1,7 +1,6 @@
 import ActionBarEffects from "./ActionBarEffects";
 import ActionButton from "./ActionButton";
 import ActionLine from "./ActionLine";
-import Container from "components/Container";
 import Roact from "@rbxts/roact";
 
 export default function ActionBar() {
@@ -17,7 +16,18 @@ export default function ActionBar() {
 
 			<ActionBarEffects />
 
-			<Container size={new UDim2(1, 0, 0, 36)} position={new UDim2(0, 0, 0, 42)}>
+			<scrollingframe
+				Size={new UDim2(1, 0, 0, 36)}
+				Position={new UDim2(0, 0, 0, 42)}
+				BackgroundTransparency={1}
+				BorderSizePixel={0}
+				ClipsDescendants={true}
+				ScrollBarThickness={6}
+				ScrollingDirection={Enum.ScrollingDirection.X}
+				CanvasSize={new UDim2(0, 0, 0, 0)}
+				AutomaticCanvasSize={Enum.AutomaticSize.X}
+				ElasticBehavior={Enum.ElasticBehavior.Never}
+			>
 				<ActionButton layoutOrder={1} id="navigatePrevious" icon="rbxassetid://9887696242" />
 				<ActionButton layoutOrder={2} id="navigateNext" icon="rbxassetid://9887978919" />
 				<ActionButton layoutOrder={3} id="pause" icon="rbxassetid://12200106191" caption="Pause" />
@@ -51,7 +61,7 @@ export default function ActionBar() {
 				/>
 
 				<uipadding PaddingLeft={new UDim(0, 3)} />
-			</Container>
+			</scrollingframe>
 
 		</>
 	);

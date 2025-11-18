@@ -26,9 +26,6 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				logs: state.logs.map((log) => {
 					if (log.id === action.id) {
 						const outgoing = [action.signal, ...log.outgoing];
-						if (outgoing.size() > 50) {
-							outgoing.pop();
-						}
 						return {
 							...log,
 							outgoing,

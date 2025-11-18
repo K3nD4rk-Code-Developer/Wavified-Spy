@@ -1,5 +1,6 @@
 import Rodux from "@rbxts/rodux";
 import rootReducer, { RootState } from "reducers";
+import { selectPaused, selectPausedRemotes, selectBlockedRemotes, selectNoActors } from "reducers/remote-log";
 
 let store: Rodux.Store<RootState, Rodux.Action>;
 let isDestructed = false;
@@ -20,7 +21,43 @@ export function destruct() {
 }
 
 export function isActive() {
-	return store && !isDestructed;
+	if (!store || isDestructed) return false;
+	const paused = selectPaused(store.getState());
+	return !paused;
+}
+
+export function isRemoteBlocked(remoteId: string) {
+	if (!store || isDestructed) return false;
+	const state = store.getState();
+	const blockedRemotes = selectBlockedRemotes(state);
+
+	// Only check if remote is blocked (not paused)
+	return blockedRemotes.has(remoteId);
+}
+
+export function isRemoteAllowed(remoteId: string) {
+	if (!store || isDestructed) return false;
+	const state = store.getState();
+	const paused = selectPaused(state);
+	const pausedRemotes = selectPausedRemotes(state);
+	const blockedRemotes = selectBlockedRemotes(state);
+
+	// If globally paused, don't allow any remote
+	if (paused) return false;
+
+	// If remote is blocked, don't allow it
+	if (blockedRemotes.has(remoteId)) return false;
+
+	// If remote is individually paused, don't allow it
+	if (pausedRemotes.has(remoteId)) return false;
+
+	return true;
+}
+
+export function isNoActors() {
+	if (!store || isDestructed) return false;
+	const state = store.getState();
+	return selectNoActors(state);
 }
 
 export function dispatch(action: Rodux.AnyAction) {

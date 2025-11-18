@@ -20,7 +20,7 @@ export default function ActionBar() {
 			<Container size={new UDim2(1, 0, 0, 36)} position={new UDim2(0, 0, 0, 42)}>
 				<ActionButton layoutOrder={1} id="navigatePrevious" icon="rbxassetid://9887696242" />
 				<ActionButton layoutOrder={2} id="navigateNext" icon="rbxassetid://9887978919" />
-				<ActionButton layoutOrder={3} id="pause" icon="rbxassetid://9887697099" caption="Pause" />
+				<ActionButton layoutOrder={3} id="pause" icon="rbxassetid://12200106191" caption="Pause" />
 
 				<ActionLine order={4} />
 
@@ -37,13 +37,13 @@ export default function ActionBar() {
 
 				<uilistlayout
 					SortOrder={Enum.SortOrder.LayoutOrder}
-					Padding={new UDim(0, 4)}
+					Padding={new UDim(0, 1)}
 					FillDirection="Horizontal"
 					HorizontalAlignment="Left"
 					VerticalAlignment="Center"
 				/>
 
-				<uipadding PaddingLeft={new UDim(0, 8)} />
+				<uipadding PaddingLeft={new UDim(0, 3)} />
 			</Container>
 
 		</>

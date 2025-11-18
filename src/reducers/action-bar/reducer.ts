@@ -14,7 +14,11 @@ const initialState: ActionBarState = {
 		copyScript: { id: "copyScript", disabled: true, active: false, },
 		viewScript: { id: "viewScript", disabled: true, active: false },
 		pause: { id: "pause", disabled: false, active: false },
-
+		pauseRemote: { id: "pauseRemote", disabled: true, active: false },
+		blockRemote: { id: "blockRemote", disabled: true, active: false },
+		blockAll: { id: "blockAll", disabled: false, active: false },
+		viewScript: { id: "viewScript", disabled: true, active: false },
+		runRemote: { id: "runRemote", disabled: true, active: false },
 	},
 };
 
@@ -50,6 +54,17 @@ export default function actionBarReducer(state = initialState, action: ActionBar
 					[action.id]: {
 						...state.actions[action.id],
 						active: false,
+					},
+				},
+			};
+		case "SET_ACTION_CAPTION":
+			return {
+				...state,
+				actions: {
+					...state.actions,
+					[action.id]: {
+						...state.actions[action.id],
+						caption: action.caption,
 					},
 				},
 			};

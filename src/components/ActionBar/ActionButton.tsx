@@ -27,11 +27,14 @@ function ActionButton({ id, icon, caption, layoutOrder }: Props) {
 	const backgroundTransparency = actionState.disabled ? 1 : transparency.map((t) => t[0]);
 	const foregroundTransparency = actionState.disabled ? 0.5 : transparency.map((t) => t[1]);
 
+	// Use dynamic caption from state if available, otherwise use prop
+	const displayCaption = actionState.caption ?? caption;
+
 	const textSize = useMemo(() => {
-		return caption !== undefined
-			? TextService.GetTextSize(caption, 11, "Gotham", new Vector2(150, 36))
+		return displayCaption !== undefined
+			? TextService.GetTextSize(displayCaption, 11, "Gotham", new Vector2(150, 36))
 			: new Vector2();
-	}, [caption]);
+	}, [displayCaption]);
 
 	return (
 		<Button
@@ -44,22 +47,31 @@ function ActionButton({ id, icon, caption, layoutOrder }: Props) {
 			onHover={() => setGoal(BUTTON_HOVERED)}
 			onHoverEnd={() => setGoal(BUTTON_DEFAULT)}
 			active={!actionState.disabled}
-			size={new UDim2(0, caption !== undefined ? textSize.X + 16 + MARGIN * 3 : 36, 0, 36)}
+			size={new UDim2(
+				0,
+				displayCaption !== undefined
+					? textSize.X + (icon !== undefined ? 16 + MARGIN * 3 : MARGIN * 2)
+					: 36,
+				0,
+				36,
+			)}
 			transparency={backgroundTransparency}
 			cornerRadius={new UDim(0, 4)}
 		>
-			<imagelabel
-				Image={icon}
-				ImageTransparency={foregroundTransparency}
-				Size={new UDim2(0, 16, 0, 16)}
-				Position={new UDim2(0, MARGIN, 0.5, 0)}
-				AnchorPoint={new Vector2(0, 0.5)}
-				BackgroundTransparency={1}
-			/>
+			{icon !== undefined && (
+				<imagelabel
+					Image={icon}
+					ImageTransparency={foregroundTransparency}
+					Size={new UDim2(0, 16, 0, 16)}
+					Position={new UDim2(0, MARGIN, 0.5, 0)}
+					AnchorPoint={new Vector2(0, 0.5)}
+					BackgroundTransparency={1}
+				/>
+			)}
 
-			{caption !== undefined && (
+			{displayCaption !== undefined && (
 				<textlabel
-					Text={caption}
+					Text={displayCaption}
 					Font="Gotham"
 					TextColor3={new Color3(1, 1, 1)}
 					TextTransparency={foregroundTransparency}
@@ -67,7 +79,7 @@ function ActionButton({ id, icon, caption, layoutOrder }: Props) {
 					TextXAlignment="Left"
 					TextYAlignment="Center"
 					Size={new UDim2(1, 0, 1, 0)}
-					Position={new UDim2(0, MARGIN * 2 + 16, 0, 0)}
+					Position={new UDim2(0, icon !== undefined ? MARGIN * 2 + 16 : MARGIN, 0, 0)}
 					BackgroundTransparency={1}
 				/>
 			)}

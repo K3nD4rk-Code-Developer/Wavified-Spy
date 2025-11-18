@@ -1,8 +1,13 @@
 import { RemoteLogActions } from "./actions";
-import { RemoteLogState } from "./model";
+import { PathNotation, RemoteLogState } from "./model";
 
 const initialState: RemoteLogState = {
 	logs: [],
+	paused: false,
+	pausedRemotes: new Set(),
+	blockedRemotes: new Set(),
+	noActors: false,
+	pathNotation: PathNotation.Dot,
 };
 
 export default function remoteLogReducer(state = initialState, action: RemoteLogActions): RemoteLogState {
@@ -23,9 +28,6 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				logs: state.logs.map((log) => {
 					if (log.id === action.id) {
 						const outgoing = [action.signal, ...log.outgoing];
-						if (outgoing.size() > 50) {
-							outgoing.pop();
-						}
 						return {
 							...log,
 							outgoing,
@@ -80,6 +82,63 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				remoteForSignalSelected: signalSelected !== undefined ? action.remote : undefined,
 			};
 		}
+		case "TOGGLE_PAUSED":
+			return {
+				...state,
+				paused: !state.paused,
+			};
+		case "TOGGLE_REMOTE_PAUSED": {
+			const pausedRemotes = new Set<string>();
+			state.pausedRemotes.forEach((id) => pausedRemotes.add(id));
+			if (pausedRemotes.has(action.id)) {
+				pausedRemotes.delete(action.id);
+			} else {
+				pausedRemotes.add(action.id);
+			}
+			return {
+				...state,
+				pausedRemotes,
+			};
+		}
+		case "TOGGLE_REMOTE_BLOCKED": {
+			const blockedRemotes = new Set<string>();
+			state.blockedRemotes.forEach((id) => blockedRemotes.add(id));
+			if (blockedRemotes.has(action.id)) {
+				blockedRemotes.delete(action.id);
+			} else {
+				blockedRemotes.add(action.id);
+			}
+			return {
+				...state,
+				blockedRemotes,
+			};
+		}
+		case "TOGGLE_BLOCK_ALL_REMOTES": {
+			// Check if all remotes are currently blocked
+			const allBlocked = state.logs.size() > 0 && state.logs.every((log) => state.blockedRemotes.has(log.id));
+
+			const blockedRemotes = new Set<string>();
+			if (!allBlocked) {
+				// Block all if not all are blocked
+				state.logs.forEach((log) => blockedRemotes.add(log.id));
+			}
+			// Otherwise leave it empty to unblock all
+
+			return {
+				...state,
+				blockedRemotes,
+			};
+		}
+		case "TOGGLE_NO_ACTORS":
+			return {
+				...state,
+				noActors: !state.noActors,
+			};
+		case "SET_PATH_NOTATION":
+			return {
+				...state,
+				pathNotation: action.notation,
+			};
 		default:
 			return state;
 	}

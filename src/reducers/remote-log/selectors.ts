@@ -8,6 +8,11 @@ export const selectRemoteLogsOutgoing = (state: RootState) => state.remoteLog.lo
 export const selectRemoteIdSelected = (state: RootState) => state.remoteLog.remoteSelected;
 export const selectSignalIdSelected = (state: RootState) => state.remoteLog.signalSelected;
 export const selectSignalIdSelectedRemote = (state: RootState) => state.remoteLog.remoteForSignalSelected;
+export const selectPaused = (state: RootState) => state.remoteLog.paused;
+export const selectPausedRemotes = (state: RootState) => state.remoteLog.pausedRemotes;
+export const selectBlockedRemotes = (state: RootState) => state.remoteLog.blockedRemotes;
+export const selectNoActors = (state: RootState) => state.remoteLog.noActors;
+export const selectPathNotation = (state: RootState) => state.remoteLog.pathNotation;
 
 export const makeSelectRemoteLog = () =>
 	createSelector([selectRemoteLogs, (_: unknown, id: string) => id], (logs, id) => logs.find((log) => log.id === id));

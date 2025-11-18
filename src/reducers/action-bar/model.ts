@@ -14,10 +14,16 @@ export interface ActionBarStates {
 	copyScript: ActionState;
 	viewScript: ActionState;
 	pause: ActionState;
+	pauseRemote: ActionState;
+	blockRemote: ActionState;
+	blockAll: ActionState;
+	viewScript: ActionState;
+	runRemote: ActionState;
 }
 
 export interface ActionState {
 	id: string;
 	disabled: boolean;
 	active: boolean;
+	caption?: string;
 }

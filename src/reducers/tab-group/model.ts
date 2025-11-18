@@ -8,6 +8,7 @@ export interface TabGroupColumn {
 	caption: string;
 	type: TabType;
 	canClose: boolean;
+	scriptContent?: string;
 }
 
 export enum TabType {
@@ -15,4 +16,5 @@ export enum TabType {
 	Event = "event",
 	Function = "function",
 	Script = "script",
+	Settings = "settings",
 }

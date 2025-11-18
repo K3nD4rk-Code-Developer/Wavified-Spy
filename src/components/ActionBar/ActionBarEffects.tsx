@@ -7,6 +7,12 @@ import {
 	removeOutgoingSignal,
 	selectRemoteIdSelected,
 	selectSignalSelected,
+	togglePaused,
+	selectRemoteLogIds,
+	setRemoteSelected,
+	toggleRemotePaused,
+	toggleRemoteBlocked,
+	toggleBlockAllRemotes,
 } from "reducers/remote-log";
 import { removeRemoteLog } from "reducers/remote-log";
 import { setActionEnabled } from "reducers/action-bar";
@@ -92,13 +98,16 @@ function ActionBarEffects() {
 	});
 
 	useActionEffect("copyScript", () => {
-		if (signal) {
+		// Check if we're viewing a script tab
+		if (currentTab?.type === TabType.Script && currentTab.scriptContent) {
+			setclipboard?.(currentTab.scriptContent);
+		} else if (signal) {
 			// Convert Record<number, unknown> to array
 			const parameters: unknown[] = [];
 			for (const [key, value] of pairs(signal.parameters)) {
 				parameters[key as number] = value;
 			}
-			const scriptText = genScript(signal.remote, parameters);
+			const scriptText = genScript(signal.remote, parameters, pathNotation);
 			setclipboard?.(scriptText);
 
 			// Also open the script viewer
@@ -164,6 +173,95 @@ function ActionBarEffects() {
 			);
 
 			notify(`Opened ${uniqueName} in script viewer`);
+		}
+	});
+
+	useActionEffect("pause", () => {
+		dispatch(togglePaused());
+	});
+
+	const remoteIds = useRootSelector(selectRemoteLogIds);
+	const paused = useRootSelector(selectPaused);
+	const pausedRemotes = useRootSelector(selectPausedRemotes);
+	const blockedRemotes = useRootSelector(selectBlockedRemotes);
+
+	useActionEffect("navigatePrevious", () => {
+		if (remoteId !== undefined) {
+			const currentIndex = remoteIds.indexOf(remoteId);
+			if (currentIndex > 0) {
+				dispatch(setRemoteSelected(remoteIds[currentIndex - 1]));
+			}
+		} else if (remoteIds.size() > 0) {
+			dispatch(setRemoteSelected(remoteIds[remoteIds.size() - 1]));
+		}
+	});
+
+	useActionEffect("navigateNext", () => {
+		if (remoteId !== undefined) {
+			const currentIndex = remoteIds.indexOf(remoteId);
+			if (currentIndex < remoteIds.size() - 1) {
+				dispatch(setRemoteSelected(remoteIds[currentIndex + 1]));
+			}
+		} else if (remoteIds.size() > 0) {
+			dispatch(setRemoteSelected(remoteIds[0]));
+		}
+	});
+
+	useActionEffect("pauseRemote", () => {
+		if (remoteId !== undefined) {
+			dispatch(toggleRemotePaused(remoteId));
+		}
+	});
+
+	useActionEffect("blockRemote", () => {
+		if (remoteId !== undefined) {
+			dispatch(toggleRemoteBlocked(remoteId));
+		}
+	});
+
+	useActionEffect("blockAll", () => {
+		dispatch(toggleBlockAllRemotes());
+	});
+
+	useActionEffect("viewScript", () => {
+		if (signal) {
+			// Convert Record<number, unknown> to array
+			const parameters: unknown[] = [];
+			for (const [key, value] of pairs(signal.parameters)) {
+				parameters[key as number] = value;
+			}
+			const scriptText = genScript(signal.remote, parameters, pathNotation);
+
+			// Create a unique ID for the script tab
+			const scriptTabId = HttpService.GenerateGUID(false);
+			const tab = createTabColumn(scriptTabId, `Script - ${signal.name}`, TabType.Script, true, scriptText);
+
+			dispatch(pushTab(tab));
+			dispatch(setActiveTab(scriptTabId));
+		}
+	});
+
+	useActionEffect("runRemote", () => {
+		if (signal) {
+			// Convert Record<number, unknown> to array
+			const parameters: unknown[] = [];
+			for (const [key, value] of pairs(signal.parameters)) {
+				parameters[key as number] = value;
+			}
+			const scriptText = genScript(signal.remote, parameters, pathNotation);
+			
+			// Execute the script
+			if (loadstring) {
+				const [func, err] = loadstring(scriptText);
+				if (func) {
+					const [success, result] = pcall(func);
+					if (!success) {
+						warn("Failed to run remote:", result);
+					}
+				} else {
+					warn("Failed to load remote script:", err);
+				}
+			}
 		}
 	});
 

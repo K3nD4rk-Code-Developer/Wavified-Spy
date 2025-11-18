@@ -1,19 +1,9 @@
---[[
--- This file is generated automatically and is not intended to be modified.
--- To view the source code, see the 'src' folder on GitHub!
---
--- Author: 0866
--- License: MIT
--- GitHub: https://github.com/richie0866/remote-spy
---]]
-
 local instanceFromId = {}
 local idFromInstance = {}
 
 local modules = {}
 local currentlyLoading = {}
 
--- Module resolution
 
 local function loadModule(object, caller)
 	local module = modules[object]
@@ -27,9 +17,7 @@ local function loadModule(object, caller)
 
 		local currentObject = object
 		local depth = 0
-	
-		-- Keep looping until we reach the top of the dependency chain.
-		-- Throw an error if we encounter a circular dependency.
+
 		while currentObject do
 			depth = depth + 1
 			currentObject = currentlyLoading[currentObject]
@@ -49,7 +37,7 @@ local function loadModule(object, caller)
 
 	local data = module.fn()
 
-	if currentlyLoading[caller] == object then -- Thread-safe cleanup!
+	if currentlyLoading[caller] == object then
 		currentlyLoading[caller] = nil
 	end
 
@@ -70,8 +58,6 @@ local function start()
 		end
 	end
 end
-
--- Project setup
 
 local globalMt = {
 	__index = getfenv(0),

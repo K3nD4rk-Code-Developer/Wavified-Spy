@@ -55,6 +55,17 @@ export default function actionBarReducer(state = initialState, action: ActionBar
 					},
 				},
 			};
+		case "SET_ACTION_CAPTION":
+			return {
+				...state,
+				actions: {
+					...state.actions,
+					[action.id]: {
+						...state.actions[action.id],
+						caption: action.caption,
+					},
+				},
+			};
 		default:
 			return state;
 	}

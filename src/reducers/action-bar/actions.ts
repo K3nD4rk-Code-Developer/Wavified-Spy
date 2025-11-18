@@ -22,7 +22,16 @@ export function deactivateAction(id: keyof ActionBarStates) {
 	} as const;
 }
 
+export function setActionCaption(id: keyof ActionBarStates, caption?: string) {
+	return {
+		type: "SET_ACTION_CAPTION",
+		id,
+		caption,
+	} as const;
+}
+
 export type ActionBarActions =
 	| ReturnType<typeof setActionEnabled>
 	| ReturnType<typeof activateAction>
-	| ReturnType<typeof deactivateAction>;
+	| ReturnType<typeof deactivateAction>
+	| ReturnType<typeof setActionCaption>;

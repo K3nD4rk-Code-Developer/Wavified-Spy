@@ -23,4 +23,5 @@ export interface ActionState {
 	id: string;
 	disabled: boolean;
 	active: boolean;
+	caption?: string;
 }

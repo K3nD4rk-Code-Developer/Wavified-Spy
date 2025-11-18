@@ -109,11 +109,20 @@ function ActionBarEffects() {
 		if (currentTab?.type === TabType.Script && currentTab.scriptContent) {
 			setclipboard?.(currentTab.scriptContent);
 		} else if (signal) {
-			// Convert Record<number, unknown> to array
-			const parameters: unknown[] = [];
+			// Convert Record<number, unknown> to sequential array
+			const paramEntries: [number, unknown][] = [];
 			for (const [key, value] of pairs(signal.parameters)) {
-				parameters[key as number] = value;
+				paramEntries.push([key as number, value]);
 			}
+			// Sort by key
+			paramEntries.sort((a, b) => a[0] < b[0]);
+
+			// Create sequential array starting from index 1 (Lua convention)
+			const parameters: unknown[] = [];
+			for (const [_, value] of paramEntries) {
+				parameters.push(value);
+			}
+
 			const scriptText = genScript(signal.remote, parameters, pathNotation);
 			setclipboard?.(scriptText);
 
@@ -238,11 +247,20 @@ function ActionBarEffects() {
 
 	useActionEffect("runRemote", () => {
 		if (signal) {
-			// Convert Record<number, unknown> to array
-			const parameters: unknown[] = [];
+			// Convert Record<number, unknown> to sequential array
+			const paramEntries: [number, unknown][] = [];
 			for (const [key, value] of pairs(signal.parameters)) {
-				parameters[key as number] = value;
+				paramEntries.push([key as number, value]);
 			}
+			// Sort by key
+			paramEntries.sort((a, b) => a[0] < b[0]);
+
+			// Create sequential array starting from index 1 (Lua convention)
+			const parameters: unknown[] = [];
+			for (const [_, value] of paramEntries) {
+				parameters.push(value);
+			}
+
 			const scriptText = genScript(signal.remote, parameters, pathNotation);
 
 			// Execute the script

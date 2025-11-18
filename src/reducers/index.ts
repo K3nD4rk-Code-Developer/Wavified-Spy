@@ -1,7 +1,7 @@
 import Rodux from "@rbxts/rodux";
 import actionBarReducer, { ActionBarState } from "./action-bar";
 import remoteLogReducer, { RemoteLogState } from "./remote-log";
-import scriptReducer, { ScriptState } from "./script";
+import { scriptReducer, ScriptState } from "./script";
 import tabGroupReducer, { TabGroupState } from "./tab-group";
 import tracebackReducer, { TracebackState } from "./traceback";
 

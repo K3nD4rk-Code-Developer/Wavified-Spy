@@ -9,7 +9,7 @@ declare const Utility: {
 
 export function notify(message: string, lifetime: number = 3, isError: boolean = false) {
 	// Try to use Utility.UtilityNotify if available
-	if (typeOf(Utility) === "table" && Utility.UtilityNotify !== undefined) {
+	if (Utility !== undefined && typeOf(Utility) === "table" && Utility.UtilityNotify !== undefined) {
 		Utility.UtilityNotify(isError, message, lifetime);
 		return;
 	}

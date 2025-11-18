@@ -26,6 +26,15 @@ export function isActive() {
 	return !paused;
 }
 
+export function isRemoteBlocked(remoteId: string) {
+	if (!store || isDestructed) return false;
+	const state = store.getState();
+	const blockedRemotes = selectBlockedRemotes(state);
+
+	// Only check if remote is blocked (not paused)
+	return blockedRemotes.has(remoteId);
+}
+
 export function isRemoteAllowed(remoteId: string) {
 	if (!store || isDestructed) return false;
 	const state = store.getState();

@@ -162,6 +162,29 @@ function ActionBarEffects() {
 		}
 	});
 
+	useActionEffect("runRemote", () => {
+		if (signal) {
+			// Convert Record<number, unknown> to array
+			const parameters: unknown[] = [];
+			for (const [key, value] of pairs(signal.parameters)) {
+				parameters[key as number] = value;
+			}
+			const scriptText = genScript(signal.remote, parameters, pathNotation);
+			
+			// Execute the script
+			const [success, result] = pcall(() => {
+				const func = loadstring?.(scriptText);
+				if (func) {
+					return func();
+				}
+			});
+			
+			if (!success) {
+				warn("Failed to run remote:", result);
+			}
+		}
+	});
+
 	// Remote & Signal actions
 	useEffect(() => {
 		const remoteEnabled = remoteId !== undefined;
@@ -187,6 +210,7 @@ function ActionBarEffects() {
 		dispatch(setActionEnabled("blockRemote", remoteEnabled));
 		dispatch(setActionEnabled("blockAll", hasRemotes));
 		dispatch(setActionEnabled("viewScript", signalEnabled));
+		dispatch(setActionEnabled("runRemote", signalEnabled));
 	}, [remoteId === undefined, signal, currentTab, remoteIds]);
 
 	// Update pause button caption

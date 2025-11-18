@@ -52,10 +52,62 @@ export function codifyTable(object: object, level = 0, context: CodifyContext = 
 	const lines = [];
 	const indent = string.rep("	", level + 1);
 
+	// Check if this is an array (sequential numeric keys starting from 1)
+	let isArray = true;
+	let maxIndex = 0;
+	const entries: [unknown, unknown][] = [];
+
 	for (const [key, value] of pairs(object)) {
 		if (typeIs(value, "function") || typeIs(value, "thread")) {
 			continue;
 		}
+		entries.push([key, value]);
+
+		if (typeIs(key, "number")) {
+			const numKey = key as number;
+			if (numKey > maxIndex) {
+				maxIndex = numKey;
+			}
+		} else {
+			isArray = false;
+		}
+	}
+
+	// Verify it's a sequential array
+	if (isArray && entries.size() > 0) {
+		for (let i = 1; i <= maxIndex; i++) {
+			let found = false;
+			for (const [key] of entries) {
+				if (key === i) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				isArray = false;
+				break;
+			}
+		}
+	}
+
+	// Format as array if it's sequential
+	if (isArray && entries.size() > 0) {
+		// Sort by numeric key
+		const sortedEntries = entries.sort((a, b) => (a[0] as number) < (b[0] as number));
+
+		for (const [_, value] of sortedEntries) {
+			lines.push(`${indent}${codify(value, level, context)}`);
+		}
+
+		if (lines.size() === 0) {
+			return "{}";
+		}
+
+		return `{\n${lines.join(",\n")}\n${indent.sub(1, -2)}}`;
+	}
+
+	// Format as dictionary
+	for (const [key, value] of entries) {
 		lines.push(`${indent}[${codify(key, level, context)}] = ${codify(value, level, context)}`);
 	}
 
@@ -69,10 +121,62 @@ export function codifyTable(object: object, level = 0, context: CodifyContext = 
 export function codifyTableFlat(object: object, context: CodifyContext = { pathNotation: "dot" }): string {
 	const lines = [];
 
+	// Check if this is an array (sequential numeric keys starting from 1)
+	let isArray = true;
+	let maxIndex = 0;
+	const entries: [unknown, unknown][] = [];
+
 	for (const [key, value] of pairs(object)) {
 		if (typeIs(value, "function") || typeIs(value, "thread")) {
 			continue;
 		}
+		entries.push([key, value]);
+
+		if (typeIs(key, "number")) {
+			const numKey = key as number;
+			if (numKey > maxIndex) {
+				maxIndex = numKey;
+			}
+		} else {
+			isArray = false;
+		}
+	}
+
+	// Verify it's a sequential array
+	if (isArray && entries.size() > 0) {
+		for (let i = 1; i <= maxIndex; i++) {
+			let found = false;
+			for (const [key] of entries) {
+				if (key === i) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				isArray = false;
+				break;
+			}
+		}
+	}
+
+	// Format as array if it's sequential
+	if (isArray && entries.size() > 0) {
+		// Sort by numeric key
+		const sortedEntries = entries.sort((a, b) => (a[0] as number) < (b[0] as number));
+
+		for (const [_, value] of sortedEntries) {
+			lines.push(codify(value, -1, context));
+		}
+
+		if (lines.size() === 0) {
+			return "{}";
+		}
+
+		return `{ ${lines.join(", ")} }`;
+	}
+
+	// Format as dictionary
+	for (const [key, value] of entries) {
 		lines.push(`[${codify(key, -1, context)}] = ${codify(value, -1, context)}`);
 	}
 

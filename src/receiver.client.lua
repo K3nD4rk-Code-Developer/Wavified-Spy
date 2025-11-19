@@ -7,6 +7,9 @@ local makeSelectRemoteLog = TS.import(script, script.Parent, "reducers", "remote
 
 local CALLER_STACK_LEVEL = if KRNL_LOADED then 6 else 4
 
+-- ExtraData for tracking execution context (Actor vs Main thread)
+local ExtraData = nil
+
 local FireServer = Instance.new("RemoteEvent").FireServer
 local InvokeServer = Instance.new("RemoteFunction").InvokeServer
 local IsA = game.IsA
@@ -87,7 +90,10 @@ local function onReceive(self, params, returns)
 			return
 		end
 
-		local signal = logger.createOutgoingSignal(self, script, callback, traceback, params, returns)
+		-- Determine if this call is from an actor (either ExtraData.IsActor or legacy detection)
+		local isActor = (ExtraData and ExtraData.IsActor) or isFromActor(script, callback)
+
+		local signal = logger.createOutgoingSignal(self, script, callback, traceback, params, returns, isActor)
 
 		if store.get(function(state)
 			return selectRemoteLog(state, remoteId)
@@ -148,4 +154,146 @@ refs.__namecall = hookmetamethod(game, "__namecall", function(self, ...)
 	end
 
 	return refs.__namecall(self, ...)
+end)
+
+-- Actor Detection System
+local function generateActorCode()
+	-- This generates a self-contained script that runs in each Actor
+	-- The script sets ExtraData.IsActor = true and sets up the same hooks
+	local actorCode = [[
+		-- Actor Context Marker
+		local ExtraData = { IsActor = true }
+
+		-- Get required functions
+		local hookfunction = hookfunction
+		local hookmetamethod = hookmetamethod
+		local getnamecallmethod = getnamecallmethod
+		local getcallingscript = getcallingscript
+
+		if not hookfunction then return end
+
+		if not getcallingscript then
+			function getcallingscript()
+				return nil
+			end
+		end
+
+		-- Import necessary modules (they should be accessible from actors)
+		local ReplicatedStorage = game:GetService("ReplicatedStorage")
+		local success, TS = pcall(function()
+			return require(ReplicatedStorage.TS.include.RuntimeLib)
+		end)
+
+		if not success then return end
+
+		local logger = TS.import(ReplicatedStorage.TS, ReplicatedStorage.TS, "reducers", "remote-log")
+		local store = TS.import(ReplicatedStorage.TS, ReplicatedStorage.TS, "store")
+		local getFunctionScript = TS.import(ReplicatedStorage.TS, ReplicatedStorage.TS, "utils", "function-util").getFunctionScript
+		local getInstanceId = TS.import(ReplicatedStorage.TS, ReplicatedStorage.TS, "utils", "instance-util").getInstanceId
+		local makeSelectRemoteLog = TS.import(ReplicatedStorage.TS, ReplicatedStorage.TS, "reducers", "remote-log", "selectors").makeSelectRemoteLog
+
+		local CALLER_STACK_LEVEL = if KRNL_LOADED then 6 else 4
+		local FireServer = Instance.new("RemoteEvent").FireServer
+		local InvokeServer = Instance.new("RemoteFunction").InvokeServer
+		local IsA = game.IsA
+		local refs = {}
+		local selectRemoteLog = makeSelectRemoteLog()
+
+		local function onReceive(self, params, returns)
+			local traceback = {}
+			local callback = debug.info(CALLER_STACK_LEVEL, "f")
+			local level, fn = 4, callback
+
+			while fn do
+				table.insert(traceback, fn)
+				level = level + 1
+				fn = debug.info(level, "f")
+			end
+
+			task.defer(function()
+				local remoteId = getInstanceId(self)
+				if not store.isRemoteAllowed(remoteId) then return end
+
+				local script = getcallingscript() or (callback and getFunctionScript(callback))
+
+				-- Pass ExtraData.IsActor = true to signal
+				local signal = logger.createOutgoingSignal(self, script, callback, traceback, params, returns, true)
+
+				if store.get(function(state)
+					return selectRemoteLog(state, remoteId)
+				end) then
+					store.dispatch(logger.pushOutgoingSignal(remoteId, signal))
+				else
+					local remoteLog = logger.createRemoteLog(self, signal)
+					store.dispatch(logger.pushRemoteLog(remoteLog))
+				end
+			end)
+		end
+
+		-- Hook FireServer
+		refs.FireServer = hookfunction(FireServer, function(self, ...)
+			if self and store.isActive() and typeof(self) == "Instance" and self:IsA("RemoteEvent") then
+				local remoteId = getInstanceId(self)
+				if store.isRemoteBlocked(remoteId) then return end
+				onReceive(self, { ... })
+			end
+			return refs.FireServer(self, ...)
+		end)
+
+		-- Hook InvokeServer
+		refs.InvokeServer = hookfunction(InvokeServer, function(self, ...)
+			if self and store.isActive() and typeof(self) == "Instance" and self:IsA("RemoteFunction") then
+				local remoteId = getInstanceId(self)
+				if store.isRemoteBlocked(remoteId) then return end
+				onReceive(self, { ... })
+			end
+			return refs.InvokeServer(self, ...)
+		end)
+
+		-- Hook __namecall
+		refs.__namecall = hookmetamethod(game, "__namecall", function(self, ...)
+			local method = getnamecallmethod()
+			if (store.isActive() and method == "FireServer" and IsA(self, "RemoteEvent")) or
+			   (store.isActive() and method == "InvokeServer" and IsA(self, "RemoteFunction")) then
+				local remoteId = getInstanceId(self)
+				if store.isRemoteBlocked(remoteId) then return end
+				onReceive(self, { ... })
+			end
+			return refs.__namecall(self, ...)
+		end)
+	]]
+
+	return actorCode
+end
+
+local function runOnActors()
+	-- Check if executor supports actor functions
+	if not getactors or not run_on_actor then
+		return
+	end
+
+	-- Check if actor detection is disabled in settings
+	if store.isNoActors() then
+		return
+	end
+
+	local actors = getactors()
+	if not actors then
+		return
+	end
+
+	local actorCode = generateActorCode()
+
+	-- Run the actor code in each Actor's context
+	for _, actor in ipairs(actors) do
+		local success, err = pcall(run_on_actor, actor, actorCode)
+		if not success then
+			warn(`[Wavified-Spy] Failed to initialize actor {actor:GetFullName()}: {err}`)
+		end
+	end
+end
+
+-- Initialize actor detection
+task.defer(function()
+	runOnActors()
 end)

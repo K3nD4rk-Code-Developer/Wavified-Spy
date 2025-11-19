@@ -37,4 +37,5 @@ export interface OutgoingSignal {
 	caller?: LocalScript | ModuleScript;
 	callback: Callback;
 	traceback: Callback[];
+	isActor?: boolean;
 }

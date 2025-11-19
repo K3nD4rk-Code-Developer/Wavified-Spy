@@ -29,6 +29,7 @@ import { notify } from "utils/notify";
 import { generateUniqueScriptName } from "utils/script-tab-util";
 import { createTabColumn } from "reducers/tab-group/utils";
 import { HttpService } from "@rbxts/services";
+import { setTracebackCallStack } from "reducers/traceback";
 
 declare const decompile: ((script: LuaSourceContainer) => string) | undefined;
 declare const loadstring: ((source: string) => LuaTuple<[() => void, undefined] | [undefined, string]>) | undefined;
@@ -47,6 +48,13 @@ function ActionBarEffects() {
 	const signal = useRootSelector(selectSignalSelected);
 	const tabs = useRootSelector(selectTabs);
 	const pathNotation = useRootSelector(selectPathNotation);
+
+	// Auto-populate traceback when signal changes
+	useEffect(() => {
+		if (signal) {
+			dispatch(setTracebackCallStack(signal.traceback));
+		}
+	}, [signal]);
 
 	useActionEffect("copy", () => {
 		if (remote) {
@@ -185,6 +193,12 @@ function ActionBarEffects() {
 			);
 
 			notify(`Opened ${uniqueName} in script viewer`);
+		}
+	});
+
+	useActionEffect("traceback", () => {
+		if (signal) {
+			dispatch(setTracebackCallStack(signal.traceback));
 		}
 	});
 

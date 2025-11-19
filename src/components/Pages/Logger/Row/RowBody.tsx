@@ -62,6 +62,10 @@ function RowBody({ signal }: Props) {
 					description={signal.caller ? formatEscapes(getInstancePath(signal.caller)) : "No script found"}
 					wrapped
 				/>
+				<RowCaption
+					text="Called from Actor"
+					description={signal.isActor ? "Yes" : "No"}
+				/>
 
 				<uipadding
 					PaddingLeft={new UDim(0, 58)}

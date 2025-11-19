@@ -18,6 +18,7 @@ export function createOutgoingSignal(
 	traceback: Callback[],
 	parameters: Record<number, unknown>,
 	returns?: Record<number, unknown>,
+	isActor?: boolean,
 ): OutgoingSignal {
 	return {
 		id: `signal-${nextId++}`,
@@ -31,6 +32,7 @@ export function createOutgoingSignal(
 		caller,
 		callback,
 		traceback,
+		isActor,
 	};
 }
 

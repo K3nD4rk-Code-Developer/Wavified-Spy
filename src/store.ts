@@ -4,6 +4,7 @@ import {
 	selectPaused,
 	selectPausedRemotes,
 	selectBlockedRemotes,
+	selectNoActors,
 	selectShowRemoteEvents,
 	selectShowRemoteFunctions,
 	selectShowBindableEvents,
@@ -60,6 +61,12 @@ export function isRemoteAllowed(remoteId: string) {
 	if (pausedRemotes.has(remoteId)) return false;
 
 	return true;
+}
+
+export function isNoActors() {
+	if (!store || isDestructed) return false;
+	const state = store.getState();
+	return selectNoActors(state);
 }
 
 export function isShowRemoteEvents() {

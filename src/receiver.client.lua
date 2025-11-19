@@ -101,6 +101,11 @@ local function onReceive(self, params, returns)
 
 		local script = getcallingscript() or (callback and getFunctionScript(callback))
 
+		-- Check if actor detection is disabled and the calling script is from an actor
+		if store.isNoActors() and isFromActor(script, callback) then
+			return
+		end
+
 		-- Detect if this call is from an actor by checking script ancestry
 		local isActor = isFromActor(script, callback)
 

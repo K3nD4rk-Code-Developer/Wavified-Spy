@@ -6,6 +6,7 @@ const initialState: RemoteLogState = {
 	paused: false,
 	pausedRemotes: new Set(),
 	blockedRemotes: new Set(),
+	noActors: false,
 	showRemoteEvents: true,
 	showRemoteFunctions: true,
 	showBindableEvents: false,
@@ -132,6 +133,11 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				blockedRemotes,
 			};
 		}
+		case "TOGGLE_NO_ACTORS":
+			return {
+				...state,
+				noActors: !state.noActors,
+			};
 		case "TOGGLE_SHOW_REMOTE_EVENTS":
 			return {
 				...state,

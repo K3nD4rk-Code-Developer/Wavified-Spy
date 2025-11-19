@@ -22,7 +22,8 @@ export default function ActionBar() {
 				BackgroundTransparency={1}
 				BorderSizePixel={0}
 				ClipsDescendants={true}
-				ScrollBarThickness={6}
+				ScrollBarThickness={1}
+				ScrollBarImageTransparency={0.8}
 				ScrollingDirection={Enum.ScrollingDirection.X}
 				CanvasSize={new UDim2(0, 0, 0, 0)}
 				AutomaticCanvasSize={Enum.AutomaticSize.X}
@@ -41,7 +42,7 @@ export default function ActionBar() {
 				<ActionLine order={8} />
 
 				<ActionButton layoutOrder={9} id="traceback" icon="rbxassetid://9887697255" caption="Traceback" />
-				<ActionButton layoutOrder={10} id="copyPath" icon="rbxassetid://9887697099" caption="Copy as path" />
+				<ActionButton layoutOrder={10} id="copyPath" icon="rbxassetid://9887697099" caption="Copy Path" />
 				<ActionButton layoutOrder={11} id="copyScript" icon="rbxassetid://9887697099" caption="Copy Script" />
 				<ActionButton layoutOrder={12} id="viewScript" icon="rbxassetid://9887697255" caption="View Script" />
 

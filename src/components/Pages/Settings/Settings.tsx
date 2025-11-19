@@ -1,7 +1,8 @@
 import Button from "components/Button";
 import Container from "components/Container";
 import Roact from "@rbxts/roact";
-import { withHooksPure } from "@rbxts/roact-hooked";
+import { withHooksPure, useState, useEffect } from "@rbxts/roact-hooked";
+import { UserInputService } from "@rbxts/services";
 import { useRootDispatch, useRootSelector } from "hooks/use-root-store";
 import {
 	selectNoActors,
@@ -32,6 +33,7 @@ function Settings() {
 	const showBindableFunctions = useRootSelector(selectShowBindableFunctions);
 	const pathNotation = useRootSelector(selectPathNotation);
 	const toggleKey = useRootSelector(selectToggleKey);
+	const [isListeningForKey, setIsListeningForKey] = useState(false);
 
 	const handleToggleNoActors = () => {
 		dispatch(toggleNoActors());
@@ -60,6 +62,26 @@ function Settings() {
 	const handleToggleKeyChange = (key: Enum.KeyCode) => {
 		dispatch(setToggleKey(key));
 	};
+
+	const startListeningForKey = () => {
+		setIsListeningForKey(true);
+	};
+
+	// Listen for key press when in listening mode
+	useEffect(() => {
+		if (!isListeningForKey) return;
+
+		const connection = UserInputService.InputBegan.Connect((input) => {
+			if (input.UserInputType === Enum.UserInputType.Keyboard) {
+				handleToggleKeyChange(input.KeyCode);
+				setIsListeningForKey(false);
+			}
+		});
+
+		return () => {
+			connection.Disconnect();
+		};
+	}, [isListeningForKey]);
 
 	return (
 		<Container>
@@ -179,7 +201,7 @@ function Settings() {
 						/>
 
 						<textlabel
-							Text="Choose which key to press to show/hide the UI"
+							Text="Press any key to set as the UI toggle keybind"
 							TextSize={12}
 							Font="Gotham"
 							TextColor3={new Color3(0.7, 0.7, 0.7)}
@@ -191,7 +213,7 @@ function Settings() {
 						/>
 					</frame>
 
-					{/* Buttons */}
+					{/* Keybind Display and Change Button */}
 					<frame Size={new UDim2(1, 0, 0, 36)} BackgroundTransparency={1}>
 						<uilistlayout
 							FillDirection={Enum.FillDirection.Horizontal}
@@ -199,109 +221,35 @@ function Settings() {
 							Padding={new UDim(0, 8)}
 						/>
 
-						<Button
-							onClick={() => handleToggleKeyChange(Enum.KeyCode.RightControl)}
-							size={new UDim2(0, 80, 0, 32)}
-							background={
-								toggleKey === Enum.KeyCode.RightControl
-									? new Color3(0.3, 0.7, 0.3)
-									: new Color3(0.2, 0.2, 0.2)
-							}
-							transparency={0}
-							cornerRadius={new UDim(0, 6)}
+						{/* Current Key Display */}
+						<frame
+							Size={new UDim2(0, 150, 0, 32)}
+							BackgroundColor3={new Color3(0.15, 0.15, 0.15)}
+							BorderSizePixel={0}
 						>
+							<uicorner CornerRadius={new UDim(0, 6)} />
 							<textlabel
-								Text="RCtrl"
+								Text={`Current: ${toggleKey.Name}`}
 								TextSize={14}
-								Font="GothamBold"
+								Font="Gotham"
 								TextColor3={new Color3(1, 1, 1)}
 								Size={new UDim2(1, 0, 1, 0)}
 								BackgroundTransparency={1}
 								TextXAlignment="Center"
 								TextYAlignment="Center"
 							/>
-						</Button>
+						</frame>
 
+						{/* Change Keybind Button */}
 						<Button
-							onClick={() => handleToggleKeyChange(Enum.KeyCode.RightShift)}
-							size={new UDim2(0, 80, 0, 32)}
-							background={
-								toggleKey === Enum.KeyCode.RightShift
-									? new Color3(0.3, 0.7, 0.3)
-									: new Color3(0.2, 0.2, 0.2)
-							}
+							onClick={startListeningForKey}
+							size={new UDim2(0, 150, 0, 32)}
+							background={isListeningForKey ? new Color3(0.3, 0.7, 0.3) : new Color3(0.2, 0.5, 0.8)}
 							transparency={0}
 							cornerRadius={new UDim(0, 6)}
 						>
 							<textlabel
-								Text="RShift"
-								TextSize={14}
-								Font="GothamBold"
-								TextColor3={new Color3(1, 1, 1)}
-								Size={new UDim2(1, 0, 1, 0)}
-								BackgroundTransparency={1}
-								TextXAlignment="Center"
-								TextYAlignment="Center"
-							/>
-						</Button>
-
-						<Button
-							onClick={() => handleToggleKeyChange(Enum.KeyCode.Insert)}
-							size={new UDim2(0, 80, 0, 32)}
-							background={
-								toggleKey === Enum.KeyCode.Insert
-									? new Color3(0.3, 0.7, 0.3)
-									: new Color3(0.2, 0.2, 0.2)
-							}
-							transparency={0}
-							cornerRadius={new UDim(0, 6)}
-						>
-							<textlabel
-								Text="Insert"
-								TextSize={14}
-								Font="GothamBold"
-								TextColor3={new Color3(1, 1, 1)}
-								Size={new UDim2(1, 0, 1, 0)}
-								BackgroundTransparency={1}
-								TextXAlignment="Center"
-								TextYAlignment="Center"
-							/>
-						</Button>
-
-						<Button
-							onClick={() => handleToggleKeyChange(Enum.KeyCode.Delete)}
-							size={new UDim2(0, 80, 0, 32)}
-							background={
-								toggleKey === Enum.KeyCode.Delete
-									? new Color3(0.3, 0.7, 0.3)
-									: new Color3(0.2, 0.2, 0.2)
-							}
-							transparency={0}
-							cornerRadius={new UDim(0, 6)}
-						>
-							<textlabel
-								Text="Delete"
-								TextSize={14}
-								Font="GothamBold"
-								TextColor3={new Color3(1, 1, 1)}
-								Size={new UDim2(1, 0, 1, 0)}
-								BackgroundTransparency={1}
-								TextXAlignment="Center"
-								TextYAlignment="Center"
-							/>
-						</Button>
-
-						<Button
-							onClick={() => handleToggleKeyChange(Enum.KeyCode.End)}
-							size={new UDim2(0, 80, 0, 32)}
-							background={
-								toggleKey === Enum.KeyCode.End ? new Color3(0.3, 0.7, 0.3) : new Color3(0.2, 0.2, 0.2)
-							}
-							transparency={0}
-							cornerRadius={new UDim(0, 6)}
-						>
-							<textlabel
-								Text="End"
+								Text={isListeningForKey ? "Press a key..." : "Change Keybind"}
 								TextSize={14}
 								Font="GothamBold"
 								TextColor3={new Color3(1, 1, 1)}

@@ -180,7 +180,7 @@ local function generateActorCode()
 
 		-- First, verify the instance is in the game tree
 		if not instance:IsDescendantOf(game) then
-			warn("[Wavified-Spy] Module is not parented to game yet, cannot generate path")
+			-- Not in game tree - this is normal for executor environments
 			return nil
 		end
 
@@ -194,7 +194,7 @@ local function generateActorCode()
 		end
 
 		if not service then
-			warn("[Wavified-Spy] Could not find parent service for module")
+			-- Couldn't find service - return nil to trigger fallback
 			return nil
 		end
 
@@ -214,11 +214,12 @@ local function generateActorCode()
 	local modulePath = getInstancePath(moduleRoot)
 
 	if not modulePath then
-		warn("[Wavified-Spy] Failed to generate module path, actor detection disabled")
-		return ""
+		print("[Wavified-Spy] Module not in game tree, will use fallback search in actors")
+		-- Use a placeholder that will fail and trigger fallback search
+		modulePath = "nil"
+	else
+		print(`[Wavified-Spy] Generated actor module path: {modulePath}`)
 	end
-
-	print(`[Wavified-Spy] Generated actor module path: {modulePath}`)
 
 	local actorCode = string.format([[
 		-- Actor Context Marker
@@ -246,23 +247,31 @@ local function generateActorCode()
 
 		if success and result then
 			moduleRoot = result
+			print("[Wavified-Spy Actor] Module loaded from path: " .. tostring(moduleRoot:GetFullName()))
 		else
-			warn("[Wavified-Spy Actor] Failed to resolve primary module path: " .. tostring(result))
+			-- Try fallback locations (common for executor environments)
+			print("[Wavified-Spy Actor] Primary path failed, searching for module...")
 
-			-- Try fallback locations
-			local fallbacks = {
-				function() return game:GetService("ReplicatedStorage"):FindFirstChild("TS", true) end,
-				function() return game:GetService("ReplicatedStorage"):FindFirstChild("RemoteSpy", true) end,
-				function() return game:GetService("ReplicatedStorage"):FindFirstChild("Wavified-Spy", true) end,
+			local searchLocations = {
+				game:GetService("ReplicatedStorage"),
+				game:GetService("ReplicatedFirst"),
+				game:GetService("StarterPlayer"),
 			}
 
-			for _, fallback in ipairs(fallbacks) do
-				local ok, module = pcall(fallback)
-				if ok and module then
-					moduleRoot = module
-					warn("[Wavified-Spy Actor] Using fallback module: " .. tostring(module:GetFullName()))
-					break
+			local searchNames = {"TS", "RemoteSpy", "Wavified-Spy", "WavifiedSpy"}
+
+			for _, location in ipairs(searchLocations) do
+				for _, name in ipairs(searchNames) do
+					local ok, module = pcall(function()
+						return location:FindFirstChild(name, true)
+					end)
+					if ok and module and module:FindFirstChild("include") then
+						moduleRoot = module
+						print("[Wavified-Spy Actor] Found module: " .. tostring(module:GetFullName()))
+						break
+					end
 				end
+				if moduleRoot then break end
 			end
 		end
 
@@ -430,22 +439,7 @@ end
 
 -- Initialize actor detection
 task.defer(function()
-	-- Wait for module to be fully parented to game
-	local moduleRoot = script.Parent
-	local maxWait = 5
-	local waited = 0
-
-	while not moduleRoot:IsDescendantOf(game) and waited < maxWait do
-		task.wait(0.1)
-		waited = waited + 0.1
-	end
-
-	if not moduleRoot:IsDescendantOf(game) then
-		warn("[Wavified-Spy] Module never became parented to game, actor detection disabled")
-		return
-	end
-
-	print("[Wavified-Spy] Module fully loaded, initializing actor detection...")
+	print("[Wavified-Spy] Initializing actor detection...")
 	runOnActors()
 	monitorNewActors()
 end)

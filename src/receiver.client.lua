@@ -98,6 +98,10 @@ local function onReceive(self, params, returns)
 		-- Determine if this call is from an actor (either ExtraData.IsActor or legacy detection)
 		local isActor = (ExtraData and ExtraData.IsActor) or isFromActor(script, callback)
 
+		if isActor then
+			print(`[Wavified-Spy] 🎭 Actor remote detected: {self.Name}`)
+		end
+
 		local signal = logger.createOutgoingSignal(self, script, callback, traceback, params, returns, isActor)
 
 		if store.get(function(state)
@@ -218,6 +222,8 @@ local function generateActorCode()
 
 			task.defer(function()
 				local script = getcallingscript()
+
+				print(`[Wavified-Spy Actor] 🎭 Remote fired from actor: {self.Name}`)
 
 				-- Use shared logger and store
 				local signal = logger.createOutgoingSignal(self, script, callback, traceback, params, returns, true)

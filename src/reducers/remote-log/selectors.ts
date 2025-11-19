@@ -11,8 +11,10 @@ export const selectSignalIdSelectedRemote = (state: RootState) => state.remoteLo
 export const selectPaused = (state: RootState) => state.remoteLog.paused;
 export const selectPausedRemotes = (state: RootState) => state.remoteLog.pausedRemotes;
 export const selectBlockedRemotes = (state: RootState) => state.remoteLog.blockedRemotes;
-export const selectNoActors = (state: RootState) => state.remoteLog.noActors;
-export const selectNoBindables = (state: RootState) => state.remoteLog.noBindables;
+export const selectShowRemoteEvents = (state: RootState) => state.remoteLog.showRemoteEvents;
+export const selectShowRemoteFunctions = (state: RootState) => state.remoteLog.showRemoteFunctions;
+export const selectShowBindableEvents = (state: RootState) => state.remoteLog.showBindableEvents;
+export const selectShowBindableFunctions = (state: RootState) => state.remoteLog.showBindableFunctions;
 export const selectPathNotation = (state: RootState) => state.remoteLog.pathNotation;
 
 export const makeSelectRemoteLog = () =>

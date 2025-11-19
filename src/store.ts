@@ -4,8 +4,10 @@ import {
 	selectPaused,
 	selectPausedRemotes,
 	selectBlockedRemotes,
-	selectNoActors,
-	selectNoBindables,
+	selectShowRemoteEvents,
+	selectShowRemoteFunctions,
+	selectShowBindableEvents,
+	selectShowBindableFunctions,
 } from "reducers/remote-log";
 
 let store: Rodux.Store<RootState, Rodux.Action>;
@@ -60,16 +62,28 @@ export function isRemoteAllowed(remoteId: string) {
 	return true;
 }
 
-export function isNoActors() {
-	if (!store || isDestructed) return false;
+export function isShowRemoteEvents() {
+	if (!store || isDestructed) return true;
 	const state = store.getState();
-	return selectNoActors(state);
+	return selectShowRemoteEvents(state);
 }
 
-export function isNoBindables() {
+export function isShowRemoteFunctions() {
+	if (!store || isDestructed) return true;
+	const state = store.getState();
+	return selectShowRemoteFunctions(state);
+}
+
+export function isShowBindableEvents() {
 	if (!store || isDestructed) return false;
 	const state = store.getState();
-	return selectNoBindables(state);
+	return selectShowBindableEvents(state);
+}
+
+export function isShowBindableFunctions() {
+	if (!store || isDestructed) return false;
+	const state = store.getState();
+	return selectShowBindableFunctions(state);
 }
 
 export function dispatch(action: Rodux.AnyAction) {

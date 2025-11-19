@@ -6,8 +6,10 @@ const initialState: RemoteLogState = {
 	paused: false,
 	pausedRemotes: new Set(),
 	blockedRemotes: new Set(),
-	noActors: false,
-	noBindables: false,
+	showRemoteEvents: true,
+	showRemoteFunctions: true,
+	showBindableEvents: false,
+	showBindableFunctions: false,
 	pathNotation: PathNotation.Dot,
 };
 
@@ -130,15 +132,25 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				blockedRemotes,
 			};
 		}
-		case "TOGGLE_NO_ACTORS":
+		case "TOGGLE_SHOW_REMOTE_EVENTS":
 			return {
 				...state,
-				noActors: !state.noActors,
+				showRemoteEvents: !state.showRemoteEvents,
 			};
-		case "TOGGLE_NO_BINDABLES":
+		case "TOGGLE_SHOW_REMOTE_FUNCTIONS":
 			return {
 				...state,
-				noBindables: !state.noBindables,
+				showRemoteFunctions: !state.showRemoteFunctions,
+			};
+		case "TOGGLE_SHOW_BINDABLE_EVENTS":
+			return {
+				...state,
+				showBindableEvents: !state.showBindableEvents,
+			};
+		case "TOGGLE_SHOW_BINDABLE_FUNCTIONS":
+			return {
+				...state,
+				showBindableFunctions: !state.showBindableFunctions,
 			};
 		case "SET_PATH_NOTATION":
 			return {

@@ -14,8 +14,10 @@ export interface RemoteLogState {
 	paused: boolean;
 	pausedRemotes: Set<string>;
 	blockedRemotes: Set<string>;
-	noActors: boolean;
-	noBindables: boolean;
+	showRemoteEvents: boolean;
+	showRemoteFunctions: boolean;
+	showBindableEvents: boolean;
+	showBindableFunctions: boolean;
 	pathNotation: PathNotation;
 }
 

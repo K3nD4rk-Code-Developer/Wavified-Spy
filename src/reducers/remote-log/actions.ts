@@ -48,12 +48,20 @@ export function toggleBlockAllRemotes() {
 	return { type: "TOGGLE_BLOCK_ALL_REMOTES" } as const;
 }
 
-export function toggleNoActors() {
-	return { type: "TOGGLE_NO_ACTORS" } as const;
+export function toggleShowRemoteEvents() {
+	return { type: "TOGGLE_SHOW_REMOTE_EVENTS" } as const;
 }
 
-export function toggleNoBindables() {
-	return { type: "TOGGLE_NO_BINDABLES" } as const;
+export function toggleShowRemoteFunctions() {
+	return { type: "TOGGLE_SHOW_REMOTE_FUNCTIONS" } as const;
+}
+
+export function toggleShowBindableEvents() {
+	return { type: "TOGGLE_SHOW_BINDABLE_EVENTS" } as const;
+}
+
+export function toggleShowBindableFunctions() {
+	return { type: "TOGGLE_SHOW_BINDABLE_FUNCTIONS" } as const;
 }
 
 export function setPathNotation(notation: PathNotation) {
@@ -73,6 +81,8 @@ export type RemoteLogActions =
 	| ReturnType<typeof toggleRemotePaused>
 	| ReturnType<typeof toggleRemoteBlocked>
 	| ReturnType<typeof toggleBlockAllRemotes>
-	| ReturnType<typeof toggleNoActors>
-	| ReturnType<typeof toggleNoBindables>
+	| ReturnType<typeof toggleShowRemoteEvents>
+	| ReturnType<typeof toggleShowRemoteFunctions>
+	| ReturnType<typeof toggleShowBindableEvents>
+	| ReturnType<typeof toggleShowBindableFunctions>
 	| ReturnType<typeof setPathNotation>;

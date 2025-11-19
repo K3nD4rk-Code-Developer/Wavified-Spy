@@ -7,6 +7,7 @@ const initialState: RemoteLogState = {
 	pausedRemotes: new Set(),
 	blockedRemotes: new Set(),
 	noActors: false,
+	noBindables: false,
 	pathNotation: PathNotation.Dot,
 };
 
@@ -133,6 +134,11 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 			return {
 				...state,
 				noActors: !state.noActors,
+			};
+		case "TOGGLE_NO_BINDABLES":
+			return {
+				...state,
+				noBindables: !state.noBindables,
 			};
 		case "SET_PATH_NOTATION":
 			return {

@@ -52,6 +52,10 @@ export function toggleNoActors() {
 	return { type: "TOGGLE_NO_ACTORS" } as const;
 }
 
+export function toggleNoBindables() {
+	return { type: "TOGGLE_NO_BINDABLES" } as const;
+}
+
 export function setPathNotation(notation: PathNotation) {
 	return { type: "SET_PATH_NOTATION", notation } as const;
 }
@@ -70,4 +74,5 @@ export type RemoteLogActions =
 	| ReturnType<typeof toggleRemoteBlocked>
 	| ReturnType<typeof toggleBlockAllRemotes>
 	| ReturnType<typeof toggleNoActors>
+	| ReturnType<typeof toggleNoBindables>
 	| ReturnType<typeof setPathNotation>;

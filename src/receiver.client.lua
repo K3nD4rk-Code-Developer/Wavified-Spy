@@ -9,6 +9,8 @@ local CALLER_STACK_LEVEL = if KRNL_LOADED then 6 else 4
 
 local FireServer = Instance.new("RemoteEvent").FireServer
 local InvokeServer = Instance.new("RemoteFunction").InvokeServer
+local BindableEvent_Fire = Instance.new("BindableEvent").Fire
+local BindableFunction_Invoke = Instance.new("BindableFunction").Invoke
 local IsA = game.IsA
 
 local refs = {}
@@ -80,6 +82,11 @@ local function onReceive(self, params, returns)
 			return
 		end
 
+		-- Check if bindables are disabled and this is a bindable
+		if store.isNoBindables() and (self:IsA("BindableEvent") or self:IsA("BindableFunction")) then
+			return
+		end
+
 		local script = getcallingscript() or (callback and getFunctionScript(callback))
 
 		-- Check if actor detection is disabled and the calling script is from an actor
@@ -137,12 +144,42 @@ refs.InvokeServer = hookfunction(InvokeServer, function(self, ...)
 	return refs.InvokeServer(self, ...)
 end)
 
+refs.BindableEvent_Fire = hookfunction(BindableEvent_Fire, function(self, ...)
+	if self and store.isActive() and typeof(self) == "Instance" and self:IsA("BindableEvent") then
+		local remoteId = getInstanceId(self)
+
+		-- Check if remote is blocked BEFORE firing (paused remotes should still fire)
+		if store.isRemoteBlocked(remoteId) then
+			return -- Block the bindable from firing
+		end
+
+		onReceive(self, { ... })
+	end
+	return refs.BindableEvent_Fire(self, ...)
+end)
+
+refs.BindableFunction_Invoke = hookfunction(BindableFunction_Invoke, function(self, ...)
+	if self and store.isActive() and typeof(self) == "Instance" and self:IsA("BindableFunction") then
+		local remoteId = getInstanceId(self)
+
+		-- Check if remote is blocked BEFORE firing (paused remotes should still fire)
+		if store.isRemoteBlocked(remoteId) then
+			return -- Block the bindable from invoking
+		end
+
+		onReceive(self, { ... })
+	end
+	return refs.BindableFunction_Invoke(self, ...)
+end)
+
 refs.__namecall = hookmetamethod(game, "__namecall", function(self, ...)
 	local method = getnamecallmethod()
 
 	if
 		(store.isActive() and method == "FireServer" and IsA(self, "RemoteEvent")) or
-		(store.isActive() and method == "InvokeServer" and IsA(self, "RemoteFunction"))
+		(store.isActive() and method == "InvokeServer" and IsA(self, "RemoteFunction")) or
+		(store.isActive() and method == "Fire" and IsA(self, "BindableEvent")) or
+		(store.isActive() and method == "Invoke" and IsA(self, "BindableFunction"))
 	then
 		local remoteId = getInstanceId(self)
 

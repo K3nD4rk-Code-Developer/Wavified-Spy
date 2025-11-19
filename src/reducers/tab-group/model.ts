@@ -15,6 +15,8 @@ export enum TabType {
 	Home = "home",
 	Event = "event",
 	Function = "function",
+	BindableEvent = "bindable-event",
+	BindableFunction = "bindable-function",
 	Script = "script",
 	Settings = "settings",
 }

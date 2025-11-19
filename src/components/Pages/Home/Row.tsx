@@ -92,7 +92,17 @@ function Row({ onClick, id, order, selected }: Props) {
 
 			{/* Icon */}
 			<imagelabel
-				Image={remoteType === TabType.Event ? "rbxassetid://9904941486" : "rbxassetid://9904941685"}
+				Image={
+					remoteType === TabType.Event
+						? "rbxassetid://9904941486"
+						: remoteType === TabType.Function
+							? "rbxassetid://9904941685"
+							: remoteType === TabType.BindableEvent
+								? "rbxassetid://00000"
+								: remoteType === TabType.BindableFunction
+									? "rbxassetid://00000"
+									: ""
+				}
 				ImageTransparency={foregroundTransparency}
 				Size={new UDim2(0, 24, 0, 24)}
 				Position={new UDim2(0, 18, 0, 20)}

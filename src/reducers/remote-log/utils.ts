@@ -5,14 +5,23 @@ import { stringifyFunctionSignature } from "utils/function-util";
 
 let nextId = 0;
 
-export function createRemoteLog(object: RemoteEvent | RemoteFunction, signal?: OutgoingSignal): RemoteLog {
+export function createRemoteLog(
+	object: RemoteEvent | RemoteFunction | BindableEvent | BindableFunction,
+	signal?: OutgoingSignal,
+): RemoteLog {
 	const id = getInstanceId(object);
-	const remoteType = object.IsA("RemoteEvent") ? TabType.Event : TabType.Function;
+	const remoteType = object.IsA("RemoteEvent")
+		? TabType.Event
+		: object.IsA("RemoteFunction")
+			? TabType.Function
+			: object.IsA("BindableEvent")
+				? TabType.BindableEvent
+				: TabType.BindableFunction;
 	return { id, object, type: remoteType, outgoing: signal ? [signal] : [] };
 }
 
 export function createOutgoingSignal(
-	object: RemoteEvent | RemoteFunction,
+	object: RemoteEvent | RemoteFunction | BindableEvent | BindableFunction,
 	caller: LocalScript | ModuleScript | undefined,
 	callback: Callback,
 	traceback: Callback[],

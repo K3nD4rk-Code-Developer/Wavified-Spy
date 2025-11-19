@@ -12,6 +12,7 @@ export const selectPaused = (state: RootState) => state.remoteLog.paused;
 export const selectPausedRemotes = (state: RootState) => state.remoteLog.pausedRemotes;
 export const selectBlockedRemotes = (state: RootState) => state.remoteLog.blockedRemotes;
 export const selectNoActors = (state: RootState) => state.remoteLog.noActors;
+export const selectNoBindables = (state: RootState) => state.remoteLog.noBindables;
 export const selectPathNotation = (state: RootState) => state.remoteLog.pathNotation;
 
 export const makeSelectRemoteLog = () =>

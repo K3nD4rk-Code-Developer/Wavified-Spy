@@ -3,17 +3,22 @@ import Container from "components/Container";
 import Roact from "@rbxts/roact";
 import { withHooksPure } from "@rbxts/roact-hooked";
 import { useRootDispatch, useRootSelector } from "hooks/use-root-store";
-import { selectNoActors, selectPathNotation } from "reducers/remote-log";
-import { toggleNoActors, setPathNotation } from "reducers/remote-log";
+import { selectNoActors, selectNoBindables, selectPathNotation } from "reducers/remote-log";
+import { toggleNoActors, toggleNoBindables, setPathNotation } from "reducers/remote-log";
 import { PathNotation } from "reducers/remote-log/model";
 
 function Settings() {
 	const dispatch = useRootDispatch();
 	const noActors = useRootSelector(selectNoActors);
+	const noBindables = useRootSelector(selectNoBindables);
 	const pathNotation = useRootSelector(selectPathNotation);
 
-	const handleToggle = () => {
+	const handleToggleNoActors = () => {
 		dispatch(toggleNoActors());
+	};
+
+	const handleToggleNoBindables = () => {
+		dispatch(toggleNoBindables());
 	};
 
 	const handlePathNotationChange = (notation: PathNotation) => {
@@ -91,7 +96,7 @@ function Settings() {
 
 					{/* Toggle Switch */}
 					<Button
-						onClick={handleToggle}
+						onClick={handleToggleNoActors}
 						size={new UDim2(0, 50, 0, 28)}
 						background={noActors ? new Color3(0.3, 0.7, 0.3) : new Color3(0.3, 0.3, 0.3)}
 						transparency={0}
@@ -101,6 +106,67 @@ function Settings() {
 						<frame
 							Size={new UDim2(0, 22, 0, 22)}
 							Position={noActors ? new UDim2(1, -25, 0.5, 0) : new UDim2(0, 3, 0.5, 0)}
+							AnchorPoint={new Vector2(0, 0.5)}
+							BackgroundColor3={new Color3(1, 1, 1)}
+							BorderSizePixel={0}
+						>
+							<uicorner CornerRadius={new UDim(0, 11)} />
+						</frame>
+					</Button>
+				</frame>
+
+				{/* Bindables Setting */}
+				<frame Size={new UDim2(1, 0, 0, 70)} BackgroundTransparency={1}>
+					<uilistlayout
+						FillDirection={Enum.FillDirection.Horizontal}
+						VerticalAlignment={Enum.VerticalAlignment.Center}
+						Padding={new UDim(0, 12)}
+					/>
+
+					{/* Setting Label */}
+					<frame Size={new UDim2(1, -70, 1, 0)} BackgroundTransparency={1}>
+						<uilistlayout
+							FillDirection={Enum.FillDirection.Vertical}
+							HorizontalAlignment={Enum.HorizontalAlignment.Left}
+							Padding={new UDim(0, 4)}
+						/>
+
+						<textlabel
+							Text="Ignore Bindables"
+							TextSize={16}
+							Font="GothamBold"
+							TextColor3={new Color3(1, 1, 1)}
+							Size={new UDim2(1, 0, 0, 20)}
+							BackgroundTransparency={1}
+							TextXAlignment="Left"
+							TextYAlignment="Center"
+						/>
+
+						<textlabel
+							Text="When enabled, BindableEvent and BindableFunction calls will be ignored and not logged"
+							TextSize={12}
+							Font="Gotham"
+							TextColor3={new Color3(0.7, 0.7, 0.7)}
+							Size={new UDim2(1, 0, 0, 36)}
+							BackgroundTransparency={1}
+							TextXAlignment="Left"
+							TextYAlignment="Top"
+							TextWrapped={true}
+						/>
+					</frame>
+
+					{/* Toggle Switch */}
+					<Button
+						onClick={handleToggleNoBindables}
+						size={new UDim2(0, 50, 0, 28)}
+						background={noBindables ? new Color3(0.3, 0.7, 0.3) : new Color3(0.3, 0.3, 0.3)}
+						transparency={0}
+						cornerRadius={new UDim(0, 14)}
+					>
+						{/* Toggle Thumb */}
+						<frame
+							Size={new UDim2(0, 22, 0, 22)}
+							Position={noBindables ? new UDim2(1, -25, 0.5, 0) : new UDim2(0, 3, 0.5, 0)}
 							AnchorPoint={new Vector2(0, 0.5)}
 							BackgroundColor3={new Color3(1, 1, 1)}
 							BorderSizePixel={0}

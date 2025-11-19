@@ -178,27 +178,46 @@ local function generateActorCode()
 			end
 		end
 
+		-- First, verify the instance is in the game tree
+		if not instance:IsDescendantOf(game) then
+			warn("[Wavified-Spy] Module is not parented to game yet, cannot generate path")
+			return nil
+		end
+
+		-- Find the service this instance belongs to
+		local service = nil
+		for _, svc in ipairs(game:GetChildren()) do
+			if instance:IsDescendantOf(svc) then
+				service = svc
+				break
+			end
+		end
+
+		if not service then
+			warn("[Wavified-Spy] Could not find parent service for module")
+			return nil
+		end
+
+		-- Build path from service to instance
 		local parts = {}
 		local current = instance
-		while current and current.Parent ~= game do
+		while current and current ~= service do
 			table.insert(parts, 1, formatName(current.Name))
 			current = current.Parent
 		end
 
-		-- Add the service name
-		if instance:IsDescendantOf(game) then
-			for _, service in ipairs(game:GetChildren()) do
-				if instance:IsDescendantOf(service) then
-					local path = table.concat(parts, "")
-					return "game:GetService('" .. service.ClassName .. "')" .. path
-				end
-			end
-		end
-
-		return table.concat(parts, "")
+		-- Build final path
+		local path = table.concat(parts, "")
+		return "game:GetService('" .. service.ClassName .. "')" .. path
 	end
 
 	local modulePath = getInstancePath(moduleRoot)
+
+	if not modulePath then
+		warn("[Wavified-Spy] Failed to generate module path, actor detection disabled")
+		return ""
+	end
+
 	print(`[Wavified-Spy] Generated actor module path: {modulePath}`)
 
 	local actorCode = string.format([[
@@ -362,6 +381,12 @@ local function runOnActors()
 	print(`[Wavified-Spy] Found {#actors} actor(s), initializing hooks...`)
 
 	local actorCode = generateActorCode()
+
+	if not actorCode or actorCode == "" then
+		warn("[Wavified-Spy] Failed to generate actor code, aborting actor detection")
+		return
+	end
+
 	local successCount = 0
 
 	-- Run the actor code in each Actor's context
@@ -388,6 +413,10 @@ local function monitorNewActors()
 		if descendant:IsA("Actor") then
 			task.defer(function()
 				local actorCode = generateActorCode()
+				if not actorCode or actorCode == "" then
+					warn("[Wavified-Spy] Failed to generate actor code for new actor")
+					return
+				end
 				local success, err = pcall(run_on_actor, descendant, actorCode)
 				if success then
 					print(`[Wavified-Spy] ✓ New actor initialized: {descendant:GetFullName()}`)

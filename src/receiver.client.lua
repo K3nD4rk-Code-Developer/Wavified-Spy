@@ -10,6 +10,11 @@ local CALLER_STACK_LEVEL = if KRNL_LOADED then 6 else 4
 -- ExtraData for tracking execution context (Actor vs Main thread)
 local ExtraData = nil
 
+-- Share logger and store globally for actor access
+local sharedEnv = getgenv and getgenv() or _G
+sharedEnv.WavifiedSpyLogger = logger
+sharedEnv.WavifiedSpyStore = store
+
 local FireServer = Instance.new("RemoteEvent").FireServer
 local InvokeServer = Instance.new("RemoteFunction").InvokeServer
 local IsA = game.IsA
@@ -159,69 +164,8 @@ end)
 -- Actor Detection System
 local function generateActorCode()
 	-- This generates a self-contained script that runs in each Actor
-	-- The script sets ExtraData.IsActor = true and sets up the same hooks
-
-	-- Get the path to the module root dynamically
-	local moduleRoot = script.Parent
-	local function getInstancePath(instance)
-		local function isValidIdentifier(name)
-			-- Check if name is a valid Lua identifier (no spaces, dashes, etc.)
-			return name:match("^[%a_][%w_]*$") ~= nil
-		end
-
-		local function formatName(name)
-			-- Use bracket notation for names with special characters
-			if isValidIdentifier(name) then
-				return "." .. name
-			else
-				return '["' .. name:gsub('"', '\\"') .. '"]'
-			end
-		end
-
-		-- First, verify the instance is in the game tree
-		if not instance:IsDescendantOf(game) then
-			-- Not in game tree - this is normal for executor environments
-			return nil
-		end
-
-		-- Find the service this instance belongs to
-		local service = nil
-		for _, svc in ipairs(game:GetChildren()) do
-			if instance:IsDescendantOf(svc) then
-				service = svc
-				break
-			end
-		end
-
-		if not service then
-			-- Couldn't find service - return nil to trigger fallback
-			return nil
-		end
-
-		-- Build path from service to instance
-		local parts = {}
-		local current = instance
-		while current and current ~= service do
-			table.insert(parts, 1, formatName(current.Name))
-			current = current.Parent
-		end
-
-		-- Build final path
-		local path = table.concat(parts, "")
-		return "game:GetService('" .. service.ClassName .. "')" .. path
-	end
-
-	local modulePath = getInstancePath(moduleRoot)
-
-	if not modulePath then
-		print("[Wavified-Spy] Module not in game tree, will use fallback search in actors")
-		-- Use a placeholder that will fail and trigger fallback search
-		modulePath = "nil"
-	else
-		print(`[Wavified-Spy] Generated actor module path: {modulePath}`)
-	end
-
-	local actorCode = string.format([[
+	-- Uses shared global environment to access logger and store
+	local actorCode = [[
 		-- Actor Context Marker
 		local ExtraData = { IsActor = true }
 
@@ -231,7 +175,10 @@ local function generateActorCode()
 		local getnamecallmethod = getnamecallmethod
 		local getcallingscript = getcallingscript
 
-		if not hookfunction then return end
+		if not hookfunction then
+			print("[Wavified-Spy Actor] hookfunction not available, actor hooks disabled")
+			return
+		end
 
 		if not getcallingscript then
 			function getcallingscript()
@@ -239,72 +186,28 @@ local function generateActorCode()
 			end
 		end
 
-		-- Import necessary modules using dynamic path
-		local moduleRoot
-		local success, result = pcall(function()
-			return %s
-		end)
+		-- Access shared modules from global environment
+		local sharedEnv = getgenv and getgenv() or _G
+		local logger = sharedEnv.WavifiedSpyLogger
+		local store = sharedEnv.WavifiedSpyStore
 
-		if success and result then
-			moduleRoot = result
-			print("[Wavified-Spy Actor] Module loaded from path: " .. tostring(moduleRoot:GetFullName()))
-		else
-			-- Try fallback locations (common for executor environments)
-			print("[Wavified-Spy Actor] Primary path failed, searching for module...")
-
-			local searchLocations = {
-				game:GetService("ReplicatedStorage"),
-				game:GetService("ReplicatedFirst"),
-				game:GetService("StarterPlayer"),
-			}
-
-			local searchNames = {"TS", "RemoteSpy", "Wavified-Spy", "WavifiedSpy"}
-
-			for _, location in ipairs(searchLocations) do
-				for _, name in ipairs(searchNames) do
-					local ok, module = pcall(function()
-						return location:FindFirstChild(name, true)
-					end)
-					if ok and module and module:FindFirstChild("include") then
-						moduleRoot = module
-						print("[Wavified-Spy Actor] Found module: " .. tostring(module:GetFullName()))
-						break
-					end
-				end
-				if moduleRoot then break end
-			end
-		end
-
-		if not moduleRoot then
-			warn("[Wavified-Spy Actor] Module root is nil after all attempts")
+		if not logger or not store then
+			warn("[Wavified-Spy Actor] Shared modules not found in global environment")
 			return
 		end
 
-		local success2, TS = pcall(function()
-			return require(moduleRoot.include.RuntimeLib)
-		end)
-
-		if not success2 then
-			warn("[Wavified-Spy Actor] Failed to load RuntimeLib from " .. tostring(moduleRoot) .. ": " .. tostring(TS))
-			return
-		end
-
-		local logger = TS.import(moduleRoot, moduleRoot, "reducers", "remote-log")
-		local store = TS.import(moduleRoot, moduleRoot, "store")
-		local getFunctionScript = TS.import(moduleRoot, moduleRoot, "utils", "function-util").getFunctionScript
-		local getInstanceId = TS.import(moduleRoot, moduleRoot, "utils", "instance-util").getInstanceId
-		local makeSelectRemoteLog = TS.import(moduleRoot, moduleRoot, "reducers", "remote-log", "selectors").makeSelectRemoteLog
+		print("[Wavified-Spy Actor] Successfully loaded shared modules")
 
 		local CALLER_STACK_LEVEL = if KRNL_LOADED then 6 else 4
 		local FireServer = Instance.new("RemoteEvent").FireServer
 		local InvokeServer = Instance.new("RemoteFunction").InvokeServer
 		local IsA = game.IsA
 		local refs = {}
-		local selectRemoteLog = makeSelectRemoteLog()
 
+		-- Simple receive handler that uses shared store
 		local function onReceive(self, params, returns)
-			local traceback = {}
 			local callback = debug.info(CALLER_STACK_LEVEL, "f")
+			local traceback = {}
 			local level, fn = 4, callback
 
 			while fn do
@@ -314,30 +217,18 @@ local function generateActorCode()
 			end
 
 			task.defer(function()
-				local remoteId = getInstanceId(self)
-				if not store.isRemoteAllowed(remoteId) then return end
+				local script = getcallingscript()
 
-				local script = getcallingscript() or (callback and getFunctionScript(callback))
-
-				-- Pass ExtraData.IsActor = true to signal
+				-- Use shared logger and store
 				local signal = logger.createOutgoingSignal(self, script, callback, traceback, params, returns, true)
-
-				if store.get(function(state)
-					return selectRemoteLog(state, remoteId)
-				end) then
-					store.dispatch(logger.pushOutgoingSignal(remoteId, signal))
-				else
-					local remoteLog = logger.createRemoteLog(self, signal)
-					store.dispatch(logger.pushRemoteLog(remoteLog))
-				end
+				local remoteLog = logger.createRemoteLog(self, signal)
+				store.dispatch(logger.pushRemoteLog(remoteLog))
 			end)
 		end
 
 		-- Hook FireServer
 		refs.FireServer = hookfunction(FireServer, function(self, ...)
 			if self and store.isActive() and typeof(self) == "Instance" and self:IsA("RemoteEvent") then
-				local remoteId = getInstanceId(self)
-				if store.isRemoteBlocked(remoteId) then return end
 				onReceive(self, { ... })
 			end
 			return refs.FireServer(self, ...)
@@ -346,8 +237,6 @@ local function generateActorCode()
 		-- Hook InvokeServer
 		refs.InvokeServer = hookfunction(InvokeServer, function(self, ...)
 			if self and store.isActive() and typeof(self) == "Instance" and self:IsA("RemoteFunction") then
-				local remoteId = getInstanceId(self)
-				if store.isRemoteBlocked(remoteId) then return end
 				onReceive(self, { ... })
 			end
 			return refs.InvokeServer(self, ...)
@@ -358,13 +247,13 @@ local function generateActorCode()
 			local method = getnamecallmethod()
 			if (store.isActive() and method == "FireServer" and IsA(self, "RemoteEvent")) or
 			   (store.isActive() and method == "InvokeServer" and IsA(self, "RemoteFunction")) then
-				local remoteId = getInstanceId(self)
-				if store.isRemoteBlocked(remoteId) then return end
 				onReceive(self, { ... })
 			end
 			return refs.__namecall(self, ...)
 		end)
-	]], modulePath)
+
+		print("[Wavified-Spy Actor] Hooks installed successfully")
+	]]
 
 	return actorCode
 end

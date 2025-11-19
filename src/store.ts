@@ -16,7 +16,11 @@ import { saveSettings } from "utils/settings-persistence";
 
 let store: Rodux.Store<RootState, Rodux.Action>;
 let isDestructed = false;
-let settingsSaveConnection: Rodux.Signal<RootState> | undefined;
+let settingsSaveConnection:
+	| {
+			disconnect: () => void;
+	  }
+	| undefined;
 
 function createStore() {
 	const newStore = new Rodux.Store(rootReducer, undefined);

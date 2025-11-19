@@ -100,8 +100,8 @@ function Traceback() {
 					Position={new UDim2(0, 0, 0, 30)}
 					BorderSizePixel={0}
 					BackgroundTransparency={1}
-					ScrollBarThickness={8}
-					ScrollBarImageTransparency={0.7}
+					ScrollBarThickness={1}
+					ScrollBarImageTransparency={0.6}
 					AutomaticCanvasSize="Y"
 				>
 					{/* Event Type Header */}
@@ -182,7 +182,7 @@ function Traceback() {
 					Size={new UDim2(1, 0, 1, -30)}
 					Position={new UDim2(0, 0, 0, 30)}
 					BackgroundColor3={new Color3(1, 1, 1)}
-					BackgroundTransparency={0.98}
+					BackgroundTransparency={1}
 					BorderSizePixel={0}
 				>
 					<textlabel

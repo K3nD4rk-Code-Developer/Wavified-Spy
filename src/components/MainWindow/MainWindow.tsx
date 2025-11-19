@@ -7,11 +7,16 @@ import SidePanel from "components/SidePanel";
 import Tabs from "components/Tabs";
 import Window from "components/Window";
 import { activateAction } from "reducers/action-bar";
-import { useRootDispatch } from "hooks/use-root-store";
+import { useRootDispatch, useRootSelector } from "hooks/use-root-store";
+import { selectUIVisible } from "reducers/ui";
 import { withHooksPure } from "@rbxts/roact-hooked";
 
 function MainWindow() {
 	const dispatch = useRootDispatch();
+	const visible = useRootSelector(selectUIVisible);
+
+	// Don't render if not visible
+	if (!visible) return undefined;
 
 	return (
 		<Root>

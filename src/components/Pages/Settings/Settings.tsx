@@ -20,6 +20,8 @@ import {
 	setPathNotation,
 } from "reducers/remote-log";
 import { PathNotation } from "reducers/remote-log/model";
+import { selectToggleKey } from "reducers/ui";
+import { setToggleKey } from "reducers/ui";
 
 function Settings() {
 	const dispatch = useRootDispatch();
@@ -29,6 +31,7 @@ function Settings() {
 	const showBindableEvents = useRootSelector(selectShowBindableEvents);
 	const showBindableFunctions = useRootSelector(selectShowBindableFunctions);
 	const pathNotation = useRootSelector(selectPathNotation);
+	const toggleKey = useRootSelector(selectToggleKey);
 
 	const handleToggleNoActors = () => {
 		dispatch(toggleNoActors());
@@ -52,6 +55,10 @@ function Settings() {
 
 	const handlePathNotationChange = (notation: PathNotation) => {
 		dispatch(setPathNotation(notation));
+	};
+
+	const handleToggleKeyChange = (key: Enum.KeyCode) => {
+		dispatch(setToggleKey(key));
 	};
 
 	return (
@@ -142,6 +149,169 @@ function Settings() {
 							<uicorner CornerRadius={new UDim(0, 11)} />
 						</frame>
 					</Button>
+				</frame>
+
+				{/* UI Toggle Keybind Setting */}
+				<frame Size={new UDim2(1, 0, 0, 100)} BackgroundTransparency={1}>
+					<uilistlayout
+						FillDirection={Enum.FillDirection.Vertical}
+						HorizontalAlignment={Enum.HorizontalAlignment.Left}
+						Padding={new UDim(0, 8)}
+					/>
+
+					{/* Setting Label */}
+					<frame Size={new UDim2(1, 0, 0, 56)} BackgroundTransparency={1}>
+						<uilistlayout
+							FillDirection={Enum.FillDirection.Vertical}
+							HorizontalAlignment={Enum.HorizontalAlignment.Left}
+							Padding={new UDim(0, 4)}
+						/>
+
+						<textlabel
+							Text="UI Toggle Keybind"
+							TextSize={16}
+							Font="GothamBold"
+							TextColor3={new Color3(1, 1, 1)}
+							Size={new UDim2(1, 0, 0, 20)}
+							BackgroundTransparency={1}
+							TextXAlignment="Left"
+							TextYAlignment="Center"
+						/>
+
+						<textlabel
+							Text="Choose which key to press to show/hide the UI"
+							TextSize={12}
+							Font="Gotham"
+							TextColor3={new Color3(0.7, 0.7, 0.7)}
+							Size={new UDim2(1, 0, 0, 32)}
+							BackgroundTransparency={1}
+							TextXAlignment="Left"
+							TextYAlignment="Top"
+							TextWrapped={true}
+						/>
+					</frame>
+
+					{/* Buttons */}
+					<frame Size={new UDim2(1, 0, 0, 36)} BackgroundTransparency={1}>
+						<uilistlayout
+							FillDirection={Enum.FillDirection.Horizontal}
+							HorizontalAlignment={Enum.HorizontalAlignment.Left}
+							Padding={new UDim(0, 8)}
+						/>
+
+						<Button
+							onClick={() => handleToggleKeyChange(Enum.KeyCode.RightControl)}
+							size={new UDim2(0, 80, 0, 32)}
+							background={
+								toggleKey === Enum.KeyCode.RightControl
+									? new Color3(0.3, 0.7, 0.3)
+									: new Color3(0.2, 0.2, 0.2)
+							}
+							transparency={0}
+							cornerRadius={new UDim(0, 6)}
+						>
+							<textlabel
+								Text="RCtrl"
+								TextSize={14}
+								Font="GothamBold"
+								TextColor3={new Color3(1, 1, 1)}
+								Size={new UDim2(1, 0, 1, 0)}
+								BackgroundTransparency={1}
+								TextXAlignment="Center"
+								TextYAlignment="Center"
+							/>
+						</Button>
+
+						<Button
+							onClick={() => handleToggleKeyChange(Enum.KeyCode.RightShift)}
+							size={new UDim2(0, 80, 0, 32)}
+							background={
+								toggleKey === Enum.KeyCode.RightShift
+									? new Color3(0.3, 0.7, 0.3)
+									: new Color3(0.2, 0.2, 0.2)
+							}
+							transparency={0}
+							cornerRadius={new UDim(0, 6)}
+						>
+							<textlabel
+								Text="RShift"
+								TextSize={14}
+								Font="GothamBold"
+								TextColor3={new Color3(1, 1, 1)}
+								Size={new UDim2(1, 0, 1, 0)}
+								BackgroundTransparency={1}
+								TextXAlignment="Center"
+								TextYAlignment="Center"
+							/>
+						</Button>
+
+						<Button
+							onClick={() => handleToggleKeyChange(Enum.KeyCode.Insert)}
+							size={new UDim2(0, 80, 0, 32)}
+							background={
+								toggleKey === Enum.KeyCode.Insert
+									? new Color3(0.3, 0.7, 0.3)
+									: new Color3(0.2, 0.2, 0.2)
+							}
+							transparency={0}
+							cornerRadius={new UDim(0, 6)}
+						>
+							<textlabel
+								Text="Insert"
+								TextSize={14}
+								Font="GothamBold"
+								TextColor3={new Color3(1, 1, 1)}
+								Size={new UDim2(1, 0, 1, 0)}
+								BackgroundTransparency={1}
+								TextXAlignment="Center"
+								TextYAlignment="Center"
+							/>
+						</Button>
+
+						<Button
+							onClick={() => handleToggleKeyChange(Enum.KeyCode.Delete)}
+							size={new UDim2(0, 80, 0, 32)}
+							background={
+								toggleKey === Enum.KeyCode.Delete
+									? new Color3(0.3, 0.7, 0.3)
+									: new Color3(0.2, 0.2, 0.2)
+							}
+							transparency={0}
+							cornerRadius={new UDim(0, 6)}
+						>
+							<textlabel
+								Text="Delete"
+								TextSize={14}
+								Font="GothamBold"
+								TextColor3={new Color3(1, 1, 1)}
+								Size={new UDim2(1, 0, 1, 0)}
+								BackgroundTransparency={1}
+								TextXAlignment="Center"
+								TextYAlignment="Center"
+							/>
+						</Button>
+
+						<Button
+							onClick={() => handleToggleKeyChange(Enum.KeyCode.End)}
+							size={new UDim2(0, 80, 0, 32)}
+							background={
+								toggleKey === Enum.KeyCode.End ? new Color3(0.3, 0.7, 0.3) : new Color3(0.2, 0.2, 0.2)
+							}
+							transparency={0}
+							cornerRadius={new UDim(0, 6)}
+						>
+							<textlabel
+								Text="End"
+								TextSize={14}
+								Font="GothamBold"
+								TextColor3={new Color3(1, 1, 1)}
+								Size={new UDim2(1, 0, 1, 0)}
+								BackgroundTransparency={1}
+								TextXAlignment="Center"
+								TextYAlignment="Center"
+							/>
+						</Button>
+					</frame>
 				</frame>
 
 				{/* Filter Options Section */}

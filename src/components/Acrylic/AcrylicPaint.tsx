@@ -1,4 +1,3 @@
-import Acrylic from "./Acrylic";
 import Container from "components/Container";
 import Roact from "@rbxts/roact";
 
@@ -10,8 +9,6 @@ export default function AcrylicPaint() {
 			BackgroundTransparency={0.9}
 			BorderSizePixel={0}
 		>
-			<Acrylic />
-
 			<uicorner CornerRadius={new UDim(0, 8)} />
 
 			<frame

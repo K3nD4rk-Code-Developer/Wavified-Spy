@@ -430,6 +430,22 @@ end
 
 -- Initialize actor detection
 task.defer(function()
+	-- Wait for module to be fully parented to game
+	local moduleRoot = script.Parent
+	local maxWait = 5
+	local waited = 0
+
+	while not moduleRoot:IsDescendantOf(game) and waited < maxWait do
+		task.wait(0.1)
+		waited = waited + 0.1
+	end
+
+	if not moduleRoot:IsDescendantOf(game) then
+		warn("[Wavified-Spy] Module never became parented to game, actor detection disabled")
+		return
+	end
+
+	print("[Wavified-Spy] Module fully loaded, initializing actor detection...")
 	runOnActors()
 	monitorNewActors()
 end)

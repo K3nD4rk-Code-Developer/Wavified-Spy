@@ -160,7 +160,30 @@ end)
 local function generateActorCode()
 	-- This generates a self-contained script that runs in each Actor
 	-- The script sets ExtraData.IsActor = true and sets up the same hooks
-	local actorCode = [[
+
+	-- Get the path to the module root dynamically
+	local moduleRoot = script.Parent
+	local function getInstancePath(instance)
+		local path = instance.Name
+		local current = instance.Parent
+		while current and current ~= game do
+			path = current.Name .. "." .. path
+			current = current.Parent
+		end
+		-- Add the service name
+		if instance:IsDescendantOf(game) then
+			for _, service in ipairs(game:GetChildren()) do
+				if instance:IsDescendantOf(service) then
+					return "game:GetService('" .. service.ClassName .. "')." .. path
+				end
+			end
+		end
+		return path
+	end
+
+	local modulePath = getInstancePath(moduleRoot)
+
+	local actorCode = string.format([[
 		-- Actor Context Marker
 		local ExtraData = { IsActor = true }
 
@@ -178,19 +201,22 @@ local function generateActorCode()
 			end
 		end
 
-		-- Import necessary modules (they should be accessible from actors)
-		local ReplicatedStorage = game:GetService("ReplicatedStorage")
+		-- Import necessary modules using dynamic path
+		local moduleRoot = %s
 		local success, TS = pcall(function()
-			return require(ReplicatedStorage.TS.include.RuntimeLib)
+			return require(moduleRoot.include.RuntimeLib)
 		end)
 
-		if not success then return end
+		if not success then
+			warn("[Wavified-Spy Actor] Failed to load RuntimeLib: " .. tostring(TS))
+			return
+		end
 
-		local logger = TS.import(ReplicatedStorage.TS, ReplicatedStorage.TS, "reducers", "remote-log")
-		local store = TS.import(ReplicatedStorage.TS, ReplicatedStorage.TS, "store")
-		local getFunctionScript = TS.import(ReplicatedStorage.TS, ReplicatedStorage.TS, "utils", "function-util").getFunctionScript
-		local getInstanceId = TS.import(ReplicatedStorage.TS, ReplicatedStorage.TS, "utils", "instance-util").getInstanceId
-		local makeSelectRemoteLog = TS.import(ReplicatedStorage.TS, ReplicatedStorage.TS, "reducers", "remote-log", "selectors").makeSelectRemoteLog
+		local logger = TS.import(moduleRoot, moduleRoot, "reducers", "remote-log")
+		local store = TS.import(moduleRoot, moduleRoot, "store")
+		local getFunctionScript = TS.import(moduleRoot, moduleRoot, "utils", "function-util").getFunctionScript
+		local getInstanceId = TS.import(moduleRoot, moduleRoot, "utils", "instance-util").getInstanceId
+		local makeSelectRemoteLog = TS.import(moduleRoot, moduleRoot, "reducers", "remote-log", "selectors").makeSelectRemoteLog
 
 		local CALLER_STACK_LEVEL = if KRNL_LOADED then 6 else 4
 		local FireServer = Instance.new("RemoteEvent").FireServer
@@ -261,7 +287,7 @@ local function generateActorCode()
 			end
 			return refs.__namecall(self, ...)
 		end)
-	]]
+	]], modulePath)
 
 	return actorCode
 end
@@ -269,31 +295,63 @@ end
 local function runOnActors()
 	-- Check if executor supports actor functions
 	if not getactors or not run_on_actor then
-		return
-	end
-
-	-- Check if actor detection is disabled in settings
-	if store.isNoActors() then
+		warn("[Wavified-Spy] Executor does not support actor detection (missing getactors or run_on_actor)")
 		return
 	end
 
 	local actors = getactors()
 	if not actors then
+		warn("[Wavified-Spy] getactors() returned nil")
 		return
 	end
 
+	if #actors == 0 then
+		print("[Wavified-Spy] No actors found in game")
+		return
+	end
+
+	print(`[Wavified-Spy] Found {#actors} actor(s), initializing hooks...`)
+
 	local actorCode = generateActorCode()
+	local successCount = 0
 
 	-- Run the actor code in each Actor's context
 	for _, actor in ipairs(actors) do
 		local success, err = pcall(run_on_actor, actor, actorCode)
-		if not success then
-			warn(`[Wavified-Spy] Failed to initialize actor {actor:GetFullName()}: {err}`)
+		if success then
+			successCount = successCount + 1
+			print(`[Wavified-Spy] ✓ Actor initialized: {actor:GetFullName()}`)
+		else
+			warn(`[Wavified-Spy] ✗ Failed to initialize actor {actor:GetFullName()}: {err}`)
 		end
 	end
+
+	print(`[Wavified-Spy] Actor detection initialized: {successCount}/{#actors} actors hooked`)
+end
+
+-- Monitor for new actors being added
+local function monitorNewActors()
+	if not getactors or not run_on_actor then
+		return
+	end
+
+	game.DescendantAdded:Connect(function(descendant)
+		if descendant:IsA("Actor") then
+			task.defer(function()
+				local actorCode = generateActorCode()
+				local success, err = pcall(run_on_actor, descendant, actorCode)
+				if success then
+					print(`[Wavified-Spy] ✓ New actor initialized: {descendant:GetFullName()}`)
+				else
+					warn(`[Wavified-Spy] ✗ Failed to initialize new actor {descendant:GetFullName()}: {err}`)
+				end
+			end)
+		end
+	end)
 end
 
 -- Initialize actor detection
 task.defer(function()
 	runOnActors()
+	monitorNewActors()
 end)

@@ -113,7 +113,7 @@ function WindowTitleBar({
 				background={Color3.fromHex("#FFFFFF")}
 				transparency={settingsTransparency}
 				size={new UDim2(0, 28, 0, 28)}
-				position={new UDim2(1, -46 * 3 - 35, 0.5, 0)}
+				position={new UDim2(1, -46 * 3 - 5, 0.5, 0)}
 				anchorPoint={new Vector2(1, 0.5)}
 			zIndex={2}
 			>

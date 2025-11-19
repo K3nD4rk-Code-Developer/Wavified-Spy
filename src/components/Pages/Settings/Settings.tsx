@@ -3,22 +3,44 @@ import Container from "components/Container";
 import Roact from "@rbxts/roact";
 import { withHooksPure } from "@rbxts/roact-hooked";
 import { useRootDispatch, useRootSelector } from "hooks/use-root-store";
-import { selectNoActors, selectNoBindables, selectPathNotation } from "reducers/remote-log";
-import { toggleNoActors, toggleNoBindables, setPathNotation } from "reducers/remote-log";
+import {
+	selectShowRemoteEvents,
+	selectShowRemoteFunctions,
+	selectShowBindableEvents,
+	selectShowBindableFunctions,
+	selectPathNotation,
+} from "reducers/remote-log";
+import {
+	toggleShowRemoteEvents,
+	toggleShowRemoteFunctions,
+	toggleShowBindableEvents,
+	toggleShowBindableFunctions,
+	setPathNotation,
+} from "reducers/remote-log";
 import { PathNotation } from "reducers/remote-log/model";
 
 function Settings() {
 	const dispatch = useRootDispatch();
-	const noActors = useRootSelector(selectNoActors);
-	const noBindables = useRootSelector(selectNoBindables);
+	const showRemoteEvents = useRootSelector(selectShowRemoteEvents);
+	const showRemoteFunctions = useRootSelector(selectShowRemoteFunctions);
+	const showBindableEvents = useRootSelector(selectShowBindableEvents);
+	const showBindableFunctions = useRootSelector(selectShowBindableFunctions);
 	const pathNotation = useRootSelector(selectPathNotation);
 
-	const handleToggleNoActors = () => {
-		dispatch(toggleNoActors());
+	const handleToggleRemoteEvents = () => {
+		dispatch(toggleShowRemoteEvents());
 	};
 
-	const handleToggleNoBindables = () => {
-		dispatch(toggleNoBindables());
+	const handleToggleRemoteFunctions = () => {
+		dispatch(toggleShowRemoteFunctions());
+	};
+
+	const handleToggleBindableEvents = () => {
+		dispatch(toggleShowBindableEvents());
+	};
+
+	const handleToggleBindableFunctions = () => {
+		dispatch(toggleShowBindableFunctions());
 	};
 
 	const handlePathNotationChange = (notation: PathNotation) => {
@@ -54,7 +76,19 @@ function Settings() {
 					TextYAlignment="Top"
 				/>
 
-				{/* Actor Detection Setting */}
+				{/* Filter Options Section */}
+				<textlabel
+					Text="Filter Options"
+					TextSize={18}
+					Font="GothamBold"
+					TextColor3={new Color3(1, 1, 1)}
+					Size={new UDim2(1, 0, 0, 24)}
+					BackgroundTransparency={1}
+					TextXAlignment="Left"
+					TextYAlignment="Top"
+				/>
+
+				{/* RemoteEvent Setting */}
 				<frame Size={new UDim2(1, 0, 0, 70)} BackgroundTransparency={1}>
 					<uilistlayout
 						FillDirection={Enum.FillDirection.Horizontal}
@@ -71,7 +105,7 @@ function Settings() {
 						/>
 
 						<textlabel
-							Text="Ignore Actor Remotes"
+							Text="Show RemoteEvents"
 							TextSize={16}
 							Font="GothamBold"
 							TextColor3={new Color3(1, 1, 1)}
@@ -82,7 +116,7 @@ function Settings() {
 						/>
 
 						<textlabel
-							Text="When enabled, remote calls from scripts running inside Actors will be ignored and not logged"
+							Text="When enabled, RemoteEvent calls will be logged and displayed"
 							TextSize={12}
 							Font="Gotham"
 							TextColor3={new Color3(0.7, 0.7, 0.7)}
@@ -96,16 +130,16 @@ function Settings() {
 
 					{/* Toggle Switch */}
 					<Button
-						onClick={handleToggleNoActors}
+						onClick={handleToggleRemoteEvents}
 						size={new UDim2(0, 50, 0, 28)}
-						background={noActors ? new Color3(0.3, 0.7, 0.3) : new Color3(0.3, 0.3, 0.3)}
+						background={showRemoteEvents ? new Color3(0.3, 0.7, 0.3) : new Color3(0.3, 0.3, 0.3)}
 						transparency={0}
 						cornerRadius={new UDim(0, 14)}
 					>
 						{/* Toggle Thumb */}
 						<frame
 							Size={new UDim2(0, 22, 0, 22)}
-							Position={noActors ? new UDim2(1, -25, 0.5, 0) : new UDim2(0, 3, 0.5, 0)}
+							Position={showRemoteEvents ? new UDim2(1, -25, 0.5, 0) : new UDim2(0, 3, 0.5, 0)}
 							AnchorPoint={new Vector2(0, 0.5)}
 							BackgroundColor3={new Color3(1, 1, 1)}
 							BorderSizePixel={0}
@@ -115,7 +149,7 @@ function Settings() {
 					</Button>
 				</frame>
 
-				{/* Bindables Setting */}
+				{/* RemoteFunction Setting */}
 				<frame Size={new UDim2(1, 0, 0, 70)} BackgroundTransparency={1}>
 					<uilistlayout
 						FillDirection={Enum.FillDirection.Horizontal}
@@ -132,7 +166,7 @@ function Settings() {
 						/>
 
 						<textlabel
-							Text="Ignore Bindables"
+							Text="Show RemoteFunctions"
 							TextSize={16}
 							Font="GothamBold"
 							TextColor3={new Color3(1, 1, 1)}
@@ -143,7 +177,7 @@ function Settings() {
 						/>
 
 						<textlabel
-							Text="When enabled, BindableEvent and BindableFunction calls will be ignored and not logged"
+							Text="When enabled, RemoteFunction calls will be logged and displayed"
 							TextSize={12}
 							Font="Gotham"
 							TextColor3={new Color3(0.7, 0.7, 0.7)}
@@ -157,16 +191,138 @@ function Settings() {
 
 					{/* Toggle Switch */}
 					<Button
-						onClick={handleToggleNoBindables}
+						onClick={handleToggleRemoteFunctions}
 						size={new UDim2(0, 50, 0, 28)}
-						background={noBindables ? new Color3(0.3, 0.7, 0.3) : new Color3(0.3, 0.3, 0.3)}
+						background={showRemoteFunctions ? new Color3(0.3, 0.7, 0.3) : new Color3(0.3, 0.3, 0.3)}
 						transparency={0}
 						cornerRadius={new UDim(0, 14)}
 					>
 						{/* Toggle Thumb */}
 						<frame
 							Size={new UDim2(0, 22, 0, 22)}
-							Position={noBindables ? new UDim2(1, -25, 0.5, 0) : new UDim2(0, 3, 0.5, 0)}
+							Position={showRemoteFunctions ? new UDim2(1, -25, 0.5, 0) : new UDim2(0, 3, 0.5, 0)}
+							AnchorPoint={new Vector2(0, 0.5)}
+							BackgroundColor3={new Color3(1, 1, 1)}
+							BorderSizePixel={0}
+						>
+							<uicorner CornerRadius={new UDim(0, 11)} />
+						</frame>
+					</Button>
+				</frame>
+
+				{/* BindableEvent Setting */}
+				<frame Size={new UDim2(1, 0, 0, 70)} BackgroundTransparency={1}>
+					<uilistlayout
+						FillDirection={Enum.FillDirection.Horizontal}
+						VerticalAlignment={Enum.VerticalAlignment.Center}
+						Padding={new UDim(0, 12)}
+					/>
+
+					{/* Setting Label */}
+					<frame Size={new UDim2(1, -70, 1, 0)} BackgroundTransparency={1}>
+						<uilistlayout
+							FillDirection={Enum.FillDirection.Vertical}
+							HorizontalAlignment={Enum.HorizontalAlignment.Left}
+							Padding={new UDim(0, 4)}
+						/>
+
+						<textlabel
+							Text="Show BindableEvents"
+							TextSize={16}
+							Font="GothamBold"
+							TextColor3={new Color3(1, 1, 1)}
+							Size={new UDim2(1, 0, 0, 20)}
+							BackgroundTransparency={1}
+							TextXAlignment="Left"
+							TextYAlignment="Center"
+						/>
+
+						<textlabel
+							Text="When enabled, BindableEvent calls will be logged and displayed"
+							TextSize={12}
+							Font="Gotham"
+							TextColor3={new Color3(0.7, 0.7, 0.7)}
+							Size={new UDim2(1, 0, 0, 36)}
+							BackgroundTransparency={1}
+							TextXAlignment="Left"
+							TextYAlignment="Top"
+							TextWrapped={true}
+						/>
+					</frame>
+
+					{/* Toggle Switch */}
+					<Button
+						onClick={handleToggleBindableEvents}
+						size={new UDim2(0, 50, 0, 28)}
+						background={showBindableEvents ? new Color3(0.3, 0.7, 0.3) : new Color3(0.3, 0.3, 0.3)}
+						transparency={0}
+						cornerRadius={new UDim(0, 14)}
+					>
+						{/* Toggle Thumb */}
+						<frame
+							Size={new UDim2(0, 22, 0, 22)}
+							Position={showBindableEvents ? new UDim2(1, -25, 0.5, 0) : new UDim2(0, 3, 0.5, 0)}
+							AnchorPoint={new Vector2(0, 0.5)}
+							BackgroundColor3={new Color3(1, 1, 1)}
+							BorderSizePixel={0}
+						>
+							<uicorner CornerRadius={new UDim(0, 11)} />
+						</frame>
+					</Button>
+				</frame>
+
+				{/* BindableFunction Setting */}
+				<frame Size={new UDim2(1, 0, 0, 70)} BackgroundTransparency={1}>
+					<uilistlayout
+						FillDirection={Enum.FillDirection.Horizontal}
+						VerticalAlignment={Enum.VerticalAlignment.Center}
+						Padding={new UDim(0, 12)}
+					/>
+
+					{/* Setting Label */}
+					<frame Size={new UDim2(1, -70, 1, 0)} BackgroundTransparency={1}>
+						<uilistlayout
+							FillDirection={Enum.FillDirection.Vertical}
+							HorizontalAlignment={Enum.HorizontalAlignment.Left}
+							Padding={new UDim(0, 4)}
+						/>
+
+						<textlabel
+							Text="Show BindableFunctions"
+							TextSize={16}
+							Font="GothamBold"
+							TextColor3={new Color3(1, 1, 1)}
+							Size={new UDim2(1, 0, 0, 20)}
+							BackgroundTransparency={1}
+							TextXAlignment="Left"
+							TextYAlignment="Center"
+						/>
+
+						<textlabel
+							Text="When enabled, BindableFunction calls will be logged and displayed"
+							TextSize={12}
+							Font="Gotham"
+							TextColor3={new Color3(0.7, 0.7, 0.7)}
+							Size={new UDim2(1, 0, 0, 36)}
+							BackgroundTransparency={1}
+							TextXAlignment="Left"
+							TextYAlignment="Top"
+							TextWrapped={true}
+						/>
+					</frame>
+
+					{/* Toggle Switch */}
+					<Button
+						onClick={handleToggleBindableFunctions}
+						size={new UDim2(0, 50, 0, 28)}
+						background={showBindableFunctions ? new Color3(0.3, 0.7, 0.3) : new Color3(0.3, 0.3, 0.3)}
+						transparency={0}
+						cornerRadius={new UDim(0, 14)}
+					>
+						{/* Toggle Thumb */}
+						<frame
+							Size={new UDim2(0, 22, 0, 22)}
+							Position={showBindableFunctions ? new UDim2(1, -25, 0.5, 0) : new UDim2(0, 3, 0.5, 0)}
 							AnchorPoint={new Vector2(0, 0.5)}
 							BackgroundColor3={new Color3(1, 1, 1)}
 							BorderSizePixel={0}

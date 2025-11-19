@@ -82,17 +82,24 @@ local function onReceive(self, params, returns)
 			return
 		end
 
-		-- Check if bindables are disabled and this is a bindable
-		if store.isNoBindables() and (self:IsA("BindableEvent") or self:IsA("BindableFunction")) then
+		-- Check if this type should be shown based on individual type filters
+		if self:IsA("RemoteEvent") and not store.isShowRemoteEvents() then
+			return
+		end
+
+		if self:IsA("RemoteFunction") and not store.isShowRemoteFunctions() then
+			return
+		end
+
+		if self:IsA("BindableEvent") and not store.isShowBindableEvents() then
+			return
+		end
+
+		if self:IsA("BindableFunction") and not store.isShowBindableFunctions() then
 			return
 		end
 
 		local script = getcallingscript() or (callback and getFunctionScript(callback))
-
-		-- Check if actor detection is disabled and the calling script is from an actor
-		if store.isNoActors() and isFromActor(script, callback) then
-			return
-		end
 
 		-- Detect if this call is from an actor by checking script ancestry
 		local isActor = isFromActor(script, callback)

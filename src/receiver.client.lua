@@ -164,24 +164,42 @@ local function generateActorCode()
 	-- Get the path to the module root dynamically
 	local moduleRoot = script.Parent
 	local function getInstancePath(instance)
-		local path = instance.Name
-		local current = instance.Parent
-		while current and current ~= game do
-			path = current.Name .. "." .. path
+		local function isValidIdentifier(name)
+			-- Check if name is a valid Lua identifier (no spaces, dashes, etc.)
+			return name:match("^[%a_][%w_]*$") ~= nil
+		end
+
+		local function formatName(name)
+			-- Use bracket notation for names with special characters
+			if isValidIdentifier(name) then
+				return "." .. name
+			else
+				return '["' .. name:gsub('"', '\\"') .. '"]'
+			end
+		end
+
+		local parts = {}
+		local current = instance
+		while current and current.Parent ~= game do
+			table.insert(parts, 1, formatName(current.Name))
 			current = current.Parent
 		end
+
 		-- Add the service name
 		if instance:IsDescendantOf(game) then
 			for _, service in ipairs(game:GetChildren()) do
 				if instance:IsDescendantOf(service) then
-					return "game:GetService('" .. service.ClassName .. "')." .. path
+					local path = table.concat(parts, "")
+					return "game:GetService('" .. service.ClassName .. "')" .. path
 				end
 			end
 		end
-		return path
+
+		return table.concat(parts, "")
 	end
 
 	local modulePath = getInstancePath(moduleRoot)
+	print(`[Wavified-Spy] Generated actor module path: {modulePath}`)
 
 	local actorCode = string.format([[
 		-- Actor Context Marker
@@ -202,13 +220,44 @@ local function generateActorCode()
 		end
 
 		-- Import necessary modules using dynamic path
-		local moduleRoot = %s
-		local success, TS = pcall(function()
+		local moduleRoot
+		local success, result = pcall(function()
+			return %s
+		end)
+
+		if success and result then
+			moduleRoot = result
+		else
+			warn("[Wavified-Spy Actor] Failed to resolve primary module path: " .. tostring(result))
+
+			-- Try fallback locations
+			local fallbacks = {
+				function() return game:GetService("ReplicatedStorage"):FindFirstChild("TS", true) end,
+				function() return game:GetService("ReplicatedStorage"):FindFirstChild("RemoteSpy", true) end,
+				function() return game:GetService("ReplicatedStorage"):FindFirstChild("Wavified-Spy", true) end,
+			}
+
+			for _, fallback in ipairs(fallbacks) do
+				local ok, module = pcall(fallback)
+				if ok and module then
+					moduleRoot = module
+					warn("[Wavified-Spy Actor] Using fallback module: " .. tostring(module:GetFullName()))
+					break
+				end
+			end
+		end
+
+		if not moduleRoot then
+			warn("[Wavified-Spy Actor] Module root is nil after all attempts")
+			return
+		end
+
+		local success2, TS = pcall(function()
 			return require(moduleRoot.include.RuntimeLib)
 		end)
 
-		if not success then
-			warn("[Wavified-Spy Actor] Failed to load RuntimeLib: " .. tostring(TS))
+		if not success2 then
+			warn("[Wavified-Spy Actor] Failed to load RuntimeLib from " .. tostring(moduleRoot) .. ": " .. tostring(TS))
 			return
 		end
 

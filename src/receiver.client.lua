@@ -101,17 +101,11 @@ local function onReceive(self, params, returns)
 
 		local script = getcallingscript() or (callback and getFunctionScript(callback))
 
-		-- Check if actor detection is disabled and the calling script is from an actor
 		if store.isNoActors() and isFromActor(script, callback) then
 			return
 		end
 
-		-- Detect if this call is from an actor by checking script ancestry
 		local isActor = isFromActor(script, callback)
-
-		if isActor then
-			print(`[Wavified-Spy] 🎭 Actor remote detected: {self.Name}`)
-		end
 
 		local signal = logger.createOutgoingSignal(self, script, callback, traceback, params, returns, isActor)
 
@@ -204,22 +198,4 @@ refs.__namecall = hookmetamethod(game, "__namecall", function(self, ...)
 	end
 
 	return refs.__namecall(self, ...)
-end)
-
--- Actor Detection System
--- Uses isFromActor() to detect when remotes are called from actor contexts
--- All detection happens on main thread - no code is run inside actors
-task.defer(function()
-	if not getactors then
-		print("[Wavified-Spy] Executor does not support getactors()")
-		return
-	end
-
-	local actors = getactors()
-	if actors and #actors > 0 then
-		print(`[Wavified-Spy] Detected {#actors} actor(s) in game`)
-		print("[Wavified-Spy] Actor detection active using isFromActor() method")
-	else
-		print("[Wavified-Spy] No actors found in game")
-	end
 end)

@@ -58,7 +58,7 @@ function FunctionNode({ fn, index, totalInStack, remotePath, remoteName }: Funct
 				AutomaticSize="Y"
 				Size={new UDim2(1, -16, 0, 0)}
 				Text={isRemoteCaller ? `→ ${signature} ←` : signature}
-				Font="GothamMono"
+				Font="Gotham"
 				TextColor3={new Color3(1, 1, 1)}
 				TextSize={11}
 				TextXAlignment="Left"

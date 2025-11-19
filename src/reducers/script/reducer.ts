@@ -23,6 +23,20 @@ export default function scriptReducer(state = initialState, action: ScriptAction
 				scripts: newScripts,
 			};
 		}
+		case "UPDATE_SCRIPT_CONTENT": {
+			const script = state.scripts[action.id];
+			if (!script) return state;
+			return {
+				...state,
+				scripts: {
+					...state.scripts,
+					[action.id]: {
+						...script,
+						content: action.content,
+					},
+				},
+			};
+		}
 		default:
 			return state;
 	}

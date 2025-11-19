@@ -14,6 +14,7 @@ export interface RemoteLogState {
 	paused: boolean;
 	pausedRemotes: Set<string>;
 	blockedRemotes: Set<string>;
+	noActors: boolean;
 	showRemoteEvents: boolean;
 	showRemoteFunctions: boolean;
 	showBindableEvents: boolean;

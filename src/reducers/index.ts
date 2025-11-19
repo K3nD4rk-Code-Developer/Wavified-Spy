@@ -4,6 +4,7 @@ import remoteLogReducer, { RemoteLogState } from "./remote-log";
 import { scriptReducer, ScriptState } from "./script";
 import tabGroupReducer, { TabGroupState } from "./tab-group";
 import tracebackReducer, { TracebackState } from "./traceback";
+import uiReducer, { UIState } from "./ui";
 
 export interface RootState {
 	actionBar: ActionBarState;
@@ -11,6 +12,7 @@ export interface RootState {
 	script: ScriptState;
 	tabGroup: TabGroupState;
 	traceback: TracebackState;
+	ui: UIState;
 }
 
 export default Rodux.combineReducers<RootState, Rodux.AnyAction>({
@@ -19,4 +21,5 @@ export default Rodux.combineReducers<RootState, Rodux.AnyAction>({
 	script: scriptReducer,
 	tabGroup: tabGroupReducer,
 	traceback: tracebackReducer,
+	ui: uiReducer,
 });

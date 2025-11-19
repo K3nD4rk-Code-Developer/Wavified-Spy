@@ -7,14 +7,6 @@ local makeSelectRemoteLog = TS.import(script, script.Parent, "reducers", "remote
 
 local CALLER_STACK_LEVEL = if KRNL_LOADED then 6 else 4
 
--- ExtraData for tracking execution context (Actor vs Main thread)
-local ExtraData = nil
-
--- Share logger and store globally for actor access
-local sharedEnv = getgenv and getgenv() or _G
-sharedEnv.WavifiedSpyLogger = logger
-sharedEnv.WavifiedSpyStore = store
-
 local FireServer = Instance.new("RemoteEvent").FireServer
 local InvokeServer = Instance.new("RemoteFunction").InvokeServer
 local IsA = game.IsA
@@ -95,8 +87,8 @@ local function onReceive(self, params, returns)
 			return
 		end
 
-		-- Determine if this call is from an actor (either ExtraData.IsActor or legacy detection)
-		local isActor = (ExtraData and ExtraData.IsActor) or isFromActor(script, callback)
+		-- Detect if this call is from an actor by checking script ancestry
+		local isActor = isFromActor(script, callback)
 
 		if isActor then
 			print(`[Wavified-Spy] 🎭 Actor remote detected: {self.Name}`)
@@ -166,175 +158,19 @@ refs.__namecall = hookmetamethod(game, "__namecall", function(self, ...)
 end)
 
 -- Actor Detection System
-local function generateActorCode()
-	-- This generates a self-contained script that runs in each Actor
-	-- Uses shared global environment to access logger and store
-	local actorCode = [[
-		-- Actor Context Marker
-		local ExtraData = { IsActor = true }
-
-		-- Get required functions
-		local hookfunction = hookfunction
-		local hookmetamethod = hookmetamethod
-		local getnamecallmethod = getnamecallmethod
-		local getcallingscript = getcallingscript
-
-		if not hookfunction then
-			print("[Wavified-Spy Actor] hookfunction not available, actor hooks disabled")
-			return
-		end
-
-		if not getcallingscript then
-			function getcallingscript()
-				return nil
-			end
-		end
-
-		-- Access shared modules from global environment
-		local sharedEnv = getgenv and getgenv() or _G
-		local logger = sharedEnv.WavifiedSpyLogger
-		local store = sharedEnv.WavifiedSpyStore
-
-		if not logger or not store then
-			warn("[Wavified-Spy Actor] Shared modules not found in global environment")
-			return
-		end
-
-		print("[Wavified-Spy Actor] Successfully loaded shared modules")
-
-		local CALLER_STACK_LEVEL = if KRNL_LOADED then 6 else 4
-		local FireServer = Instance.new("RemoteEvent").FireServer
-		local InvokeServer = Instance.new("RemoteFunction").InvokeServer
-		local IsA = game.IsA
-		local refs = {}
-
-		-- Simple receive handler that uses shared store
-		local function onReceive(self, params, returns)
-			local callback = debug.info(CALLER_STACK_LEVEL, "f")
-			local traceback = {}
-			local level, fn = 4, callback
-
-			while fn do
-				table.insert(traceback, fn)
-				level = level + 1
-				fn = debug.info(level, "f")
-			end
-
-			task.defer(function()
-				local script = getcallingscript()
-
-				print(`[Wavified-Spy Actor] 🎭 Remote fired from actor: {self.Name}`)
-
-				-- Use shared logger and store
-				local signal = logger.createOutgoingSignal(self, script, callback, traceback, params, returns, true)
-				local remoteLog = logger.createRemoteLog(self, signal)
-				store.dispatch(logger.pushRemoteLog(remoteLog))
-			end)
-		end
-
-		-- Hook FireServer
-		refs.FireServer = hookfunction(FireServer, function(self, ...)
-			if self and store.isActive() and typeof(self) == "Instance" and self:IsA("RemoteEvent") then
-				onReceive(self, { ... })
-			end
-			return refs.FireServer(self, ...)
-		end)
-
-		-- Hook InvokeServer
-		refs.InvokeServer = hookfunction(InvokeServer, function(self, ...)
-			if self and store.isActive() and typeof(self) == "Instance" and self:IsA("RemoteFunction") then
-				onReceive(self, { ... })
-			end
-			return refs.InvokeServer(self, ...)
-		end)
-
-		-- Hook __namecall
-		refs.__namecall = hookmetamethod(game, "__namecall", function(self, ...)
-			local method = getnamecallmethod()
-			if (store.isActive() and method == "FireServer" and IsA(self, "RemoteEvent")) or
-			   (store.isActive() and method == "InvokeServer" and IsA(self, "RemoteFunction")) then
-				onReceive(self, { ... })
-			end
-			return refs.__namecall(self, ...)
-		end)
-
-		print("[Wavified-Spy Actor] Hooks installed successfully")
-	]]
-
-	return actorCode
-end
-
-local function runOnActors()
-	-- Check if executor supports actor functions
-	if not getactors or not run_on_actor then
-		warn("[Wavified-Spy] Executor does not support actor detection (missing getactors or run_on_actor)")
+-- Uses isFromActor() to detect when remotes are called from actor contexts
+-- All detection happens on main thread - no code is run inside actors
+task.defer(function()
+	if not getactors then
+		print("[Wavified-Spy] Executor does not support getactors()")
 		return
 	end
 
 	local actors = getactors()
-	if not actors then
-		warn("[Wavified-Spy] getactors() returned nil")
-		return
-	end
-
-	if #actors == 0 then
+	if actors and #actors > 0 then
+		print(`[Wavified-Spy] Detected {#actors} actor(s) in game`)
+		print("[Wavified-Spy] Actor detection active using isFromActor() method")
+	else
 		print("[Wavified-Spy] No actors found in game")
-		return
 	end
-
-	print(`[Wavified-Spy] Found {#actors} actor(s), initializing hooks...`)
-
-	local actorCode = generateActorCode()
-
-	if not actorCode or actorCode == "" then
-		warn("[Wavified-Spy] Failed to generate actor code, aborting actor detection")
-		return
-	end
-
-	local successCount = 0
-
-	-- Run the actor code in each Actor's context
-	for _, actor in ipairs(actors) do
-		local success, err = pcall(run_on_actor, actor, actorCode)
-		if success then
-			successCount = successCount + 1
-			print(`[Wavified-Spy] ✓ Actor initialized: {actor:GetFullName()}`)
-		else
-			warn(`[Wavified-Spy] ✗ Failed to initialize actor {actor:GetFullName()}: {err}`)
-		end
-	end
-
-	print(`[Wavified-Spy] Actor detection initialized: {successCount}/{#actors} actors hooked`)
-end
-
--- Monitor for new actors being added
-local function monitorNewActors()
-	if not getactors or not run_on_actor then
-		return
-	end
-
-	game.DescendantAdded:Connect(function(descendant)
-		if descendant:IsA("Actor") then
-			task.defer(function()
-				local actorCode = generateActorCode()
-				if not actorCode or actorCode == "" then
-					warn("[Wavified-Spy] Failed to generate actor code for new actor")
-					return
-				end
-				local success, err = pcall(run_on_actor, descendant, actorCode)
-				if success then
-					print(`[Wavified-Spy] ✓ New actor initialized: {descendant:GetFullName()}`)
-				else
-					warn(`[Wavified-Spy] ✗ Failed to initialize new actor {descendant:GetFullName()}: {err}`)
-				end
-			end)
-		end
-	end)
-end
-
--- Initialize actor detection
-task.defer(function()
-	print("[Wavified-Spy] Initializing actor detection...")
-	runOnActors()
-	monitorNewActors()
 end)

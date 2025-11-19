@@ -9,13 +9,35 @@ import {
 	selectShowRemoteFunctions,
 	selectShowBindableEvents,
 	selectShowBindableFunctions,
+	selectPathNotation,
 } from "reducers/remote-log";
+import { selectToggleKey } from "reducers/ui";
+import { saveSettings } from "utils/settings-persistence";
 
 let store: Rodux.Store<RootState, Rodux.Action>;
 let isDestructed = false;
+let settingsSaveConnection: RBXScriptConnection | undefined;
 
 function createStore() {
-	return new Rodux.Store(rootReducer, undefined);
+	const newStore = new Rodux.Store(rootReducer, undefined);
+
+	// Subscribe to store changes to save settings
+	settingsSaveConnection = newStore.changed.connect((state: RootState) => {
+		// Debounce the save operation
+		task.defer(() => {
+			saveSettings({
+				noActors: selectNoActors(state),
+				showRemoteEvents: selectShowRemoteEvents(state),
+				showRemoteFunctions: selectShowRemoteFunctions(state),
+				showBindableEvents: selectShowBindableEvents(state),
+				showBindableFunctions: selectShowBindableFunctions(state),
+				pathNotation: selectPathNotation(state),
+				toggleKey: selectToggleKey(state).Name,
+			});
+		});
+	});
+
+	return newStore;
 }
 
 export function configureStore() {
@@ -26,6 +48,9 @@ export function configureStore() {
 export function destruct() {
 	if (isDestructed) return;
 	isDestructed = true;
+	if (settingsSaveConnection) {
+		settingsSaveConnection.Disconnect();
+	}
 	store.destruct();
 }
 

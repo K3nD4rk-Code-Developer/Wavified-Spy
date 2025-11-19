@@ -9,9 +9,13 @@ const persistedSettings = loadSettings();
 const getInitialToggleKey = (): Enum.KeyCode => {
 	if (persistedSettings?.toggleKey) {
 		try {
-			return Enum.KeyCode[persistedSettings.toggleKey as keyof typeof Enum.KeyCode];
+			const keyCodeValue = Enum.KeyCode[persistedSettings.toggleKey as keyof typeof Enum.KeyCode];
+			// Verify it's actually a KeyCode value and not a function
+			if (typeIs(keyCodeValue, "EnumItem")) {
+				return keyCodeValue as Enum.KeyCode;
+			}
 		} catch {
-			return Enum.KeyCode.RightControl;
+			// Fall through to default
 		}
 	}
 	return Enum.KeyCode.RightControl;

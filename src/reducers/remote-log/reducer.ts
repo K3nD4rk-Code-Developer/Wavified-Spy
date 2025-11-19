@@ -1,17 +1,21 @@
 import { RemoteLogActions } from "./actions";
 import { PathNotation, RemoteLogState } from "./model";
+import { loadSettings } from "utils/settings-persistence";
+
+// Load persisted settings if available
+const persistedSettings = loadSettings();
 
 const initialState: RemoteLogState = {
 	logs: [],
 	paused: false,
 	pausedRemotes: new Set(),
 	blockedRemotes: new Set(),
-	noActors: false,
-	showRemoteEvents: true,
-	showRemoteFunctions: true,
-	showBindableEvents: false,
-	showBindableFunctions: false,
-	pathNotation: PathNotation.Dot,
+	noActors: persistedSettings?.noActors ?? false,
+	showRemoteEvents: persistedSettings?.showRemoteEvents ?? true,
+	showRemoteFunctions: persistedSettings?.showRemoteFunctions ?? true,
+	showBindableEvents: persistedSettings?.showBindableEvents ?? false,
+	showBindableFunctions: persistedSettings?.showBindableFunctions ?? false,
+	pathNotation: persistedSettings?.pathNotation ?? PathNotation.Dot,
 };
 
 export default function remoteLogReducer(state = initialState, action: RemoteLogActions): RemoteLogState {

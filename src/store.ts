@@ -16,7 +16,7 @@ import { saveSettings } from "utils/settings-persistence";
 
 let store: Rodux.Store<RootState, Rodux.Action>;
 let isDestructed = false;
-let settingsSaveConnection: (() => void) | undefined;
+let settingsSaveConnection: Rodux.Signal<RootState> | undefined;
 
 function createStore() {
 	const newStore = new Rodux.Store(rootReducer, undefined);
@@ -49,7 +49,7 @@ export function destruct() {
 	if (isDestructed) return;
 	isDestructed = true;
 	if (settingsSaveConnection) {
-		settingsSaveConnection();
+		settingsSaveConnection.disconnect();
 	}
 	store.destruct();
 }

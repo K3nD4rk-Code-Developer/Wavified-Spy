@@ -19,6 +19,18 @@ while not getGlobal(IS_LOADED) do
 	task.wait(0.01)
 end
 
+-- Additional small delay to ensure store and UI are fully settled
+task.wait(0.1)
+
+-- Verify store is actually functional by testing key functions
+local storeReady = pcall(function()
+	return store.isActive() ~= nil and store.get() ~= nil
+end)
+
+if not storeReady then
+	warn("[RemoteSpy] Store failed readiness check - hooks may not work properly")
+end
+
 local CALLER_STACK_LEVEL = if KRNL_LOADED then 6 else 4
 
 local FireServer = Instance.new("RemoteEvent").FireServer

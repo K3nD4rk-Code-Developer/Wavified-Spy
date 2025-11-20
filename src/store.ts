@@ -59,14 +59,14 @@ export function destruct() {
 }
 
 export function isActive() {
-	if (!store || isDestructed) return false;
-	const paused = selectPaused(store.getState());
+	if (isDestructed) return false;
+	const paused = selectPaused(configureStore().getState());
 	return !paused;
 }
 
 export function isRemoteBlocked(remoteId: string) {
-	if (!store || isDestructed) return false;
-	const state = store.getState();
+	if (isDestructed) return false;
+	const state = configureStore().getState();
 	const blockedRemotes = selectBlockedRemotes(state);
 
 	// Only check if remote is blocked (not paused)
@@ -74,8 +74,8 @@ export function isRemoteBlocked(remoteId: string) {
 }
 
 export function isRemoteAllowed(remoteId: string) {
-	if (!store || isDestructed) return false;
-	const state = store.getState();
+	if (isDestructed) return false;
+	const state = configureStore().getState();
 	const paused = selectPaused(state);
 	const pausedRemotes = selectPausedRemotes(state);
 	const blockedRemotes = selectBlockedRemotes(state);
@@ -93,32 +93,32 @@ export function isRemoteAllowed(remoteId: string) {
 }
 
 export function isNoActors() {
-	if (!store || isDestructed) return false;
-	const state = store.getState();
+	if (isDestructed) return false;
+	const state = configureStore().getState();
 	return selectNoActors(state);
 }
 
 export function isShowRemoteEvents() {
-	if (!store || isDestructed) return true;
-	const state = store.getState();
+	if (isDestructed) return true;
+	const state = configureStore().getState();
 	return selectShowRemoteEvents(state);
 }
 
 export function isShowRemoteFunctions() {
-	if (!store || isDestructed) return true;
-	const state = store.getState();
+	if (isDestructed) return true;
+	const state = configureStore().getState();
 	return selectShowRemoteFunctions(state);
 }
 
 export function isShowBindableEvents() {
-	if (!store || isDestructed) return false;
-	const state = store.getState();
+	if (isDestructed) return false;
+	const state = configureStore().getState();
 	return selectShowBindableEvents(state);
 }
 
 export function isShowBindableFunctions() {
-	if (!store || isDestructed) return false;
-	const state = store.getState();
+	if (isDestructed) return false;
+	const state = configureStore().getState();
 	return selectShowBindableFunctions(state);
 }
 

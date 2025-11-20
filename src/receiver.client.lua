@@ -4,14 +4,16 @@ local store = TS.import(script, script.Parent, "store")
 local getFunctionScript = TS.import(script, script.Parent, "utils", "function-util").getFunctionScript
 local getInstanceId = TS.import(script, script.Parent, "utils", "instance-util").getInstanceId
 local makeSelectRemoteLog = TS.import(script, script.Parent, "reducers", "remote-log", "selectors").makeSelectRemoteLog
+local IS_LOADED = TS.import(script, script.Parent, "constants").IS_LOADED
+local getGlobal = TS.import(script, script.Parent, "utils", "global-util").getGlobal
 
--- Wait for store to be fully initialized before setting up hooks
--- This prevents race conditions where hooks fire before the store is ready
+-- Wait for app.client.tsx to fully initialize before setting up hooks
+-- This prevents race conditions where hooks fire before the UI and store are ready
 local maxWaitTime = 5 -- seconds
 local startTime = os.clock()
-while not store.get or not pcall(function() store.get() end) do
+while not getGlobal(IS_LOADED) do
 	if os.clock() - startTime > maxWaitTime then
-		warn("[RemoteSpy] Store initialization timeout - hooks may not work properly")
+		warn("[RemoteSpy] Initialization timeout - app may not have loaded properly")
 		break
 	end
 	task.wait(0.01)

@@ -5,6 +5,18 @@ local getFunctionScript = TS.import(script, script.Parent, "utils", "function-ut
 local getInstanceId = TS.import(script, script.Parent, "utils", "instance-util").getInstanceId
 local makeSelectRemoteLog = TS.import(script, script.Parent, "reducers", "remote-log", "selectors").makeSelectRemoteLog
 
+-- Wait for store to be fully initialized before setting up hooks
+-- This prevents race conditions where hooks fire before the store is ready
+local maxWaitTime = 5 -- seconds
+local startTime = os.clock()
+while not store.get or not pcall(function() store.get() end) do
+	if os.clock() - startTime > maxWaitTime then
+		warn("[RemoteSpy] Store initialization timeout - hooks may not work properly")
+		break
+	end
+	task.wait(0.01)
+end
+
 local CALLER_STACK_LEVEL = if KRNL_LOADED then 6 else 4
 
 local FireServer = Instance.new("RemoteEvent").FireServer

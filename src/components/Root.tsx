@@ -4,6 +4,7 @@ import { Players } from "@rbxts/services";
 
 interface Props extends Roact.PropsWithChildren {
 	displayOrder?: number;
+	enabled?: boolean;
 }
 
 function hasCoreAccess() {
@@ -20,7 +21,7 @@ function getTarget() {
 	return Players.LocalPlayer.WaitForChild("PlayerGui"); // LocalScript
 }
 
-export default function Root({ displayOrder = 0, [Roact.Children]: children }: Props) {
+export default function Root({ displayOrder = 0, enabled = true, [Roact.Children]: children }: Props) {
 	return (
 		<Roact.Portal target={getTarget()}>
 			<screengui
@@ -28,6 +29,7 @@ export default function Root({ displayOrder = 0, [Roact.Children]: children }: P
 				ResetOnSpawn={false}
 				ZIndexBehavior="Sibling"
 				DisplayOrder={DISPLAY_ORDER + displayOrder}
+				Enabled={enabled}
 			>
 				{children}
 			</screengui>

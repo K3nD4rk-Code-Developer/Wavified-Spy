@@ -15,9 +15,6 @@ function MainWindow() {
 	const dispatch = useRootDispatch();
 	const visible = useRootSelector(selectUIVisible);
 
-	// Don't render if not visible
-	if (!visible) return undefined;
-
 	return (
 		<Root>
 			<Window.Root initialSize={new UDim2(0, 860, 0, 500)} initialPosition={new UDim2(0.5, -540, 0.5, -350)}>

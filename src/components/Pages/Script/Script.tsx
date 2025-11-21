@@ -4,6 +4,7 @@ import { withHooksPure } from "@rbxts/roact-hooked";
 import { useRootDispatch, useRootSelector } from "hooks/use-root-store";
 import { selectActiveTab } from "reducers/tab-group";
 import { selectScript, updateScriptContent } from "reducers/script";
+import { highlightLua } from "utils/syntax-highlight";
 
 function Script() {
 	const dispatch = useRootDispatch();
@@ -14,6 +15,7 @@ function Script() {
 
 	const scriptContent = scriptData?.content ?? "No script content";
 	const isEditable = scriptData?.signalId !== undefined;
+	const highlightedContent = highlightLua(scriptContent);
 
 	const handleTextChange = (rbx: TextBox) => {
 		if (currentTab && isEditable) {
@@ -58,15 +60,16 @@ function Script() {
 					/>
 				) : (
 					<textlabel
-						Text={scriptContent}
+						Text={highlightedContent}
+						RichText={true}
 						TextSize={14}
 						Font={Enum.Font.Code}
-						TextColor3={new Color3(1, 1, 1)}
+						TextColor3={Color3.fromRGB(212, 212, 212)}
 						Size={new UDim2(1, 0, 1, 0)}
 						BackgroundTransparency={1}
 						TextXAlignment={Enum.TextXAlignment.Left}
 						TextYAlignment={Enum.TextYAlignment.Top}
-						TextWrapped={true}
+						TextWrapped={false}
 					/>
 				)}
 			</scrollingframe>

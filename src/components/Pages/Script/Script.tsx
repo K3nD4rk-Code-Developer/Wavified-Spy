@@ -27,7 +27,8 @@ function Script() {
 				Size={new UDim2(1, 0, 1, 0)}
 				BackgroundColor3={Color3.fromRGB(20, 20, 20)}
 				BorderSizePixel={0}
-				ScrollBarThickness={6}
+				ScrollBarThickness={1}
+				ScrollBarImageTransparency={0.6}
 				ScrollBarImageColor3={Color3.fromRGB(100, 100, 100)}
 				CanvasSize={new UDim2(1, 0, 0, 10020)}
 			>

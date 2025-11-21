@@ -89,7 +89,8 @@ function Settings() {
 				Size={new UDim2(1, 0, 1, 0)}
 				BackgroundTransparency={1}
 				BorderSizePixel={0}
-				ScrollBarThickness={6}
+				ScrollBarThickness={1}
+				ScrollBarImageTransparency={0.6}
 				CanvasSize={new UDim2(0, 0, 0, 0)}
 				AutomaticCanvasSize={Enum.AutomaticSize.Y}
 			>

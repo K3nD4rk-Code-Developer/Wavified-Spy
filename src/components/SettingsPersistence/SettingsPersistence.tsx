@@ -2,7 +2,6 @@ import Roact from "@rbxts/roact";
 import { useEffect, useMutable, withHooksPure } from "@rbxts/roact-hooked";
 import { useRootDispatch, useRootSelector } from "hooks/use-root-store";
 import {
-	selectPaused,
 	selectNoActors,
 	selectShowRemoteEvents,
 	selectShowRemoteFunctions,
@@ -11,6 +10,7 @@ import {
 	selectPathNotation,
 	loadSettings as loadSettingsAction,
 } from "reducers/remote-log";
+import { selectToggleKey, loadToggleKey } from "reducers/ui";
 import { loadSettings, saveSettings, PersistedSettings } from "utils/settings-persistence";
 
 function SettingsPersistence() {
@@ -18,13 +18,13 @@ function SettingsPersistence() {
 	const loaded = useMutable(false);
 
 	// Get all settings from state
-	const paused = useRootSelector(selectPaused);
 	const noActors = useRootSelector(selectNoActors);
 	const showRemoteEvents = useRootSelector(selectShowRemoteEvents);
 	const showRemoteFunctions = useRootSelector(selectShowRemoteFunctions);
 	const showBindableEvents = useRootSelector(selectShowBindableEvents);
 	const showBindableFunctions = useRootSelector(selectShowBindableFunctions);
 	const pathNotation = useRootSelector(selectPathNotation);
+	const toggleKey = useRootSelector(selectToggleKey);
 
 	// Load settings after 1 second on mount
 	useEffect(() => {
@@ -32,6 +32,10 @@ function SettingsPersistence() {
 			const settings = loadSettings();
 			if (settings) {
 				dispatch(loadSettingsAction(settings));
+				// Load toggle key separately
+				if (settings.toggleKey) {
+					dispatch(loadToggleKey(settings.toggleKey));
+				}
 			}
 			loaded.current = true;
 		});
@@ -48,17 +52,17 @@ function SettingsPersistence() {
 		if (!loaded.current) return;
 
 		const settings: PersistedSettings = {
-			paused,
 			noActors,
 			showRemoteEvents,
 			showRemoteFunctions,
 			showBindableEvents,
 			showBindableFunctions,
 			pathNotation,
+			toggleKey: toggleKey.Name,
 		};
 
 		saveSettings(settings);
-	}, [paused, noActors, showRemoteEvents, showRemoteFunctions, showBindableEvents, showBindableFunctions, pathNotation]);
+	}, [noActors, showRemoteEvents, showRemoteFunctions, showBindableEvents, showBindableFunctions, pathNotation, toggleKey]);
 
 	return <></>;
 }

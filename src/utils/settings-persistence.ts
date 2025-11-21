@@ -6,13 +6,13 @@ declare const writefile: ((path: string, content: string) => void) | undefined;
 const SETTINGS_FILE = "wavified_spy_settings.json";
 
 export interface PersistedSettings {
-	paused?: boolean;
 	noActors?: boolean;
 	showRemoteEvents?: boolean;
 	showRemoteFunctions?: boolean;
 	showBindableEvents?: boolean;
 	showBindableFunctions?: boolean;
 	pathNotation?: PathNotation;
+	toggleKey?: string; // KeyCode name stored as string
 }
 
 export function saveSettings(settings: PersistedSettings): void {

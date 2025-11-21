@@ -185,7 +185,6 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 		case "LOAD_SETTINGS":
 			return {
 				...state,
-				paused: action.settings.paused ?? state.paused,
 				noActors: action.settings.noActors ?? state.noActors,
 				showRemoteEvents: action.settings.showRemoteEvents ?? state.showRemoteEvents,
 				showRemoteFunctions: action.settings.showRemoteFunctions ?? state.showRemoteFunctions,

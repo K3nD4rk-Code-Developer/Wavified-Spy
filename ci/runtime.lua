@@ -4,7 +4,6 @@ local idFromInstance = {}
 local modules = {}
 local currentlyLoading = {}
 
-
 local function loadModule(object, caller)
 	local module = modules[object]
 

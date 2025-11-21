@@ -20,11 +20,15 @@ const initialState: RemoteLogState = {
 
 export default function remoteLogReducer(state = initialState, action: RemoteLogActions): RemoteLogState {
 	switch (action.type) {
-		case "PUSH_REMOTE_LOG":
-			return {
+		case "PUSH_REMOTE_LOG": {
+			print("[Reducer] PUSH_REMOTE_LOG - Adding log:", action.log.id, "Total logs:", state.logs.size() + 1);
+			const newState = {
 				...state,
 				logs: [...state.logs, action.log],
 			};
+			print("[Reducer] New state logs count:", newState.logs.size());
+			return newState;
+		}
 		case "REMOVE_REMOTE_LOG":
 			return {
 				...state,
@@ -42,11 +46,13 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				return state; // Don't modify state if log doesn't exist
 			}
 
-			return {
+			print("[Reducer] PUSH_OUTGOING_SIGNAL - Adding signal to log:", action.id);
+			const newState = {
 				...state,
 				logs: state.logs.map((log) => {
 					if (log.id === action.id) {
 						const outgoing = [action.signal, ...log.outgoing];
+						print("[Reducer] Log", action.id, "now has", outgoing.size(), "signals");
 						return {
 							...log,
 							outgoing,
@@ -55,6 +61,7 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 					return log;
 				}),
 			};
+			return newState;
 		}
 		case "REMOVE_OUTGOING_SIGNAL":
 			return {

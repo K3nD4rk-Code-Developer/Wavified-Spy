@@ -29,24 +29,28 @@ function Script() {
 				BorderSizePixel={0}
 				ScrollBarThickness={6}
 				ScrollBarImageColor3={Color3.fromRGB(100, 100, 100)}
-				CanvasSize={new UDim2(0, 0, 0, 0)}
-				AutomaticCanvasSize={Enum.AutomaticSize.Y}
+				CanvasSize={new UDim2(1, 0, 0, 10020)}
 			>
+				<uipadding
+					PaddingLeft={new UDim(0, 10)}
+					PaddingRight={new UDim(0, 10)}
+					PaddingTop={new UDim(0, 10)}
+					PaddingBottom={new UDim(0, 10)}
+				/>
+
 				{isEditable ? (
 					<textbox
 						Text={scriptContent}
 						TextSize={14}
 						Font={Enum.Font.Code}
 						TextColor3={new Color3(1, 1, 1)}
-						Size={new UDim2(1, -20, 0, 0)}
-						Position={new UDim2(0, 10, 0, 10)}
+						Size={new UDim2(1, 0, 1, 0)}
 						BackgroundTransparency={1}
 						TextXAlignment={Enum.TextXAlignment.Left}
 						TextYAlignment={Enum.TextYAlignment.Top}
 						TextWrapped={true}
 						MultiLine={true}
 						ClearTextOnFocus={false}
-						AutomaticSize={Enum.AutomaticSize.Y}
 						Change={{
 							Text: handleTextChange,
 						}}
@@ -57,13 +61,11 @@ function Script() {
 						TextSize={14}
 						Font={Enum.Font.Code}
 						TextColor3={new Color3(1, 1, 1)}
-						Size={new UDim2(1, -20, 0, 0)}
-						Position={new UDim2(0, 10, 0, 10)}
+						Size={new UDim2(1, 0, 1, 0)}
 						BackgroundTransparency={1}
 						TextXAlignment={Enum.TextXAlignment.Left}
 						TextYAlignment={Enum.TextYAlignment.Top}
 						TextWrapped={true}
-						AutomaticSize={Enum.AutomaticSize.Y}
 					/>
 				)}
 			</scrollingframe>

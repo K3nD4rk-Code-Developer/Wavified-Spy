@@ -6,6 +6,7 @@ import { selectSignalSelected, selectPathNotation } from "reducers/remote-log";
 import { useRootSelector } from "hooks/use-root-store";
 import { withHooksPure } from "@rbxts/roact-hooked";
 import { genScript } from "utils/gen-script";
+import { highlightLua } from "utils/syntax-highlight";
 
 function Peek() {
 	const { middleHidden, setMiddleHidden, middleSize, middlePosition } = useSidePanelContext();
@@ -13,6 +14,7 @@ function Peek() {
 	const pathNotation = useRootSelector(selectPathNotation);
 
 	let scriptCode = "";
+	let highlightedCode = "";
 	if (signal) {
 		// Convert parameters to array
 		const paramEntries: [number, unknown][] = [];
@@ -23,6 +25,7 @@ function Peek() {
 		const parameters = paramEntries.map(([_, value]) => value as defined);
 
 		scriptCode = genScript(signal.remote, parameters, pathNotation);
+		highlightedCode = highlightLua(scriptCode);
 	}
 
 	const isEmpty = !signal || scriptCode === "";
@@ -54,7 +57,8 @@ function Peek() {
 
 					<textlabel
 						Size={new UDim2(1, 0, 1, 0)}
-						Text={scriptCode}
+						Text={highlightedCode}
+						RichText={true}
 						Font={Enum.Font.Code}
 						TextSize={11}
 						TextColor3={Color3.fromRGB(212, 212, 212)}

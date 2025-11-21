@@ -43,4 +43,5 @@ export interface OutgoingSignal {
 	callback: Callback;
 	traceback: Callback[];
 	isActor?: boolean;
+	timestamp: number; // os.clock() timestamp when signal was captured
 }

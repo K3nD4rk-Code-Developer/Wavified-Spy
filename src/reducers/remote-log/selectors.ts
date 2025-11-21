@@ -2,7 +2,17 @@ import { RootState } from "reducers";
 import { createSelector } from "@rbxts/roselect";
 
 export const selectRemoteLogs = (state: RootState) => state.remoteLog.logs;
-export const selectRemoteLogIds = createSelector([selectRemoteLogs], (logs) => logs.map((log) => log.id));
+
+// Sort logs by most recent signal timestamp (newest first)
+export const selectRemoteLogsSorted = createSelector([selectRemoteLogs], (logs) => {
+	return [...logs].sort((a, b) => {
+		const aTimestamp = a.outgoing[0]?.timestamp ?? -math.huge;
+		const bTimestamp = b.outgoing[0]?.timestamp ?? -math.huge;
+		return bTimestamp > aTimestamp; // Descending order (newest first)
+	});
+});
+
+export const selectRemoteLogIds = createSelector([selectRemoteLogsSorted], (logs) => logs.map((log) => log.id));
 export const selectRemoteLogsOutgoing = (state: RootState) => state.remoteLog.logs.map((log) => log.outgoing);
 
 export const selectRemoteIdSelected = (state: RootState) => state.remoteLog.remoteSelected;
@@ -20,7 +30,7 @@ export const selectShowBindableFunctions = (state: RootState) => state.remoteLog
 export const selectPathNotation = (state: RootState) => state.remoteLog.pathNotation;
 
 export const makeSelectRemoteLog = () =>
-	createSelector([selectRemoteLogs, (_: unknown, id: string) => id], (logs, id) => logs.find((log) => log.id === id));
+	createSelector([selectRemoteLogsSorted, (_: unknown, id: string) => id], (logs, id) => logs.find((log) => log.id === id));
 export const makeSelectRemoteLogOutgoing = () => createSelector([makeSelectRemoteLog()], (log) => log?.outgoing);
 export const makeSelectRemoteLogObject = () => createSelector([makeSelectRemoteLog()], (log) => log?.object);
 export const makeSelectRemoteLogType = () => createSelector([makeSelectRemoteLog()], (log) => log?.type);

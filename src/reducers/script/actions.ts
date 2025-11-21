@@ -8,6 +8,14 @@ export function setScript(id: string, scriptData: ScriptData) {
 	} as const;
 }
 
+export function updateScriptContent(id: string, content: string) {
+	return {
+		type: "UPDATE_SCRIPT_CONTENT",
+		id,
+		content,
+	} as const;
+}
+
 export function removeScript(id: string) {
 	return {
 		type: "REMOVE_SCRIPT",
@@ -15,4 +23,4 @@ export function removeScript(id: string) {
 	} as const;
 }
 
-export type ScriptActions = ReturnType<typeof setScript> | ReturnType<typeof removeScript>;
+export type ScriptActions = ReturnType<typeof setScript> | ReturnType<typeof updateScriptContent> | ReturnType<typeof removeScript>;

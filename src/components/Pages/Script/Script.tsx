@@ -1,15 +1,25 @@
 import Container from "components/Container";
 import Roact from "@rbxts/roact";
 import { withHooksPure } from "@rbxts/roact-hooked";
-import { useRootSelector } from "hooks/use-root-store";
+import { useRootDispatch, useRootSelector } from "hooks/use-root-store";
 import { selectActiveTab } from "reducers/tab-group";
-import { selectScriptContent } from "reducers/script";
+import { selectScript, updateScriptContent } from "reducers/script";
 
 function Script() {
+	const dispatch = useRootDispatch();
 	const currentTab = useRootSelector(selectActiveTab);
-	const scriptContent = useRootSelector((state) =>
-		currentTab ? selectScriptContent(state, currentTab.id) : undefined,
+	const scriptData = useRootSelector((state) =>
+		currentTab ? selectScript(state, currentTab.id) : undefined,
 	);
+
+	const scriptContent = scriptData?.content ?? "No script content";
+	const isEditable = scriptData?.signalId !== undefined;
+
+	const handleTextChange = (rbx: TextBox) => {
+		if (currentTab && isEditable) {
+			dispatch(updateScriptContent(currentTab.id, rbx.Text));
+		}
+	};
 
 	return (
 		<Container>
@@ -22,19 +32,40 @@ function Script() {
 				CanvasSize={new UDim2(0, 0, 0, 0)}
 				AutomaticCanvasSize={Enum.AutomaticSize.Y}
 			>
-				<textlabel
-					Text={scriptContent ?? "No script content"}
-					TextSize={14}
-					Font={Enum.Font.Code}
-					TextColor3={new Color3(1, 1, 1)}
-					Size={new UDim2(1, -20, 0, 0)}
-					Position={new UDim2(0, 10, 0, 10)}
-					BackgroundTransparency={1}
-					TextXAlignment={Enum.TextXAlignment.Left}
-					TextYAlignment={Enum.TextYAlignment.Top}
-					TextWrapped={true}
-					AutomaticSize={Enum.AutomaticSize.Y}
-				/>
+				{isEditable ? (
+					<textbox
+						Text={scriptContent}
+						TextSize={14}
+						Font={Enum.Font.Code}
+						TextColor3={new Color3(1, 1, 1)}
+						Size={new UDim2(1, -20, 0, 0)}
+						Position={new UDim2(0, 10, 0, 10)}
+						BackgroundTransparency={1}
+						TextXAlignment={Enum.TextXAlignment.Left}
+						TextYAlignment={Enum.TextYAlignment.Top}
+						TextWrapped={true}
+						MultiLine={true}
+						ClearTextOnFocus={false}
+						AutomaticSize={Enum.AutomaticSize.Y}
+						Change={{
+							Text: handleTextChange,
+						}}
+					/>
+				) : (
+					<textlabel
+						Text={scriptContent}
+						TextSize={14}
+						Font={Enum.Font.Code}
+						TextColor3={new Color3(1, 1, 1)}
+						Size={new UDim2(1, -20, 0, 0)}
+						Position={new UDim2(0, 10, 0, 10)}
+						BackgroundTransparency={1}
+						TextXAlignment={Enum.TextXAlignment.Left}
+						TextYAlignment={Enum.TextYAlignment.Top}
+						TextWrapped={true}
+						AutomaticSize={Enum.AutomaticSize.Y}
+					/>
+				)}
 			</scrollingframe>
 		</Container>
 	);

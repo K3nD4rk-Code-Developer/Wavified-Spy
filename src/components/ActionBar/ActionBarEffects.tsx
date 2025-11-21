@@ -20,7 +20,7 @@ import {
 } from "reducers/remote-log";
 import { removeRemoteLog } from "reducers/remote-log";
 import { setActionEnabled } from "reducers/action-bar";
-import { setScript, removeScript } from "reducers/script";
+import { setScript, removeScript, selectScript } from "reducers/script";
 import { useActionEffect } from "hooks/use-action-effect";
 import { useEffect, withHooksPure } from "@rbxts/roact-hooked";
 import { useRootDispatch, useRootSelector, useRootStore } from "hooks/use-root-store";
@@ -139,12 +139,14 @@ function ActionBarEffects() {
 			dispatch(pushTab(tab));
 			dispatch(setActiveTab(scriptId));
 
-			// Store script content
+			// Store script content with signal reference
 			dispatch(
 				setScript(scriptId, {
 					id: scriptId,
 					name: uniqueName,
 					content: scriptText,
+					signalId: signal.id,
+					remoteId: signal.remoteId,
 				}),
 			);
 
@@ -255,38 +257,38 @@ function ActionBarEffects() {
 	});
 
 	useActionEffect("runRemote", () => {
-		if (signal) {
+		// Check if we're viewing a script tab with signal reference
+		let scriptText: string | undefined;
+		let signalToRun = signal;
+
+		if (currentTab?.type === TabType.Script) {
+			const scriptData = store.getState().script.scripts[currentTab.id];
+			if (scriptData?.content) {
+				scriptText = scriptData.content;
+				// If script has signal reference, use that signal
+				if (scriptData.signalId && scriptData.remoteId) {
+					const remoteLog = selectRemoteLog(store.getState(), scriptData.remoteId);
+					signalToRun = remoteLog?.outgoing.find((s) => s.id === scriptData.signalId);
+				}
+			}
+		}
+
+		// If not viewing a script tab, generate script from signal
+		if (!scriptText && signalToRun) {
 			// Convert Record<number, unknown> to sequential array
 			const paramEntries: [number, unknown][] = [];
-			for (const [key, value] of pairs(signal.parameters)) {
+			for (const [key, value] of pairs(signalToRun.parameters)) {
 				paramEntries.push([key as number, value]);
 			}
 			// Sort by key and extract values into sequential array
 			paramEntries.sort((a, b) => a[0] < b[0]);
 			const parameters = paramEntries.map(([_, value]) => value as defined);
 
-			const scriptText = genScript(signal.remote, parameters, pathNotation);
+			scriptText = genScript(signalToRun.remote, parameters, pathNotation);
+		}
 
-			// Create and display the script in a new tab
-			const baseName = signal.name;
-			const uniqueName = generateUniqueScriptName(baseName, tabs);
-			const scriptId = HttpService.GenerateGUID(false);
-
-			// Create tab
-			const tab = createTabColumn(scriptId, uniqueName, TabType.Script, true);
-			dispatch(pushTab(tab));
-			dispatch(setActiveTab(scriptId));
-
-			// Store script content
-			dispatch(
-				setScript(scriptId, {
-					id: scriptId,
-					name: uniqueName,
-					content: scriptText,
-				}),
-			);
-
-			// Execute the script
+		// Execute the script
+		if (scriptText) {
 			if (loadstring) {
 				const [func, err] = loadstring(scriptText);
 				if (func) {
@@ -312,6 +314,11 @@ function ActionBarEffects() {
 		const isHome = currentTab?.type === TabType.Home;
 		const isScript = currentTab?.type === TabType.Script;
 
+		// Check if current script tab has signal reference for execution
+		const scriptHasSignal = isScript && currentTab?.id
+			? store.getState().script.scripts[currentTab.id]?.signalId !== undefined
+			: false;
+
 		dispatch(setActionEnabled("copy", remoteEnabled || signalEnabled));
 		dispatch(setActionEnabled("save", remoteEnabled || signalEnabled));
 		dispatch(setActionEnabled("delete", remoteEnabled || signalEnabled || isScript));
@@ -323,7 +330,7 @@ function ActionBarEffects() {
 
 		dispatch(setActionEnabled("pauseRemote", remoteEnabled));
 		dispatch(setActionEnabled("blockRemote", remoteEnabled));
-		dispatch(setActionEnabled("runRemote", signalEnabled));
+		dispatch(setActionEnabled("runRemote", signalEnabled || scriptHasSignal));
 	}, [remoteId === undefined, signal, currentTab]);
 
 	return <></>;

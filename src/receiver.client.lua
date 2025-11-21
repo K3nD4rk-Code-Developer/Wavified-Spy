@@ -195,11 +195,19 @@ local function onReceive(self, params, returns)
 
 			if existingLog then
 				print("[RemoteSpy] Dispatching outgoing signal for existing remote (attempt " .. dispatchAttempts .. ")")
-				success = store.dispatch(logger.pushOutgoingSignal(remoteId, signal))
+				print("[RemoteSpy] About to call store.dispatch, type:", type(store.dispatch))
+				local action = logger.pushOutgoingSignal(remoteId, signal)
+				print("[RemoteSpy] Action created, type:", action.type)
+				success = store.dispatch(action)
+				print("[RemoteSpy] store.dispatch returned:", success, "type:", type(success))
 			else
 				print("[RemoteSpy] Dispatching NEW remote log (attempt " .. dispatchAttempts .. ")")
+				print("[RemoteSpy] About to call store.dispatch, type:", type(store.dispatch))
 				local remoteLog = logger.createRemoteLog(self, signal)
-				success = store.dispatch(logger.pushRemoteLog(remoteLog))
+				local action = logger.pushRemoteLog(remoteLog)
+				print("[RemoteSpy] Action created, type:", action.type)
+				success = store.dispatch(action)
+				print("[RemoteSpy] store.dispatch returned:", success, "type:", type(success))
 
 				-- If we just created a new log, update existingLog so retry uses pushOutgoingSignal
 				if success then

@@ -267,6 +267,25 @@ function ActionBarEffects() {
 
 			const scriptText = genScript(signal.remote, parameters, pathNotation);
 
+			// Create and display the script in a new tab
+			const baseName = signal.name;
+			const uniqueName = generateUniqueScriptName(baseName, tabs);
+			const scriptId = HttpService.GenerateGUID(false);
+
+			// Create tab
+			const tab = createTabColumn(scriptId, uniqueName, TabType.Script, true);
+			dispatch(pushTab(tab));
+			dispatch(setActiveTab(scriptId));
+
+			// Store script content
+			dispatch(
+				setScript(scriptId, {
+					id: scriptId,
+					name: uniqueName,
+					content: scriptText,
+				}),
+			);
+
 			// Execute the script
 			if (loadstring) {
 				const [func, err] = loadstring(scriptText);

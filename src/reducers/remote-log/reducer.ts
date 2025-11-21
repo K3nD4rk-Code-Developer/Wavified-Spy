@@ -19,6 +19,14 @@ const initialState: RemoteLogState = {
 };
 
 export default function remoteLogReducer(state = initialState, action: RemoteLogActions): RemoteLogState {
+	// Log ALL actions to debug state resets (including if state has 0 logs from initialState)
+	if (action.type !== "@@INIT" && action.type !== "@@rodux/INIT" && !action.type.startsWith("@@")) {
+		print("[Reducer] Action:", action.type, "Current logs:", state.logs.size());
+		if (state.logs.size() === 0 && state === initialState) {
+			warn("[Reducer] WARNING: State is initialState (fresh reducer call)!");
+		}
+	}
+
 	switch (action.type) {
 		case "PUSH_REMOTE_LOG": {
 			print("[Reducer] PUSH_REMOTE_LOG - Adding log:", action.log.id, "Total logs:", state.logs.size() + 1);
@@ -187,6 +195,10 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				pathNotation: action.notation,
 			};
 		default:
+			// Log unknown actions that might be resetting state
+			if (action.type !== "@@INIT" && action.type !== "@@rodux/INIT" && !action.type.startsWith("@@")) {
+				print("[Reducer] Unknown action:", action.type);
+			}
 			return state;
 	}
 }

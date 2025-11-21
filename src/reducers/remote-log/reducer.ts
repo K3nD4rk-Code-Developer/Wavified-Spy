@@ -19,18 +19,6 @@ const initialState: RemoteLogState = {
 };
 
 export default function remoteLogReducer(state = initialState, action: RemoteLogActions): RemoteLogState {
-	// Log ALL actions to debug state resets
-	const actionType = (action as any).type;
-	// Cast to any to bypass TypeScript string restrictions
-	const typeStr = actionType as any;
-	const isInternalAction = typeStr && typeStr.length >= 2 && typeStr[0] === "@" && typeStr[1] === "@";
-	if (actionType && !isInternalAction) {
-		print("[Reducer] Action:", actionType, "Current logs:", state.logs.size());
-		if (state.logs.size() === 0 && state === initialState) {
-			warn("[Reducer] WARNING: State is initialState (fresh reducer call)!");
-		}
-	}
-
 	switch (action.type) {
 		case "PUSH_REMOTE_LOG": {
 			print("[Reducer] PUSH_REMOTE_LOG - Adding log:", action.log.id, "Total logs:", state.logs.size() + 1);
@@ -199,15 +187,6 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				pathNotation: action.notation,
 			};
 		default:
-			// Log unknown actions that might be resetting state
-			const unknownActionType = (action as any).type;
-			// Cast to any to bypass TypeScript string restrictions
-			const unknownTypeStr = unknownActionType as any;
-			const isInternalAction =
-				unknownTypeStr && unknownTypeStr.length >= 2 && unknownTypeStr[0] === "@" && unknownTypeStr[1] === "@";
-			if (unknownActionType && !isInternalAction) {
-				print("[Reducer] Unknown action:", unknownActionType);
-			}
 			return state;
 	}
 }

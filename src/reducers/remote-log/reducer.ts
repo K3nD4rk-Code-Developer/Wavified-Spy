@@ -182,6 +182,17 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				...state,
 				remotesMultiSelected: new Set(),
 			};
+		case "LOAD_SETTINGS":
+			return {
+				...state,
+				paused: action.settings.paused ?? state.paused,
+				noActors: action.settings.noActors ?? state.noActors,
+				showRemoteEvents: action.settings.showRemoteEvents ?? state.showRemoteEvents,
+				showRemoteFunctions: action.settings.showRemoteFunctions ?? state.showRemoteFunctions,
+				showBindableEvents: action.settings.showBindableEvents ?? state.showBindableEvents,
+				showBindableFunctions: action.settings.showBindableFunctions ?? state.showBindableFunctions,
+				pathNotation: action.settings.pathNotation ?? state.pathNotation,
+			};
 		default:
 			return state;
 	}

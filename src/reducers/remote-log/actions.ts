@@ -1,4 +1,5 @@
 import { OutgoingSignal, PathNotation, RemoteLog } from "./model";
+import { PersistedSettings } from "utils/settings-persistence";
 
 export function pushRemoteLog(log: RemoteLog) {
 	return { type: "PUSH_REMOTE_LOG", log } as const;
@@ -80,6 +81,10 @@ export function clearMultiSelection() {
 	return { type: "CLEAR_MULTI_SELECTION" } as const;
 }
 
+export function loadSettings(settings: PersistedSettings) {
+	return { type: "LOAD_SETTINGS", settings } as const;
+}
+
 export type RemoteLogActions =
 	| ReturnType<typeof pushRemoteLog>
 	| ReturnType<typeof removeRemoteLog>
@@ -100,4 +105,5 @@ export type RemoteLogActions =
 	| ReturnType<typeof toggleShowBindableFunctions>
 	| ReturnType<typeof setPathNotation>
 	| ReturnType<typeof toggleRemoteMultiSelected>
-	| ReturnType<typeof clearMultiSelection>;
+	| ReturnType<typeof clearMultiSelection>
+	| ReturnType<typeof loadSettings>;

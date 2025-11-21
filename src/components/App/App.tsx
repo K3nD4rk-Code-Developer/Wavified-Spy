@@ -1,5 +1,6 @@
 import KeybindListener from "components/KeybindListener";
 import MainWindow from "components/MainWindow";
+import SettingsPersistence from "components/SettingsPersistence";
 import Roact from "@rbxts/roact";
 
 export default function App() {
@@ -7,6 +8,7 @@ export default function App() {
 		<>
 			<KeybindListener />
 			<MainWindow />
+			<SettingsPersistence />
 		</>
 	);
 }

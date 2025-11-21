@@ -9,6 +9,7 @@ local getGlobal = TS.import(script, script.Parent, "utils", "global-util").getGl
 
 -- Wait for app.client.tsx to fully initialize before setting up hooks
 -- This prevents race conditions where hooks fire before the UI and store are ready
+print("[RemoteSpy] Waiting for app initialization...")
 local maxWaitTime = 5 -- seconds
 local startTime = os.clock()
 while not getGlobal(IS_LOADED) do
@@ -19,6 +20,12 @@ while not getGlobal(IS_LOADED) do
 	task.wait(0.01)
 end
 
+if getGlobal(IS_LOADED) then
+	print("[RemoteSpy] App initialization detected, waiting for store to settle...")
+else
+	warn("[RemoteSpy] App did not initialize within timeout period")
+end
+
 -- Additional small delay to ensure store and UI are fully settled
 task.wait(0.1)
 
@@ -27,7 +34,9 @@ local storeReady = pcall(function()
 	return store.isActive() ~= nil and store.get() ~= nil
 end)
 
-if not storeReady then
+if storeReady then
+	print("[RemoteSpy] Store is ready, setting up hooks...")
+else
 	warn("[RemoteSpy] Store failed readiness check - hooks may not work properly")
 end
 
@@ -103,31 +112,39 @@ local function onReceive(self, params, returns)
 	task.defer(function()
 		local remoteId = getInstanceId(self)
 
+		print("[RemoteSpy] Remote fired:", self:GetFullName(), "Type:", self.ClassName)
+
 		-- Check if logging is allowed (paused or blocked remotes should not be logged)
 		if not store.isRemoteAllowed(remoteId) then
+			print("[RemoteSpy] Remote blocked by isRemoteAllowed")
 			return
 		end
 
 		-- Check if this type should be shown based on individual type filters
 		if self:IsA("RemoteEvent") and not store.isShowRemoteEvents() then
+			print("[RemoteSpy] RemoteEvent filtered out")
 			return
 		end
 
 		if self:IsA("RemoteFunction") and not store.isShowRemoteFunctions() then
+			print("[RemoteSpy] RemoteFunction filtered out")
 			return
 		end
 
 		if self:IsA("BindableEvent") and not store.isShowBindableEvents() then
+			print("[RemoteSpy] BindableEvent filtered out")
 			return
 		end
 
 		if self:IsA("BindableFunction") and not store.isShowBindableFunctions() then
+			print("[RemoteSpy] BindableFunction filtered out")
 			return
 		end
 
 		local script = getcallingscript() or (callback and getFunctionScript(callback))
 
 		if store.isNoActors() and isFromActor(script, callback) then
+			print("[RemoteSpy] Remote from actor filtered out")
 			return
 		end
 
@@ -138,8 +155,10 @@ local function onReceive(self, params, returns)
 		if store.get(function(state)
 			return selectRemoteLog(state, remoteId)
 		end) then
+			print("[RemoteSpy] Dispatching outgoing signal for existing remote")
 			store.dispatch(logger.pushOutgoingSignal(remoteId, signal))
 		else
+			print("[RemoteSpy] Dispatching NEW remote log")
 			local remoteLog = logger.createRemoteLog(self, signal)
 			store.dispatch(logger.pushRemoteLog(remoteLog))
 		end
@@ -225,3 +244,5 @@ refs.__namecall = hookmetamethod(game, "__namecall", function(self, ...)
 
 	return refs.__namecall(self, ...)
 end)
+
+print("[RemoteSpy] All hooks successfully installed and ready to capture remote events!")

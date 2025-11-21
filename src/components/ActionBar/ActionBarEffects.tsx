@@ -109,6 +109,10 @@ function ActionBarEffects() {
 			dispatch(removeScript(currentTab.id));
 			dispatch(deleteTab(currentTab.id));
 			notify("Deleted script");
+		} else if (currentTab && currentTab.type !== TabType.Home && currentTab.type !== TabType.Settings) {
+			// Close any other tab (Event, Function, BindableEvent, BindableFunction)
+			dispatch(deleteTab(currentTab.id));
+			notify("Closed tab");
 		}
 	});
 
@@ -313,15 +317,19 @@ function ActionBarEffects() {
 		const signalEnabled = signal !== undefined && currentTab?.id === signal.remoteId;
 		const isHome = currentTab?.type === TabType.Home;
 		const isScript = currentTab?.type === TabType.Script;
+		const isSettings = currentTab?.type === TabType.Settings;
 
 		// Check if current script tab has signal reference for execution
 		const scriptHasSignal = isScript && currentTab?.id
 			? store.getState().script.scripts[currentTab.id]?.signalId !== undefined
 			: false;
 
+		// Delete is enabled for any tab except Home and Settings
+		const canDelete = remoteEnabled || signalEnabled || (currentTab && !isHome && !isSettings);
+
 		dispatch(setActionEnabled("copy", remoteEnabled || signalEnabled));
 		dispatch(setActionEnabled("save", remoteEnabled || signalEnabled));
-		dispatch(setActionEnabled("delete", remoteEnabled || signalEnabled || isScript));
+		dispatch(setActionEnabled("delete", canDelete));
 
 		dispatch(setActionEnabled("traceback", signalEnabled));
 		dispatch(setActionEnabled("copyPath", remoteEnabled || !isHome));

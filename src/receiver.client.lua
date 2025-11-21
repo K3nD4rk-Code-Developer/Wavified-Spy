@@ -26,6 +26,12 @@ if not getcallingscript then
 	end
 end
 
+if not checkcaller then
+	function checkcaller()
+		return false
+	end
+end
+
 local function isFromActor(script, callback)
 	-- Check if the script has an Actor ancestor
 	if script then
@@ -99,15 +105,15 @@ local function onReceive(self, params, returns)
 			return
 		end
 
+		-- Filter out executor calls (when checkcaller returns true)
+		if store.isNoExecutor() and checkcaller() then
+			return
+		end
+
 		local callingScript = getcallingscript()
 		local script = callingScript or (callback and getFunctionScript(callback))
 
 		if store.isNoActors() and isFromActor(script, callback) then
-			return
-		end
-
-		-- Filter out executor calls (when final caller is nil, displays as "(nil).Script")
-		if store.isNoExecutor() and script == nil then
 			return
 		end
 

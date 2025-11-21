@@ -81,97 +81,93 @@ function escapeRichText(text: string): string {
 
 export function highlightLua(code: string): string {
 	let result = "";
-	let i = 0;
+	let pos = 1; // Lua strings are 1-indexed
 
-	while (i < code.size()) {
-		const char = code.sub(i + 1, i + 1);
+	while (pos <= code.size()) {
+		const char = code.sub(pos, pos);
 
 		// Comments
-		if (char === "-" && code.sub(i + 2, i + 2) === "-") {
-			const [endOfLine] = code.find("\n", i + 1);
+		if (char === "-" && code.sub(pos + 1, pos + 1) === "-") {
+			const [endOfLine] = code.find("\n", pos);
 			const lineEnd = endOfLine !== undefined ? endOfLine - 1 : code.size();
-			const comment = code.sub(i + 1, lineEnd);
+			const comment = code.sub(pos, lineEnd);
 			result += `<font color="rgb(${COLORS.comment})">${escapeRichText(comment)}</font>`;
-			i = lineEnd;
+			pos = lineEnd + 1;
 			continue;
 		}
 
 		// Strings (double quotes)
 		if (char === '"') {
-			let j = i + 1;
+			let endPos = pos + 1;
 			let escaped = false;
-			while (j < code.size()) {
-				const c = code.sub(j + 2, j + 2);
+			while (endPos <= code.size()) {
+				const c = code.sub(endPos, endPos);
 				if (c === "\\" && !escaped) {
 					escaped = true;
-					j++;
-					continue;
-				}
-				if (c === '"' && !escaped) {
+				} else if (c === '"' && !escaped) {
 					break;
+				} else {
+					escaped = false;
 				}
-				escaped = false;
-				j++;
+				endPos++;
 			}
-			const str = code.sub(i + 1, j + 2);
+			const str = code.sub(pos, endPos);
 			result += `<font color="rgb(${COLORS.string})">${escapeRichText(str)}</font>`;
-			i = j + 1;
+			pos = endPos + 1;
 			continue;
 		}
 
 		// Strings (single quotes)
 		if (char === "'") {
-			let j = i + 1;
+			let endPos = pos + 1;
 			let escaped = false;
-			while (j < code.size()) {
-				const c = code.sub(j + 2, j + 2);
+			while (endPos <= code.size()) {
+				const c = code.sub(endPos, endPos);
 				if (c === "\\" && !escaped) {
 					escaped = true;
-					j++;
-					continue;
-				}
-				if (c === "'" && !escaped) {
+				} else if (c === "'" && !escaped) {
 					break;
+				} else {
+					escaped = false;
 				}
-				escaped = false;
-				j++;
+				endPos++;
 			}
-			const str = code.sub(i + 1, j + 2);
+			const str = code.sub(pos, endPos);
 			result += `<font color="rgb(${COLORS.string})">${escapeRichText(str)}</font>`;
-			i = j + 1;
+			pos = endPos + 1;
 			continue;
 		}
 
 		// Numbers
 		const [isDigit] = char.match("%d");
-		const nextChar = code.sub(i + 2, i + 2);
+		const nextChar = code.sub(pos + 1, pos + 1);
 		const [nextIsDigit] = nextChar.match("%d");
 
 		if (isDigit !== undefined || (char === "." && nextIsDigit !== undefined)) {
-			let j = i;
-			while (j < code.size()) {
-				const c = code.sub(j + 2, j + 2);
+			let endPos = pos;
+			while (endPos <= code.size()) {
+				const c = code.sub(endPos, endPos);
 				const [isNumChar] = c.match("[%d%.]");
 				if (isNumChar === undefined) break;
-				j++;
+				endPos++;
 			}
-			const num = code.sub(i + 1, j + 1);
+			const num = code.sub(pos, endPos - 1);
 			result += `<font color="rgb(${COLORS.number})">${num}</font>`;
-			i = j;
+			pos = endPos;
 			continue;
 		}
 
 		// Identifiers and keywords
 		const [isAlpha] = char.match("[%a_]");
 		if (isAlpha !== undefined) {
-			let j = i;
-			while (j < code.size()) {
-				const c = code.sub(j + 2, j + 2);
+			let endPos = pos;
+			while (endPos <= code.size()) {
+				const c = code.sub(endPos, endPos);
 				const [isWordChar] = c.match("[%w_]");
 				if (isWordChar === undefined) break;
-				j++;
+				endPos++;
 			}
-			const word = code.sub(i + 1, j + 1);
+			const word = code.sub(pos, endPos - 1);
 
 			if (KEYWORDS.includes(word)) {
 				result += `<font color="rgb(${COLORS.keyword})">${word}</font>`;
@@ -179,26 +175,26 @@ export function highlightLua(code: string): string {
 				result += `<font color="rgb(${COLORS.builtin})">${word}</font>`;
 			} else {
 				// Check if it's followed by ( to identify as function
-				let k = j + 1;
-				while (k < code.size()) {
-					const c = code.sub(k + 2, k + 2);
+				let checkPos = endPos;
+				while (checkPos <= code.size()) {
+					const c = code.sub(checkPos, checkPos);
 					const [isSpace] = c.match("%s");
 					if (isSpace === undefined) break;
-					k++;
+					checkPos++;
 				}
-				if (code.sub(k + 2, k + 2) === "(") {
+				if (code.sub(checkPos, checkPos) === "(") {
 					result += `<font color="rgb(${COLORS.function})">${word}</font>`;
 				} else {
 					result += `<font color="rgb(${COLORS.default})">${word}</font>`;
 				}
 			}
-			i = j;
+			pos = endPos;
 			continue;
 		}
 
 		// Operators and other characters
 		result += escapeRichText(char);
-		i++;
+		pos++;
 	}
 
 	return result;

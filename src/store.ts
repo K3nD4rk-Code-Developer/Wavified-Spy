@@ -5,6 +5,7 @@ import {
 	selectPausedRemotes,
 	selectBlockedRemotes,
 	selectNoActors,
+	selectNoExecutor,
 	selectShowRemoteEvents,
 	selectShowRemoteFunctions,
 	selectShowBindableEvents,
@@ -67,6 +68,12 @@ export function isNoActors() {
 	if (!store || isDestructed) return false;
 	const state = store.getState();
 	return selectNoActors(state);
+}
+
+export function isNoExecutor() {
+	if (!store || isDestructed) return false;
+	const state = store.getState();
+	return selectNoExecutor(state);
 }
 
 export function isShowRemoteEvents() {

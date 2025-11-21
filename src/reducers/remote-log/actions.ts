@@ -53,6 +53,10 @@ export function toggleNoActors() {
 	return { type: "TOGGLE_NO_ACTORS" } as const;
 }
 
+export function toggleNoExecutor() {
+	return { type: "TOGGLE_NO_EXECUTOR" } as const;
+}
+
 export function toggleShowRemoteEvents() {
 	return { type: "TOGGLE_SHOW_REMOTE_EVENTS" } as const;
 }
@@ -99,6 +103,7 @@ export type RemoteLogActions =
 	| ReturnType<typeof toggleRemoteBlocked>
 	| ReturnType<typeof toggleBlockAllRemotes>
 	| ReturnType<typeof toggleNoActors>
+	| ReturnType<typeof toggleNoExecutor>
 	| ReturnType<typeof toggleShowRemoteEvents>
 	| ReturnType<typeof toggleShowRemoteFunctions>
 	| ReturnType<typeof toggleShowBindableEvents>

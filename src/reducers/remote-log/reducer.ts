@@ -8,6 +8,7 @@ const initialState: RemoteLogState = {
 	blockedRemotes: new Set(),
 	remotesMultiSelected: new Set(),
 	noActors: false,
+	noExecutor: false,
 	showRemoteEvents: true,
 	showRemoteFunctions: true,
 	showBindableEvents: false,
@@ -143,6 +144,11 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				...state,
 				noActors: !state.noActors,
 			};
+		case "TOGGLE_NO_EXECUTOR":
+			return {
+				...state,
+				noExecutor: !state.noExecutor,
+			};
 		case "TOGGLE_SHOW_REMOTE_EVENTS":
 			return {
 				...state,
@@ -190,6 +196,7 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 			return {
 				...state,
 				noActors: action.settings.noActors ?? state.noActors,
+				noExecutor: action.settings.noExecutor ?? state.noExecutor,
 				showRemoteEvents: action.settings.showRemoteEvents ?? state.showRemoteEvents,
 				showRemoteFunctions: action.settings.showRemoteFunctions ?? state.showRemoteFunctions,
 				showBindableEvents: action.settings.showBindableEvents ?? state.showBindableEvents,

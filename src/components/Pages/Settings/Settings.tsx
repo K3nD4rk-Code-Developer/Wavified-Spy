@@ -6,6 +6,7 @@ import { UserInputService } from "@rbxts/services";
 import { useRootDispatch, useRootSelector } from "hooks/use-root-store";
 import {
 	selectNoActors,
+	selectNoExecutor,
 	selectShowRemoteEvents,
 	selectShowRemoteFunctions,
 	selectShowBindableEvents,
@@ -14,6 +15,7 @@ import {
 } from "reducers/remote-log";
 import {
 	toggleNoActors,
+	toggleNoExecutor,
 	toggleShowRemoteEvents,
 	toggleShowRemoteFunctions,
 	toggleShowBindableEvents,
@@ -27,6 +29,7 @@ import { setToggleKey } from "reducers/ui";
 function Settings() {
 	const dispatch = useRootDispatch();
 	const noActors = useRootSelector(selectNoActors);
+	const noExecutor = useRootSelector(selectNoExecutor);
 	const showRemoteEvents = useRootSelector(selectShowRemoteEvents);
 	const showRemoteFunctions = useRootSelector(selectShowRemoteFunctions);
 	const showBindableEvents = useRootSelector(selectShowBindableEvents);
@@ -37,6 +40,10 @@ function Settings() {
 
 	const handleToggleNoActors = () => {
 		dispatch(toggleNoActors());
+	};
+
+	const handleToggleNoExecutor = () => {
+		dispatch(toggleNoExecutor());
 	};
 
 	const handleToggleRemoteEvents = () => {
@@ -165,6 +172,67 @@ function Settings() {
 						<frame
 							Size={new UDim2(0, 22, 0, 22)}
 							Position={noActors ? new UDim2(1, -25, 0.5, 0) : new UDim2(0, 3, 0.5, 0)}
+							AnchorPoint={new Vector2(0, 0.5)}
+							BackgroundColor3={new Color3(1, 1, 1)}
+							BorderSizePixel={0}
+						>
+							<uicorner CornerRadius={new UDim(0, 11)} />
+						</frame>
+					</Button>
+				</frame>
+
+				{/* Executor Detection Setting */}
+				<frame Size={new UDim2(1, 0, 0, 70)} BackgroundTransparency={1}>
+					<uilistlayout
+						FillDirection={Enum.FillDirection.Horizontal}
+						VerticalAlignment={Enum.VerticalAlignment.Center}
+						Padding={new UDim(0, 12)}
+					/>
+
+					{/* Setting Label */}
+					<frame Size={new UDim2(1, -70, 1, 0)} BackgroundTransparency={1}>
+						<uilistlayout
+							FillDirection={Enum.FillDirection.Vertical}
+							HorizontalAlignment={Enum.HorizontalAlignment.Left}
+							Padding={new UDim(0, 4)}
+						/>
+
+						<textlabel
+							Text="Ignore Executor Calls"
+							TextSize={16}
+							Font="GothamBold"
+							TextColor3={new Color3(1, 1, 1)}
+							Size={new UDim2(1, 0, 0, 20)}
+							BackgroundTransparency={1}
+							TextXAlignment="Left"
+							TextYAlignment="Center"
+						/>
+
+						<textlabel
+							Text="When enabled, remote calls from executor scripts (nil caller) will be ignored and not logged"
+							TextSize={12}
+							Font="Gotham"
+							TextColor3={new Color3(0.7, 0.7, 0.7)}
+							Size={new UDim2(1, 0, 0, 36)}
+							BackgroundTransparency={1}
+							TextXAlignment="Left"
+							TextYAlignment="Top"
+							TextWrapped={true}
+						/>
+					</frame>
+
+					{/* Toggle Switch */}
+					<Button
+						onClick={handleToggleNoExecutor}
+						size={new UDim2(0, 50, 0, 28)}
+						background={noExecutor ? new Color3(0.3, 0.7, 0.3) : new Color3(0.3, 0.3, 0.3)}
+						transparency={0}
+						cornerRadius={new UDim(0, 14)}
+					>
+						{/* Toggle Thumb */}
+						<frame
+							Size={new UDim2(0, 22, 0, 22)}
+							Position={noExecutor ? new UDim2(1, -25, 0.5, 0) : new UDim2(0, 3, 0.5, 0)}
 							AnchorPoint={new Vector2(0, 0.5)}
 							BackgroundColor3={new Color3(1, 1, 1)}
 							BorderSizePixel={0}

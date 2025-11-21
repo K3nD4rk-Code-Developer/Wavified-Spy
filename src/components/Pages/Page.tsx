@@ -42,7 +42,7 @@ function Page({ id }: Props) {
 
 	return (
 		<Container position={side.map((s) => new UDim2(s, 0, 0, 0))}>
-			{tabType === TabType.Event || tabType === TabType.Function ? (
+			{tabType === TabType.Event || tabType === TabType.Function || tabType === TabType.BindableEvent || tabType === TabType.BindableFunction ? (
 				<Logger id={id} />
 			) : tabType === TabType.Home ? (
 				<Home pageSelected={activeTabId === id} />

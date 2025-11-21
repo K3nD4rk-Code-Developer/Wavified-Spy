@@ -15,6 +15,20 @@ export default function scriptReducer(state = initialState, action: ScriptAction
 					[action.id]: action.script,
 				},
 			};
+		case "UPDATE_SCRIPT_CONTENT": {
+			const script = state.scripts[action.id];
+			if (!script) return state;
+			return {
+				...state,
+				scripts: {
+					...state.scripts,
+					[action.id]: {
+						...script,
+						content: action.content,
+					},
+				},
+			};
+		}
 		case "REMOVE_SCRIPT": {
 			const newScripts = { ...state.scripts };
 			delete newScripts[action.id];

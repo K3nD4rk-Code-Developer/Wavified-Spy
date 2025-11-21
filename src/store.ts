@@ -123,8 +123,24 @@ export function isShowBindableFunctions() {
 }
 
 export function dispatch(action: Rodux.AnyAction) {
-	if (isDestructed) return;
-	return configureStore().dispatch(action);
+	if (isDestructed) {
+		warn("[Store] Cannot dispatch - store is destructed");
+		return false;
+	}
+
+	try {
+		const storeInstance = configureStore();
+		if (!storeInstance) {
+			warn("[Store] Cannot dispatch - store not initialized");
+			return false;
+		}
+
+		storeInstance.dispatch(action);
+		return true;
+	} catch (err) {
+		warn("[Store] Dispatch failed:", err, "Action:", action.type);
+		return false;
+	}
 }
 
 export function get<T>(selector: (state: RootState) => T): T;

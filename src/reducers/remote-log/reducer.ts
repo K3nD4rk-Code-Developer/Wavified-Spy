@@ -30,7 +30,18 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				...state,
 				logs: state.logs.filter((log) => log.id !== action.id),
 			};
-		case "PUSH_OUTGOING_SIGNAL":
+		case "PUSH_OUTGOING_SIGNAL": {
+			// Validate that the log exists before trying to add signal
+			const logExists = state.logs.some((log) => log.id === action.id);
+			if (!logExists) {
+				warn(
+					"[RemoteLog Reducer] PUSH_OUTGOING_SIGNAL failed: No log found with id:",
+					action.id,
+					"Signal will be lost!",
+				);
+				return state; // Don't modify state if log doesn't exist
+			}
+
 			return {
 				...state,
 				logs: state.logs.map((log) => {
@@ -44,6 +55,7 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 					return log;
 				}),
 			};
+		}
 		case "REMOVE_OUTGOING_SIGNAL":
 			return {
 				...state,

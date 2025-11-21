@@ -30,14 +30,32 @@ end
 task.wait(0.1)
 
 -- Verify store is actually functional by testing key functions
-local storeReady = pcall(function()
-	return store.isActive() ~= nil and store.get() ~= nil
+local storeReady, storeError = pcall(function()
+	-- Test that store functions exist and return expected types
+	if store.isActive() == nil then
+		error("store.isActive() returned nil")
+	end
+
+	local state = store.get()
+	if state == nil then
+		error("store.get() returned nil")
+	end
+
+	-- Test that dispatch actually works by dispatching a test action
+	local testAction = { type = "@@INIT" }
+	local dispatchResult = store.dispatch(testAction)
+	if not dispatchResult then
+		error("store.dispatch() test failed - returned false")
+	end
+
+	return true
 end)
 
 if storeReady then
-	print("[RemoteSpy] Store is ready, setting up hooks...")
+	print("[RemoteSpy] Store is ready and dispatch verified, setting up hooks...")
 else
 	warn("[RemoteSpy] Store failed readiness check - hooks may not work properly")
+	warn("[RemoteSpy] Error:", storeError)
 end
 
 local CALLER_STACK_LEVEL = if KRNL_LOADED then 6 else 4
@@ -152,15 +170,55 @@ local function onReceive(self, params, returns)
 
 		local signal = logger.createOutgoingSignal(self, script, callback, traceback, params, returns, isActor)
 
-		if store.get(function(state)
+		-- Check if log already exists
+		local existingLog = store.get(function(state)
 			return selectRemoteLog(state, remoteId)
-		end) then
-			print("[RemoteSpy] Dispatching outgoing signal for existing remote")
-			store.dispatch(logger.pushOutgoingSignal(remoteId, signal))
+		end)
+
+		-- If no existing log, add small delay to reduce race condition window
+		-- This gives any concurrent dispatches for the same remote time to complete
+		if not existingLog then
+			task.wait(0.01)
+			-- Re-check after delay
+			existingLog = store.get(function(state)
+				return selectRemoteLog(state, remoteId)
+			end)
+		end
+
+		local success = false
+		local dispatchAttempts = 0
+		local maxAttempts = 3
+
+		-- Retry dispatch up to 3 times if it fails
+		while not success and dispatchAttempts < maxAttempts do
+			dispatchAttempts = dispatchAttempts + 1
+
+			if existingLog then
+				print("[RemoteSpy] Dispatching outgoing signal for existing remote (attempt " .. dispatchAttempts .. ")")
+				success = store.dispatch(logger.pushOutgoingSignal(remoteId, signal))
+			else
+				print("[RemoteSpy] Dispatching NEW remote log (attempt " .. dispatchAttempts .. ")")
+				local remoteLog = logger.createRemoteLog(self, signal)
+				success = store.dispatch(logger.pushRemoteLog(remoteLog))
+
+				-- If we just created a new log, update existingLog so retry uses pushOutgoingSignal
+				if success then
+					existingLog = remoteLog
+				end
+			end
+
+			if not success and dispatchAttempts < maxAttempts then
+				warn("[RemoteSpy] Dispatch failed, retrying... (attempt " .. dispatchAttempts .. "/" .. maxAttempts .. ")")
+				task.wait(0.05) -- Small delay before retry
+			end
+		end
+
+		if success then
+			print("[RemoteSpy] ✓ Signal successfully dispatched to store")
 		else
-			print("[RemoteSpy] Dispatching NEW remote log")
-			local remoteLog = logger.createRemoteLog(self, signal)
-			store.dispatch(logger.pushRemoteLog(remoteLog))
+			warn("[RemoteSpy] ✗ FAILED to dispatch signal after " .. maxAttempts .. " attempts!")
+			warn("[RemoteSpy] Remote:", self:GetFullName())
+			warn("[RemoteSpy] RemoteId:", remoteId)
 		end
 	end)
 end

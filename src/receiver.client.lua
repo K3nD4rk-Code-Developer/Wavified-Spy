@@ -106,8 +106,8 @@ local function onReceive(self, params, returns)
 			return
 		end
 
-		-- Filter out executor calls (when getcallingscript returns nil)
-		if store.isNoExecutor() and callingScript == nil then
+		-- Filter out executor calls (when final caller is nil, displays as "(nil).Script")
+		if store.isNoExecutor() and script == nil then
 			return
 		end
 

@@ -2,10 +2,15 @@ import { TabGroupActions } from "./actions";
 import { TabGroupState, TabType } from "./model";
 import { createTabColumn } from "./utils";
 
+print("[TabGroup Reducer] TabType.Home value:", TabType.Home, "typeof:", typeOf(TabType.Home));
+print("[TabGroup Reducer] TabType object:", TabType);
+
 const initialState: TabGroupState = {
 	tabs: [createTabColumn("home", "Home", TabType.Home, false)],
 	activeTab: "home",
 };
+
+print("[TabGroup Reducer] Initial state created, tabs:", initialState.tabs);
 
 export default function tabGroupReducer(state = initialState, action: TabGroupActions): TabGroupState {
 	switch (action.type) {

@@ -33,6 +33,7 @@ function Home({ pageSelected }: Props) {
 	const remoteLogIds = useRootSelector(selectRemoteLogIds);
 	const selection = useRootSelector(selectRemoteIdSelected);
 
+	print("[Home] useRootSelector returned remoteLogIds:", remoteLogIds, "type:", typeOf(remoteLogIds), "size:", remoteLogIds.size());
 	print("[Home] Rendering with", remoteLogIds.size(), "remote IDs, forceUpdate:", forceUpdate);
 
 	// Deselect the remote if the page is deselected.

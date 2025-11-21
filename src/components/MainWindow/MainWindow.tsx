@@ -15,11 +15,8 @@ function MainWindow() {
 	const dispatch = useRootDispatch();
 	const visible = useRootSelector(selectUIVisible);
 
-	// Don't render if not visible
-	if (!visible) return undefined;
-
 	return (
-		<Root>
+		<Root enabled={visible}>
 			<Window.Root initialSize={new UDim2(0, 1090, 0, 700)} initialPosition={new UDim2(0.5, -540, 0.5, -350)}>
 				<Window.DropShadow />
 				<Acrylic.Paint />

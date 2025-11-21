@@ -26,10 +26,11 @@ export default function uiReducer(state = initialState, action: UIActions): UISt
 		case "LOAD_TOGGLE_KEY": {
 			// Convert string back to KeyCode enum
 			const keyCode = Enum.KeyCode[action.keyName as keyof typeof Enum.KeyCode];
-			if (keyCode !== undefined) {
+			// Check if it's a valid KeyCode value (not a function or undefined)
+			if (keyCode !== undefined && typeOf(keyCode) === "EnumItem") {
 				return {
 					...state,
-					toggleKey: keyCode,
+					toggleKey: keyCode as Enum.KeyCode,
 				};
 			}
 			return state;

@@ -16,7 +16,15 @@ function RowView({ signal, selected, onHeightChange }: Props) {
 	const dispatch = useRootDispatch();
 	const [contentHeight, setContentHeight] = useBinding(0);
 
-	const toggle = useCallback(() => dispatch(toggleSignalSelected(signal.remoteId, signal.id)), []);
+	const toggle = useCallback(() => {
+		// Print caller info for debugging
+		if (signal.caller) {
+			print(`[RemoteSpy] Caller: ${signal.caller.Name} (${signal.caller.ClassName})`);
+		} else {
+			print(`[RemoteSpy] Caller: nil`);
+		}
+		dispatch(toggleSignalSelected(signal.remoteId, signal.id));
+	}, []);
 
 	return (
 		<>

@@ -99,13 +99,14 @@ local function onReceive(self, params, returns)
 			return
 		end
 
-		local script = getcallingscript() or (callback and getFunctionScript(callback))
+		local callingScript = getcallingscript()
+		local script = callingScript or (callback and getFunctionScript(callback))
 
 		if store.isNoActors() and isFromActor(script, callback) then
 			return
 		end
 
-		-- Filter out executor calls (when caller script is nil)
+		-- Filter out executor calls (when final caller is nil, displays as "(nil).Script")
 		if store.isNoExecutor() and script == nil then
 			return
 		end

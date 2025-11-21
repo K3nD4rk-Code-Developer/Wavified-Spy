@@ -6,7 +6,7 @@ import { describeFunction, stringifyFunctionSignature } from "utils/function-uti
 import { selectTracebackCallStack } from "reducers/traceback";
 import { selectSignalSelected } from "reducers/remote-log";
 import { useRootSelector } from "hooks/use-root-store";
-import { withHooksPure, useEffect, useRef } from "@rbxts/roact-hooked";
+import { withHooksPure, useEffect, useMemo } from "@rbxts/roact-hooked";
 import { formatEscapes } from "utils/format-escapes";
 
 interface TracebackFrameProps {
@@ -83,13 +83,13 @@ function Traceback() {
 	const { lowerHidden, setLowerHidden, lowerSize, lowerPosition, setLowerHeight } = useSidePanelContext();
 	const callStack = useRootSelector(selectTracebackCallStack);
 	const signal = useRootSelector(selectSignalSelected);
-	const scrollFrameRef = useRef<ScrollingFrame>();
+	const scrollFrameRef = useMemo(() => Roact.createRef<ScrollingFrame>(), []);
 
 	const isEmpty = callStack.size() === 0;
 
 	// Auto-resize panel based on content
 	useEffect(() => {
-		const frame = scrollFrameRef.current;
+		const frame = scrollFrameRef.getValue();
 		if (!frame || isEmpty) return;
 
 		const updateHeight = () => {

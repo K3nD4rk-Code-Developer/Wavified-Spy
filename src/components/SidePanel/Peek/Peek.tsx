@@ -4,16 +4,14 @@ import TitleBar from "../components/TitleBar";
 import { useSidePanelContext } from "../use-side-panel-context";
 import { selectSignalSelected, selectPathNotation } from "reducers/remote-log";
 import { useRootSelector } from "hooks/use-root-store";
-import { withHooksPure, useEffect, useRef } from "@rbxts/roact-hooked";
+import { withHooksPure, useEffect } from "@rbxts/roact-hooked";
 import { genScript } from "utils/gen-script";
 import { highlightLua } from "utils/syntax-highlight";
-import { TextService } from "@rbxts/services";
 
 function Peek() {
 	const { middleHidden, setMiddleHidden, middleSize, middlePosition, setMiddleHeight } = useSidePanelContext();
 	const signal = useRootSelector(selectSignalSelected);
 	const pathNotation = useRootSelector(selectPathNotation);
-	const textLabelRef = useRef<TextLabel>();
 
 	let scriptCode = "";
 	let highlightedCode = "";

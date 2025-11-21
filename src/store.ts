@@ -27,6 +27,8 @@ function createStore() {
 
 	// Subscribe to store changes to save settings
 	settingsSaveConnection = newStore.changed.connect((state: RootState) => {
+		print("[Store] Rodux store.changed event fired! Logs count:", state.remoteLog.logs.size());
+
 		// Debounce the save operation
 		task.defer(() => {
 			saveSettings({
@@ -135,7 +137,14 @@ export function dispatch(action: Rodux.AnyAction) {
 			return false;
 		}
 
-		storeInstance.dispatch(action);
+		print("[Store] Dispatching action:", action.type);
+		const result = storeInstance.dispatch(action);
+		print("[Store] Dispatch completed, result:", result);
+
+		// Force trigger changed event by getting new state
+		const newState = storeInstance.getState();
+		print("[Store] After dispatch - logs count:", newState.remoteLog.logs.size());
+
 		return true;
 	} catch (err) {
 		warn("[Store] Dispatch failed:", err, "Action:", action.type);

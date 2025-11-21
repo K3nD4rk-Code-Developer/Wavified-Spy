@@ -8,7 +8,7 @@ export const selectRemoteLogsSorted = createSelector([selectRemoteLogs], (logs) 
 	return [...logs].sort((a, b) => {
 		const aTimestamp = a.outgoing[0]?.timestamp ?? -math.huge;
 		const bTimestamp = b.outgoing[0]?.timestamp ?? -math.huge;
-		return bTimestamp > aTimestamp; // Descending order (newest first)
+		return aTimestamp > bTimestamp; // Descending order (newest first)
 	});
 });
 

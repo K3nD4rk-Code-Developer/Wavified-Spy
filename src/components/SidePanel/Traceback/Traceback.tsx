@@ -6,7 +6,7 @@ import { describeFunction, stringifyFunctionSignature } from "utils/function-uti
 import { selectTracebackCallStack } from "reducers/traceback";
 import { selectSignalSelected } from "reducers/remote-log";
 import { useRootSelector } from "hooks/use-root-store";
-import { withHooksPure, useEffect, useMemo } from "@rbxts/roact-hooked";
+import { withHooksPure } from "@rbxts/roact-hooked";
 import { formatEscapes } from "utils/format-escapes";
 
 interface TracebackFrameProps {
@@ -80,35 +80,11 @@ function TracebackFrame({ fn, index, isRemoteCaller }: TracebackFrameProps) {
 }
 
 function Traceback() {
-	const { lowerHidden, setLowerHidden, lowerSize, lowerPosition, setLowerHeight } = useSidePanelContext();
+	const { lowerHidden, setLowerHidden, lowerSize, lowerPosition } = useSidePanelContext();
 	const callStack = useRootSelector(selectTracebackCallStack);
 	const signal = useRootSelector(selectSignalSelected);
-	const scrollFrameRef = useMemo(() => Roact.createRef<ScrollingFrame>(), []);
 
 	const isEmpty = callStack.size() === 0;
-
-	// Auto-resize panel based on content
-	useEffect(() => {
-		const frame = scrollFrameRef.getValue();
-		if (!frame || isEmpty) return;
-
-		const updateHeight = () => {
-			const contentHeight = frame.AbsoluteCanvasSize.Y;
-			const titleBarHeight = 30;
-			const padding = 20;
-			// Cap at 400px max, min 150px
-			const desiredHeight = math.clamp(contentHeight + titleBarHeight + padding, 150, 400);
-			setLowerHeight(desiredHeight);
-		};
-
-		// Initial update
-		task.defer(updateHeight);
-
-		// Monitor for changes
-		const connection = frame.GetPropertyChangedSignal("AbsoluteCanvasSize").Connect(updateHeight);
-
-		return () => connection.Disconnect();
-	}, [isEmpty, signal]);
 
 	return (
 		<Container size={lowerSize} position={lowerPosition}>
@@ -120,7 +96,6 @@ function Traceback() {
 
 			{!isEmpty && signal ? (
 				<scrollingframe
-					Ref={scrollFrameRef}
 					Size={new UDim2(1, 0, 1, -30)}
 					Position={new UDim2(0, 0, 0, 30)}
 					BorderSizePixel={0}

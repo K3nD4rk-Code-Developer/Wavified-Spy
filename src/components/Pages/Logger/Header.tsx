@@ -2,8 +2,7 @@ import Button from "components/Button";
 import Roact from "@rbxts/roact";
 import { Instant, Spring } from "@rbxts/flipper";
 import { TabType } from "reducers/tab-group";
-import { TextService } from "@rbxts/services";
-import { clearOutgoingSignals, toggleRemotePaused, toggleRemoteBlocked, selectPausedRemotes, selectBlockedRemotes } from "reducers/remote-log";
+import { clearOutgoingSignals } from "reducers/remote-log";
 import { formatEscapes } from "utils/format-escapes";
 import { getInstancePath } from "utils/instance-util";
 import { makeSelectRemoteLogObject, makeSelectRemoteLogType } from "reducers/remote-log";
@@ -36,11 +35,6 @@ function Header({ id }: Props) {
 	const selectObject = useMemo(makeSelectRemoteLogObject, []);
 	const remoteObject = useRootSelector((state) => selectObject(state, id));
 
-	const pausedRemotes = useRootSelector(selectPausedRemotes);
-	const blockedRemotes = useRootSelector(selectBlockedRemotes);
-	const isPaused = pausedRemotes.has(id);
-	const isBlocked = blockedRemotes.has(id);
-
 	const [deleteTransparency, setDeleteTransparency] = useGroupMotor([0.94, 0]);
 	const deleteButton = useMemo(
 		() => ({
@@ -49,29 +43,6 @@ function Header({ id }: Props) {
 		}),
 		[],
 	);
-
-	const [pauseTransparency, setPauseTransparency] = useGroupMotor([0.94, 0]);
-	const pauseButton = useMemo(
-		() => ({
-			background: pauseTransparency.map((t) => t[0]),
-			foreground: pauseTransparency.map((t) => t[1]),
-		}),
-		[],
-	);
-
-	const [blockTransparency, setBlockTransparency] = useGroupMotor([0.94, 0]);
-	const blockButton = useMemo(
-		() => ({
-			background: blockTransparency.map((t) => t[0]),
-			foreground: blockTransparency.map((t) => t[1]),
-		}),
-		[],
-	);
-
-	const pauseText = isPaused ? "Resume" : "Pause";
-	const blockText = isBlocked ? "Unblock" : "Block";
-	const pauseTextSize = TextService.GetTextSize(pauseText, 11, "Gotham", new Vector2(150, 28));
-	const blockTextSize = TextService.GetTextSize(blockText, 11, "Gotham", new Vector2(150, 28));
 
 	return (
 		<frame
@@ -102,66 +73,6 @@ function Header({ id }: Props) {
 					Font="Gotham"
 					TextColor3={new Color3(1, 1, 1)}
 					TextTransparency={deleteButton.foreground}
-					TextSize={11}
-					TextXAlignment="Center"
-					TextYAlignment="Center"
-					Size={new UDim2(1, 0, 1, 0)}
-					BackgroundTransparency={1}
-				>
-					<uigradient Transparency={captionTransparency} />
-				</textlabel>
-			</Button>
-
-			{/* Pause/Resume Remote */}
-			<Button
-				onClick={() => {
-					setPauseTransparency(deleteSprings.hovered);
-					dispatch(toggleRemotePaused(id));
-				}}
-				onPress={() => setPauseTransparency(deleteSprings.pressed)}
-				onHover={() => setPauseTransparency(deleteSprings.hovered)}
-				onHoverEnd={() => setPauseTransparency(deleteSprings.default)}
-				anchorPoint={new Vector2(1, 0)}
-				size={new UDim2(0, pauseTextSize.X + 16, 0, 28)}
-				position={new UDim2(1, -18 - 94 - 8, 0, 18)}
-				transparency={pauseButton.background}
-				cornerRadius={new UDim(0, 4)}
-			>
-				<textlabel
-					Text={pauseText}
-					Font="Gotham"
-					TextColor3={new Color3(1, 1, 1)}
-					TextTransparency={pauseButton.foreground}
-					TextSize={11}
-					TextXAlignment="Center"
-					TextYAlignment="Center"
-					Size={new UDim2(1, 0, 1, 0)}
-					BackgroundTransparency={1}
-				>
-					<uigradient Transparency={captionTransparency} />
-				</textlabel>
-			</Button>
-
-			{/* Block/Unblock Remote */}
-			<Button
-				onClick={() => {
-					setBlockTransparency(deleteSprings.hovered);
-					dispatch(toggleRemoteBlocked(id));
-				}}
-				onPress={() => setBlockTransparency(deleteSprings.pressed)}
-				onHover={() => setBlockTransparency(deleteSprings.hovered)}
-				onHoverEnd={() => setBlockTransparency(deleteSprings.default)}
-				anchorPoint={new Vector2(1, 0)}
-				size={new UDim2(0, blockTextSize.X + 16, 0, 28)}
-				position={new UDim2(1, -18 - 94 - 8 - (pauseTextSize.X + 16) - 8, 0, 18)}
-				transparency={blockButton.background}
-				cornerRadius={new UDim(0, 4)}
-			>
-				<textlabel
-					Text={blockText}
-					Font="Gotham"
-					TextColor3={new Color3(1, 1, 1)}
-					TextTransparency={blockButton.foreground}
 					TextSize={11}
 					TextXAlignment="Center"
 					TextYAlignment="Center"

@@ -4,12 +4,12 @@ import TitleBar from "../components/TitleBar";
 import { useSidePanelContext } from "../use-side-panel-context";
 import { selectSignalSelected, selectPathNotation } from "reducers/remote-log";
 import { useRootSelector } from "hooks/use-root-store";
-import { withHooksPure, useEffect } from "@rbxts/roact-hooked";
+import { withHooksPure } from "@rbxts/roact-hooked";
 import { genScript } from "utils/gen-script";
 import { highlightLua } from "utils/syntax-highlight";
 
 function Peek() {
-	const { middleHidden, setMiddleHidden, middleSize, middlePosition, setMiddleHeight } = useSidePanelContext();
+	const { middleHidden, setMiddleHidden, middleSize, middlePosition } = useSidePanelContext();
 	const signal = useRootSelector(selectSignalSelected);
 	const pathNotation = useRootSelector(selectPathNotation);
 
@@ -29,25 +29,6 @@ function Peek() {
 	}
 
 	const isEmpty = !signal || scriptCode === "";
-
-	// Auto-resize panel based on text content
-	useEffect(() => {
-		if (isEmpty || !highlightedCode) return;
-
-		// Calculate approximate text height
-		// Count lines in the script
-		const lineCount = scriptCode.split("\n").size();
-		const lineHeight = 14; // Approximate line height for TextSize 11
-		const padding = 24; // Padding top + bottom
-		const titleBarHeight = 30;
-		const extra = 20; // "a little bit more"
-
-		const estimatedHeight = lineCount * lineHeight + padding + titleBarHeight + extra;
-		// Cap at 300px max, min 100px
-		const desiredHeight = math.clamp(estimatedHeight, 100, 300);
-
-		setMiddleHeight(desiredHeight);
-	}, [isEmpty, highlightedCode, scriptCode]);
 
 	return (
 		<Container size={middleSize} position={middlePosition}>

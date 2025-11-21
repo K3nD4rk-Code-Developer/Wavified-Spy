@@ -7,6 +7,7 @@ const SETTINGS_FILE = "wavified_spy_settings.json";
 
 export interface PersistedSettings {
 	noActors?: boolean;
+	noExecutor?: boolean;
 	showRemoteEvents?: boolean;
 	showRemoteFunctions?: boolean;
 	showBindableEvents?: boolean;

@@ -3,6 +3,7 @@ import { useEffect, useMutable, withHooksPure } from "@rbxts/roact-hooked";
 import { useRootDispatch, useRootSelector } from "hooks/use-root-store";
 import {
 	selectNoActors,
+	selectNoExecutor,
 	selectShowRemoteEvents,
 	selectShowRemoteFunctions,
 	selectShowBindableEvents,
@@ -19,6 +20,7 @@ function SettingsPersistence() {
 
 	// Get all settings from state
 	const noActors = useRootSelector(selectNoActors);
+	const noExecutor = useRootSelector(selectNoExecutor);
 	const showRemoteEvents = useRootSelector(selectShowRemoteEvents);
 	const showRemoteFunctions = useRootSelector(selectShowRemoteFunctions);
 	const showBindableEvents = useRootSelector(selectShowBindableEvents);
@@ -53,6 +55,7 @@ function SettingsPersistence() {
 
 		const settings: PersistedSettings = {
 			noActors,
+			noExecutor,
 			showRemoteEvents,
 			showRemoteFunctions,
 			showBindableEvents,
@@ -62,7 +65,7 @@ function SettingsPersistence() {
 		};
 
 		saveSettings(settings);
-	}, [noActors, showRemoteEvents, showRemoteFunctions, showBindableEvents, showBindableFunctions, pathNotation, toggleKey]);
+	}, [noActors, noExecutor, showRemoteEvents, showRemoteFunctions, showBindableEvents, showBindableFunctions, pathNotation, toggleKey]);
 
 	return <></>;
 }

@@ -105,6 +105,11 @@ local function onReceive(self, params, returns)
 			return
 		end
 
+		-- Filter out executor calls (when caller script is nil)
+		if store.isNoExecutor() and script == nil then
+			return
+		end
+
 		local isActor = isFromActor(script, callback)
 
 		local signal = logger.createOutgoingSignal(self, script, callback, traceback, params, returns, isActor)

@@ -255,10 +255,20 @@ function ActionBarEffects() {
 				dispatch(toggleRemotePaused(id));
 			});
 			notify(`Toggled pause for ${multiSelected.size()} remotes`);
-		} else if (remoteId !== undefined) {
-			dispatch(toggleRemotePaused(remoteId));
-			const isPaused = pausedRemotes.has(remoteId);
-			notify(isPaused ? "Unpaused remote" : "Paused remote");
+		} else {
+			// Use remoteId if available, otherwise use current tab's id if it's a remote tab
+			const targetId = remoteId ?? (currentTab && (
+				currentTab.type === TabType.Event ||
+				currentTab.type === TabType.Function ||
+				currentTab.type === TabType.BindableEvent ||
+				currentTab.type === TabType.BindableFunction
+			) ? currentTab.id : undefined);
+
+			if (targetId !== undefined) {
+				dispatch(toggleRemotePaused(targetId));
+				const isPaused = pausedRemotes.has(targetId);
+				notify(isPaused ? "Unpaused remote" : "Paused remote");
+			}
 		}
 	});
 
@@ -269,10 +279,20 @@ function ActionBarEffects() {
 				dispatch(toggleRemoteBlocked(id));
 			});
 			notify(`Toggled block for ${multiSelected.size()} remotes`);
-		} else if (remoteId !== undefined) {
-			dispatch(toggleRemoteBlocked(remoteId));
-			const isBlocked = blockedRemotes.has(remoteId);
-			notify(isBlocked ? "Unblocked remote" : "Blocked remote");
+		} else {
+			// Use remoteId if available, otherwise use current tab's id if it's a remote tab
+			const targetId = remoteId ?? (currentTab && (
+				currentTab.type === TabType.Event ||
+				currentTab.type === TabType.Function ||
+				currentTab.type === TabType.BindableEvent ||
+				currentTab.type === TabType.BindableFunction
+			) ? currentTab.id : undefined);
+
+			if (targetId !== undefined) {
+				dispatch(toggleRemoteBlocked(targetId));
+				const isBlocked = blockedRemotes.has(targetId);
+				notify(isBlocked ? "Unblocked remote" : "Blocked remote");
+			}
 		}
 	});
 
@@ -334,7 +354,14 @@ function ActionBarEffects() {
 
 	// Remote & Signal actions
 	useEffect(() => {
-		const remoteEnabled = remoteId !== undefined;
+		// Also consider current tab as a remote if it's an Event, Function, BindableEvent, or BindableFunction
+		const isRemoteTab = currentTab && (
+			currentTab.type === TabType.Event ||
+			currentTab.type === TabType.Function ||
+			currentTab.type === TabType.BindableEvent ||
+			currentTab.type === TabType.BindableFunction
+		);
+		const remoteEnabled = remoteId !== undefined || isRemoteTab;
 		const signalEnabled = signal !== undefined && currentTab?.id === signal.remoteId;
 		const isHome = currentTab?.type === TabType.Home;
 		const isScript = currentTab?.type === TabType.Script;

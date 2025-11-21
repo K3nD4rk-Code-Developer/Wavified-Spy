@@ -325,7 +325,7 @@ function ActionBarEffects() {
 			: false;
 
 		// Delete is enabled for any tab except Home and Settings
-		const canDelete = remoteEnabled || signalEnabled || (currentTab && !isHome && !isSettings);
+		const canDelete = remoteEnabled || signalEnabled || !!(currentTab && !isHome && !isSettings);
 
 		dispatch(setActionEnabled("copy", remoteEnabled || signalEnabled));
 		dispatch(setActionEnabled("save", remoteEnabled || signalEnabled));

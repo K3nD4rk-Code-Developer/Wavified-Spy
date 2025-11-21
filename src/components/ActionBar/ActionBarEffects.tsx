@@ -355,12 +355,12 @@ function ActionBarEffects() {
 	// Remote & Signal actions
 	useEffect(() => {
 		// Also consider current tab as a remote if it's an Event, Function, BindableEvent, or BindableFunction
-		const isRemoteTab = currentTab && (
+		const isRemoteTab = !!(currentTab && (
 			currentTab.type === TabType.Event ||
 			currentTab.type === TabType.Function ||
 			currentTab.type === TabType.BindableEvent ||
 			currentTab.type === TabType.BindableFunction
-		);
+		));
 		const remoteEnabled = remoteId !== undefined || isRemoteTab;
 		const signalEnabled = signal !== undefined && currentTab?.id === signal.remoteId;
 		const isHome = currentTab?.type === TabType.Home;

@@ -22,7 +22,8 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 	// Log ALL actions to debug state resets
 	// Cast to any to handle Rodux internal actions like @@INIT
 	const actionType = (action as any).type as string;
-	if (actionType && !actionType.startsWith("@@")) {
+	// Use indexOf instead of startsWith for compatibility
+	if (actionType && actionType.indexOf("@@") !== 0) {
 		print("[Reducer] Action:", actionType, "Current logs:", state.logs.size());
 		if (state.logs.size() === 0 && state === initialState) {
 			warn("[Reducer] WARNING: State is initialState (fresh reducer call)!");
@@ -200,7 +201,8 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 			// Log unknown actions that might be resetting state
 			// Cast to any to handle actions not in RemoteLogActions type
 			const unknownActionType = (action as any).type as string;
-			if (unknownActionType && !unknownActionType.startsWith("@@")) {
+			// Use indexOf instead of startsWith for compatibility
+			if (unknownActionType && unknownActionType.indexOf("@@") !== 0) {
 				print("[Reducer] Unknown action:", unknownActionType);
 			}
 			return state;

@@ -18,11 +18,20 @@ const initialState: RemoteLogState = {
 
 export default function remoteLogReducer(state = initialState, action: RemoteLogActions): RemoteLogState {
 	switch (action.type) {
-		case "PUSH_REMOTE_LOG":
+		case "PUSH_REMOTE_LOG": {
+			// Update timestamps for all signals in the new log
+			const logWithTimestamps = {
+				...action.log,
+				outgoing: action.log.outgoing.map((signal) => ({
+					...signal,
+					timestamp: os.clock(),
+				})),
+			};
 			return {
 				...state,
-				logs: [...state.logs, action.log],
+				logs: [...state.logs, logWithTimestamps],
 			};
+		}
 		case "REMOVE_REMOTE_LOG":
 			return {
 				...state,

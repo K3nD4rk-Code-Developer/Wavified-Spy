@@ -18,9 +18,10 @@ import {
 	selectBlockedRemotes,
 	selectPathNotation,
 	selectRemotesMultiSelected,
+	selectRemoteLogs,
 } from "reducers/remote-log";
 import { removeRemoteLog } from "reducers/remote-log";
-import { setActionEnabled } from "reducers/action-bar";
+import { setActionEnabled, setActionCaption } from "reducers/action-bar";
 import { setScript, removeScript, selectScript } from "reducers/script";
 import { useActionEffect } from "hooks/use-action-effect";
 import { useEffect, withHooksPure } from "@rbxts/roact-hooked";
@@ -389,6 +390,41 @@ function ActionBarEffects() {
 		dispatch(setActionEnabled("blockRemote", hasMultiSelect || remoteEnabled));
 		dispatch(setActionEnabled("runRemote", signalEnabled || scriptHasSignal));
 	}, [remoteId === undefined, signal, currentTab, multiSelected]);
+
+	// Update button captions based on state
+	const allLogs = useRootSelector(selectRemoteLogs);
+	useEffect(() => {
+		// Update global pause button caption
+		dispatch(setActionCaption("pause", paused ? "Resume" : "Pause"));
+
+		// Get current remote ID (from selected remote or current tab)
+		const currentRemoteId = remoteId ?? (currentTab && (
+			currentTab.type === TabType.Event ||
+			currentTab.type === TabType.Function ||
+			currentTab.type === TabType.BindableEvent ||
+			currentTab.type === TabType.BindableFunction
+		) ? currentTab.id : undefined);
+
+		// Update pause remote button caption
+		if (currentRemoteId !== undefined) {
+			const isRemotePaused = pausedRemotes.has(currentRemoteId);
+			dispatch(setActionCaption("pauseRemote", isRemotePaused ? "Resume Remote" : "Pause Remote"));
+		} else {
+			dispatch(setActionCaption("pauseRemote", "Pause Remote"));
+		}
+
+		// Update block remote button caption
+		if (currentRemoteId !== undefined) {
+			const isRemoteBlocked = blockedRemotes.has(currentRemoteId);
+			dispatch(setActionCaption("blockRemote", isRemoteBlocked ? "Unblock Remote" : "Block Remote"));
+		} else {
+			dispatch(setActionCaption("blockRemote", "Block Remote"));
+		}
+
+		// Update block all button caption
+		const allBlocked = allLogs.size() > 0 && allLogs.every((log) => blockedRemotes.has(log.id));
+		dispatch(setActionCaption("blockAll", allBlocked ? "Unblock All" : "Block All"));
+	}, [paused, pausedRemotes, blockedRemotes, remoteId, currentTab, allLogs]);
 
 	return <></>;
 }

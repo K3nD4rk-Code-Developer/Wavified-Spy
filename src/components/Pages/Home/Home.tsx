@@ -2,10 +2,11 @@ import Roact from "@rbxts/roact";
 import Row from "./Row";
 import Selection from "components/Selection";
 import { arrayToMap } from "@rbxts/roact-hooked-plus";
-import { selectRemoteIdSelected, selectRemoteLogIds } from "reducers/remote-log";
-import { setRemoteSelected } from "reducers/remote-log";
+import { selectRemoteIdSelected, selectRemoteLogIds, selectRemotesMultiSelected } from "reducers/remote-log";
+import { setRemoteSelected, toggleRemoteMultiSelected, clearMultiSelection } from "reducers/remote-log";
 import { useEffect, withHooksPure } from "@rbxts/roact-hooked";
 import { useRootDispatch, useRootSelector } from "hooks/use-root-store";
+import { UserInputService } from "@rbxts/services";
 
 interface Props {
 	pageSelected: boolean;
@@ -15,11 +16,15 @@ function Home({ pageSelected }: Props) {
 	const dispatch = useRootDispatch();
 	const remoteLogIds = useRootSelector(selectRemoteLogIds);
 	const selection = useRootSelector(selectRemoteIdSelected);
+	const multiSelected = useRootSelector(selectRemotesMultiSelected);
 
 	// Deselect the remote if the page is deselected.
 	useEffect(() => {
 		if (!pageSelected && selection) {
 			dispatch(setRemoteSelected(undefined));
+		}
+		if (!pageSelected && multiSelected.size() > 0) {
+			dispatch(clearMultiSelection());
 		}
 	}, [pageSelected]);
 
@@ -55,9 +60,22 @@ function Home({ pageSelected }: Props) {
 					id={id}
 					order={order}
 					selected={selection === id}
-					onClick={() =>
-						selection !== id ? dispatch(setRemoteSelected(id)) : dispatch(setRemoteSelected(undefined))
-					}
+					multiSelected={multiSelected.has(id)}
+					onClick={() => {
+						const isCtrlHeld = UserInputService.IsKeyDown(Enum.KeyCode.LeftControl) || UserInputService.IsKeyDown(Enum.KeyCode.RightControl);
+
+						if (isCtrlHeld) {
+							// Multi-select mode
+							dispatch(toggleRemoteMultiSelected(id));
+						} else {
+							// Normal single selection
+							selection !== id ? dispatch(setRemoteSelected(id)) : dispatch(setRemoteSelected(undefined));
+							// Clear multi-selection when not holding Ctrl
+							if (multiSelected.size() > 0) {
+								dispatch(clearMultiSelection());
+							}
+						}
+					}}
 				/>,
 			])}
 		</scrollingframe>

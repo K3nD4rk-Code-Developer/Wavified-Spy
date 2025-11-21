@@ -6,6 +6,7 @@ const initialState: RemoteLogState = {
 	paused: false,
 	pausedRemotes: new Set(),
 	blockedRemotes: new Set(),
+	remotesMultiSelected: new Set(),
 	noActors: false,
 	showRemoteEvents: true,
 	showRemoteFunctions: true,
@@ -162,6 +163,24 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 			return {
 				...state,
 				pathNotation: action.notation,
+			};
+		case "TOGGLE_REMOTE_MULTI_SELECTED": {
+			const remotesMultiSelected = new Set<string>();
+			state.remotesMultiSelected.forEach((id) => remotesMultiSelected.add(id));
+			if (remotesMultiSelected.has(action.id)) {
+				remotesMultiSelected.delete(action.id);
+			} else {
+				remotesMultiSelected.add(action.id);
+			}
+			return {
+				...state,
+				remotesMultiSelected,
+			};
+		}
+		case "CLEAR_MULTI_SELECTION":
+			return {
+				...state,
+				remotesMultiSelected: new Set(),
 			};
 		default:
 			return state;

@@ -17,6 +17,7 @@ import {
 	selectPausedRemotes,
 	selectBlockedRemotes,
 	selectPathNotation,
+	selectRemotesMultiSelected,
 } from "reducers/remote-log";
 import { removeRemoteLog } from "reducers/remote-log";
 import { setActionEnabled } from "reducers/action-bar";
@@ -48,6 +49,7 @@ function ActionBarEffects() {
 	const signal = useRootSelector(selectSignalSelected);
 	const tabs = useRootSelector(selectTabs);
 	const pathNotation = useRootSelector(selectPathNotation);
+	const multiSelected = useRootSelector(selectRemotesMultiSelected);
 
 	// Auto-populate traceback when signal changes
 	useEffect(() => {
@@ -97,7 +99,14 @@ function ActionBarEffects() {
 	});
 
 	useActionEffect("delete", () => {
-		if (remote) {
+		if (multiSelected.size() > 0) {
+			// Bulk delete remotes
+			multiSelected.forEach((id) => {
+				dispatch(removeRemoteLog(id));
+				dispatch(deleteTab(id));
+			});
+			notify(`Deleted ${multiSelected.size()} remotes`);
+		} else if (remote) {
 			dispatch(removeRemoteLog(remote.id));
 			dispatch(deleteTab(remote.id));
 			notify("Deleted remote");
@@ -240,7 +249,13 @@ function ActionBarEffects() {
 	});
 
 	useActionEffect("pauseRemote", () => {
-		if (remoteId !== undefined) {
+		if (multiSelected.size() > 0) {
+			// Bulk pause/unpause
+			multiSelected.forEach((id) => {
+				dispatch(toggleRemotePaused(id));
+			});
+			notify(`Toggled pause for ${multiSelected.size()} remotes`);
+		} else if (remoteId !== undefined) {
 			dispatch(toggleRemotePaused(remoteId));
 			const isPaused = pausedRemotes.has(remoteId);
 			notify(isPaused ? "Unpaused remote" : "Paused remote");
@@ -248,7 +263,13 @@ function ActionBarEffects() {
 	});
 
 	useActionEffect("blockRemote", () => {
-		if (remoteId !== undefined) {
+		if (multiSelected.size() > 0) {
+			// Bulk block/unblock
+			multiSelected.forEach((id) => {
+				dispatch(toggleRemoteBlocked(id));
+			});
+			notify(`Toggled block for ${multiSelected.size()} remotes`);
+		} else if (remoteId !== undefined) {
 			dispatch(toggleRemoteBlocked(remoteId));
 			const isBlocked = blockedRemotes.has(remoteId);
 			notify(isBlocked ? "Unblocked remote" : "Blocked remote");
@@ -318,14 +339,15 @@ function ActionBarEffects() {
 		const isHome = currentTab?.type === TabType.Home;
 		const isScript = currentTab?.type === TabType.Script;
 		const isSettings = currentTab?.type === TabType.Settings;
+		const hasMultiSelect = multiSelected.size() > 0;
 
 		// Check if current script tab has signal reference for execution
 		const scriptHasSignal = isScript && currentTab?.id
 			? store.getState().script.scripts[currentTab.id]?.signalId !== undefined
 			: false;
 
-		// Delete is enabled for any tab except Home and Settings
-		const canDelete = remoteEnabled || signalEnabled || !!(currentTab && !isHome && !isSettings);
+		// Delete is enabled for any tab except Home and Settings, or when multi-selected
+		const canDelete = hasMultiSelect || remoteEnabled || signalEnabled || !!(currentTab && !isHome && !isSettings);
 
 		dispatch(setActionEnabled("copy", remoteEnabled || signalEnabled));
 		dispatch(setActionEnabled("save", remoteEnabled || signalEnabled));
@@ -336,10 +358,10 @@ function ActionBarEffects() {
 		dispatch(setActionEnabled("copyScript", signalEnabled));
 		dispatch(setActionEnabled("viewScript", signalEnabled));
 
-		dispatch(setActionEnabled("pauseRemote", remoteEnabled));
-		dispatch(setActionEnabled("blockRemote", remoteEnabled));
+		dispatch(setActionEnabled("pauseRemote", hasMultiSelect || remoteEnabled));
+		dispatch(setActionEnabled("blockRemote", hasMultiSelect || remoteEnabled));
 		dispatch(setActionEnabled("runRemote", signalEnabled || scriptHasSignal));
-	}, [remoteId === undefined, signal, currentTab]);
+	}, [remoteId === undefined, signal, currentTab, multiSelected]);
 
 	return <></>;
 }

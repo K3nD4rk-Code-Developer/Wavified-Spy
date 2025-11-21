@@ -72,6 +72,14 @@ export function setPathNotation(notation: PathNotation) {
 	return { type: "SET_PATH_NOTATION", notation } as const;
 }
 
+export function toggleRemoteMultiSelected(id: string) {
+	return { type: "TOGGLE_REMOTE_MULTI_SELECTED", id } as const;
+}
+
+export function clearMultiSelection() {
+	return { type: "CLEAR_MULTI_SELECTION" } as const;
+}
+
 export type RemoteLogActions =
 	| ReturnType<typeof pushRemoteLog>
 	| ReturnType<typeof removeRemoteLog>
@@ -90,4 +98,6 @@ export type RemoteLogActions =
 	| ReturnType<typeof toggleShowRemoteFunctions>
 	| ReturnType<typeof toggleShowBindableEvents>
 	| ReturnType<typeof toggleShowBindableFunctions>
-	| ReturnType<typeof setPathNotation>;
+	| ReturnType<typeof setPathNotation>
+	| ReturnType<typeof toggleRemoteMultiSelected>
+	| ReturnType<typeof clearMultiSelection>;

@@ -14,6 +14,7 @@ interface Props {
 	id: string;
 	order: number;
 	selected: boolean;
+	multiSelected: boolean;
 	onClick: () => void;
 }
 
@@ -21,7 +22,7 @@ const ROW_DEFAULT = [new Spring(1, { frequency: 6 }), new Spring(0, { frequency:
 const ROW_HOVERED = [new Spring(0.95, { frequency: 6 }), new Spring(0, { frequency: 6 })];
 const ROW_PRESSED = [new Instant(0.97), new Instant(0.2)];
 
-function Row({ onClick, id, order, selected }: Props) {
+function Row({ onClick, id, order, selected, multiSelected }: Props) {
 	const store = useRootStore();
 
 	const selectType = useMemo(makeSelectRemoteLogType, []);
@@ -89,6 +90,18 @@ function Row({ onClick, id, order, selected }: Props) {
 			>
 				<uicorner CornerRadius={new UDim(0, 4)} />
 			</frame>
+
+			{/* Multi-select indicator (blue border) */}
+			{multiSelected && (
+				<frame
+					Size={new UDim2(1, 0, 1, 0)}
+					BackgroundTransparency={1}
+					BorderSizePixel={0}
+				>
+					<uicorner CornerRadius={new UDim(0, 4)} />
+					<uistroke Color={Color3.fromRGB(0, 170, 255)} Thickness={2} />
+				</frame>
+			)}
 
 			{/* Icon */}
 			<imagelabel

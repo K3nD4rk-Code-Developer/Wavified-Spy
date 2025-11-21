@@ -9,41 +9,13 @@ import {
 	selectShowRemoteFunctions,
 	selectShowBindableEvents,
 	selectShowBindableFunctions,
-	selectPathNotation,
 } from "reducers/remote-log";
-import { selectToggleKey } from "reducers/ui";
-import { saveSettings } from "utils/settings-persistence";
 
 let store: Rodux.Store<RootState, Rodux.Action>;
 let isDestructed = false;
-let settingsSaveConnection:
-	| {
-			disconnect: () => void;
-	  }
-	| undefined;
 
 function createStore() {
-	const newStore = new Rodux.Store(rootReducer, undefined);
-
-	// Subscribe to store changes to save settings
-	settingsSaveConnection = newStore.changed.connect((state: RootState) => {
-		print("[Store] Rodux store.changed event fired! Logs count:", state.remoteLog.logs.size());
-
-		// Debounce the save operation
-		task.defer(() => {
-			saveSettings({
-				noActors: selectNoActors(state),
-				showRemoteEvents: selectShowRemoteEvents(state),
-				showRemoteFunctions: selectShowRemoteFunctions(state),
-				showBindableEvents: selectShowBindableEvents(state),
-				showBindableFunctions: selectShowBindableFunctions(state),
-				pathNotation: selectPathNotation(state),
-				toggleKey: selectToggleKey(state).Name,
-			});
-		});
-	});
-
-	return newStore;
+	return new Rodux.Store(rootReducer, undefined);
 }
 
 export function configureStore() {
@@ -54,21 +26,18 @@ export function configureStore() {
 export function destruct() {
 	if (isDestructed) return;
 	isDestructed = true;
-	if (settingsSaveConnection) {
-		settingsSaveConnection.disconnect();
-	}
 	store.destruct();
 }
 
 export function isActive() {
-	if (isDestructed) return false;
-	const paused = selectPaused(configureStore().getState());
+	if (!store || isDestructed) return false;
+	const paused = selectPaused(store.getState());
 	return !paused;
 }
 
 export function isRemoteBlocked(remoteId: string) {
-	if (isDestructed) return false;
-	const state = configureStore().getState();
+	if (!store || isDestructed) return false;
+	const state = store.getState();
 	const blockedRemotes = selectBlockedRemotes(state);
 
 	// Only check if remote is blocked (not paused)
@@ -76,8 +45,8 @@ export function isRemoteBlocked(remoteId: string) {
 }
 
 export function isRemoteAllowed(remoteId: string) {
-	if (isDestructed) return false;
-	const state = configureStore().getState();
+	if (!store || isDestructed) return false;
+	const state = store.getState();
 	const paused = selectPaused(state);
 	const pausedRemotes = selectPausedRemotes(state);
 	const blockedRemotes = selectBlockedRemotes(state);
@@ -95,61 +64,38 @@ export function isRemoteAllowed(remoteId: string) {
 }
 
 export function isNoActors() {
-	if (isDestructed) return false;
-	const state = configureStore().getState();
+	if (!store || isDestructed) return false;
+	const state = store.getState();
 	return selectNoActors(state);
 }
 
 export function isShowRemoteEvents() {
-	if (isDestructed) return true;
-	const state = configureStore().getState();
+	if (!store || isDestructed) return true;
+	const state = store.getState();
 	return selectShowRemoteEvents(state);
 }
 
 export function isShowRemoteFunctions() {
-	if (isDestructed) return true;
-	const state = configureStore().getState();
+	if (!store || isDestructed) return true;
+	const state = store.getState();
 	return selectShowRemoteFunctions(state);
 }
 
 export function isShowBindableEvents() {
-	if (isDestructed) return false;
-	const state = configureStore().getState();
+	if (!store || isDestructed) return false;
+	const state = store.getState();
 	return selectShowBindableEvents(state);
 }
 
 export function isShowBindableFunctions() {
-	if (isDestructed) return false;
-	const state = configureStore().getState();
+	if (!store || isDestructed) return false;
+	const state = store.getState();
 	return selectShowBindableFunctions(state);
 }
 
 export function dispatch(action: Rodux.AnyAction) {
-	if (isDestructed) {
-		warn("[Store] Cannot dispatch - store is destructed");
-		return false;
-	}
-
-	try {
-		const storeInstance = configureStore();
-		if (!storeInstance) {
-			warn("[Store] Cannot dispatch - store not initialized");
-			return false;
-		}
-
-		print("[Store] Dispatching action:", action.type);
-		const result = storeInstance.dispatch(action);
-		print("[Store] Dispatch completed, result:", result);
-
-		// Force trigger changed event by getting new state
-		const newState = storeInstance.getState();
-		print("[Store] After dispatch - logs count:", newState.remoteLog.logs.size());
-
-		return true;
-	} catch (err) {
-		warn("[Store] Dispatch failed:", err, "Action:", action.type);
-		return false;
-	}
+	if (isDestructed) return;
+	return configureStore().dispatch(action);
 }
 
 export function get<T>(selector: (state: RootState) => T): T;

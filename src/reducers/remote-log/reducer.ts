@@ -1,58 +1,37 @@
 import { RemoteLogActions } from "./actions";
 import { PathNotation, RemoteLogState } from "./model";
-import { loadSettings } from "utils/settings-persistence";
-
-// Load persisted settings if available
-const persistedSettings = loadSettings();
 
 const initialState: RemoteLogState = {
 	logs: [],
 	paused: false,
 	pausedRemotes: new Set(),
 	blockedRemotes: new Set(),
-	noActors: persistedSettings?.noActors ?? false,
-	showRemoteEvents: persistedSettings?.showRemoteEvents ?? true,
-	showRemoteFunctions: persistedSettings?.showRemoteFunctions ?? true,
-	showBindableEvents: persistedSettings?.showBindableEvents ?? false,
-	showBindableFunctions: persistedSettings?.showBindableFunctions ?? false,
-	pathNotation: persistedSettings?.pathNotation ?? PathNotation.Dot,
+	noActors: false,
+	showRemoteEvents: true,
+	showRemoteFunctions: true,
+	showBindableEvents: false,
+	showBindableFunctions: false,
+	pathNotation: PathNotation.Dot,
 };
 
 export default function remoteLogReducer(state = initialState, action: RemoteLogActions): RemoteLogState {
 	switch (action.type) {
-		case "PUSH_REMOTE_LOG": {
-			print("[Reducer] PUSH_REMOTE_LOG - Adding log:", action.log.id, "Total logs:", state.logs.size() + 1);
-			const newState = {
+		case "PUSH_REMOTE_LOG":
+			return {
 				...state,
 				logs: [...state.logs, action.log],
 			};
-			print("[Reducer] New state logs count:", newState.logs.size());
-			return newState;
-		}
 		case "REMOVE_REMOTE_LOG":
 			return {
 				...state,
 				logs: state.logs.filter((log) => log.id !== action.id),
 			};
-		case "PUSH_OUTGOING_SIGNAL": {
-			// Validate that the log exists before trying to add signal
-			const logExists = state.logs.some((log) => log.id === action.id);
-			if (!logExists) {
-				warn(
-					"[RemoteLog Reducer] PUSH_OUTGOING_SIGNAL failed: No log found with id:",
-					action.id,
-					"Signal will be lost!",
-				);
-				return state; // Don't modify state if log doesn't exist
-			}
-
-			print("[Reducer] PUSH_OUTGOING_SIGNAL - Adding signal to log:", action.id);
-			const newState = {
+		case "PUSH_OUTGOING_SIGNAL":
+			return {
 				...state,
 				logs: state.logs.map((log) => {
 					if (log.id === action.id) {
 						const outgoing = [action.signal, ...log.outgoing];
-						print("[Reducer] Log", action.id, "now has", outgoing.size(), "signals");
 						return {
 							...log,
 							outgoing,
@@ -61,8 +40,6 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 					return log;
 				}),
 			};
-			return newState;
-		}
 		case "REMOVE_OUTGOING_SIGNAL":
 			return {
 				...state,

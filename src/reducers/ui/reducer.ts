@@ -1,26 +1,9 @@
 import { UIActions } from "./actions";
 import { UIState } from "./model";
-import { loadSettings } from "utils/settings-persistence";
-
-// Load persisted settings if available
-const persistedSettings = loadSettings();
-
-// Convert KeyCode name string back to Enum.KeyCode
-const getInitialToggleKey = (): Enum.KeyCode => {
-	if (persistedSettings?.toggleKey) {
-		// Iterate through KeyCode enum items to find matching name
-		for (const keyCode of Enum.KeyCode.GetEnumItems()) {
-			if (keyCode.Name === persistedSettings.toggleKey) {
-				return keyCode;
-			}
-		}
-	}
-	return Enum.KeyCode.RightControl;
-};
 
 const initialState: UIState = {
 	visible: true,
-	toggleKey: getInitialToggleKey(),
+	toggleKey: Enum.KeyCode.RightControl,
 };
 
 export default function uiReducer(state = initialState, action: UIActions): UIState {

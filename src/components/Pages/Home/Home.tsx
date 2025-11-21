@@ -4,8 +4,8 @@ import Selection from "components/Selection";
 import { arrayToMap } from "@rbxts/roact-hooked-plus";
 import { selectRemoteIdSelected, selectRemoteLogIds } from "reducers/remote-log";
 import { setRemoteSelected } from "reducers/remote-log";
-import { useEffect, useState, withHooksPure } from "@rbxts/roact-hooked";
-import { useRootDispatch, useRootSelector, useRootStore } from "hooks/use-root-store";
+import { useEffect, withHooksPure } from "@rbxts/roact-hooked";
+import { useRootDispatch, useRootSelector } from "hooks/use-root-store";
 
 interface Props {
 	pageSelected: boolean;
@@ -13,28 +13,8 @@ interface Props {
 
 function Home({ pageSelected }: Props) {
 	const dispatch = useRootDispatch();
-	const store = useRootStore();
-	const [forceUpdate, setForceUpdate] = useState(0);
-
-	// Force component to update when store changes
-	useEffect(() => {
-		print("[Home] Setting up store.changed subscription");
-		const connection = store.changed.connect(() => {
-			print("[Home] Store changed, forcing re-render");
-			setForceUpdate((prev) => prev + 1);
-		});
-
-		return () => {
-			print("[Home] Cleaning up store.changed subscription");
-			connection.disconnect();
-		};
-	}, []);
-
 	const remoteLogIds = useRootSelector(selectRemoteLogIds);
 	const selection = useRootSelector(selectRemoteIdSelected);
-
-	print("[Home] useRootSelector returned remoteLogIds:", remoteLogIds, "type:", typeOf(remoteLogIds), "size:", remoteLogIds.size());
-	print("[Home] Rendering with", remoteLogIds.size(), "remote IDs, forceUpdate:", forceUpdate);
 
 	// Deselect the remote if the page is deselected.
 	useEffect(() => {

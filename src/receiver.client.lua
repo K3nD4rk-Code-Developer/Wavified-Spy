@@ -4,59 +4,6 @@ local store = TS.import(script, script.Parent, "store")
 local getFunctionScript = TS.import(script, script.Parent, "utils", "function-util").getFunctionScript
 local getInstanceId = TS.import(script, script.Parent, "utils", "instance-util").getInstanceId
 local makeSelectRemoteLog = TS.import(script, script.Parent, "reducers", "remote-log", "selectors").makeSelectRemoteLog
-local IS_LOADED = TS.import(script, script.Parent, "constants").IS_LOADED
-local getGlobal = TS.import(script, script.Parent, "utils", "global-util").getGlobal
-
--- Wait for app.client.tsx to fully initialize before setting up hooks
--- This prevents race conditions where hooks fire before the UI and store are ready
-print("[RemoteSpy] Waiting for app initialization...")
-local maxWaitTime = 5 -- seconds
-local startTime = os.clock()
-while not getGlobal(IS_LOADED) do
-	if os.clock() - startTime > maxWaitTime then
-		warn("[RemoteSpy] Initialization timeout - app may not have loaded properly")
-		break
-	end
-	task.wait(0.01)
-end
-
-if getGlobal(IS_LOADED) then
-	print("[RemoteSpy] App initialization detected, waiting for store to settle...")
-else
-	warn("[RemoteSpy] App did not initialize within timeout period")
-end
-
--- Additional small delay to ensure store and UI are fully settled
-task.wait(0.1)
-
--- Verify store is actually functional by testing key functions
-local storeReady, storeError = pcall(function()
-	-- Test that store functions exist and return expected types
-	if store.isActive() == nil then
-		error("store.isActive() returned nil")
-	end
-
-	local state = store.get()
-	if state == nil then
-		error("store.get() returned nil")
-	end
-
-	-- Test that dispatch actually works by dispatching a test action
-	local testAction = { type = "@@INIT" }
-	local dispatchResult = store.dispatch(testAction)
-	if not dispatchResult then
-		error("store.dispatch() test failed - returned false")
-	end
-
-	return true
-end)
-
-if storeReady then
-	print("[RemoteSpy] Store is ready and dispatch verified, setting up hooks...")
-else
-	warn("[RemoteSpy] Store failed readiness check - hooks may not work properly")
-	warn("[RemoteSpy] Error:", storeError)
-end
 
 local CALLER_STACK_LEVEL = if KRNL_LOADED then 6 else 4
 
@@ -130,39 +77,31 @@ local function onReceive(self, params, returns)
 	task.defer(function()
 		local remoteId = getInstanceId(self)
 
-		print("[RemoteSpy] Remote fired:", self:GetFullName(), "Type:", self.ClassName)
-
 		-- Check if logging is allowed (paused or blocked remotes should not be logged)
 		if not store.isRemoteAllowed(remoteId) then
-			print("[RemoteSpy] Remote blocked by isRemoteAllowed")
 			return
 		end
 
 		-- Check if this type should be shown based on individual type filters
 		if self:IsA("RemoteEvent") and not store.isShowRemoteEvents() then
-			print("[RemoteSpy] RemoteEvent filtered out")
 			return
 		end
 
 		if self:IsA("RemoteFunction") and not store.isShowRemoteFunctions() then
-			print("[RemoteSpy] RemoteFunction filtered out")
 			return
 		end
 
 		if self:IsA("BindableEvent") and not store.isShowBindableEvents() then
-			print("[RemoteSpy] BindableEvent filtered out")
 			return
 		end
 
 		if self:IsA("BindableFunction") and not store.isShowBindableFunctions() then
-			print("[RemoteSpy] BindableFunction filtered out")
 			return
 		end
 
 		local script = getcallingscript() or (callback and getFunctionScript(callback))
 
 		if store.isNoActors() and isFromActor(script, callback) then
-			print("[RemoteSpy] Remote from actor filtered out")
 			return
 		end
 
@@ -170,63 +109,13 @@ local function onReceive(self, params, returns)
 
 		local signal = logger.createOutgoingSignal(self, script, callback, traceback, params, returns, isActor)
 
-		-- Check if log already exists
-		local existingLog = store.get(function(state)
+		if store.get(function(state)
 			return selectRemoteLog(state, remoteId)
-		end)
-
-		-- If no existing log, add small delay to reduce race condition window
-		-- This gives any concurrent dispatches for the same remote time to complete
-		if not existingLog then
-			task.wait(0.01)
-			-- Re-check after delay
-			existingLog = store.get(function(state)
-				return selectRemoteLog(state, remoteId)
-			end)
-		end
-
-		local success = false
-		local dispatchAttempts = 0
-		local maxAttempts = 3
-
-		-- Retry dispatch up to 3 times if it fails
-		while not success and dispatchAttempts < maxAttempts do
-			dispatchAttempts = dispatchAttempts + 1
-
-			if existingLog then
-				print("[RemoteSpy] Dispatching outgoing signal for existing remote (attempt " .. dispatchAttempts .. ")")
-				print("[RemoteSpy] About to call store.dispatch, type:", type(store.dispatch))
-				local action = logger.pushOutgoingSignal(remoteId, signal)
-				print("[RemoteSpy] Action created, type:", action.type)
-				success = store.dispatch(action)
-				print("[RemoteSpy] store.dispatch returned:", success, "type:", type(success))
-			else
-				print("[RemoteSpy] Dispatching NEW remote log (attempt " .. dispatchAttempts .. ")")
-				print("[RemoteSpy] About to call store.dispatch, type:", type(store.dispatch))
-				local remoteLog = logger.createRemoteLog(self, signal)
-				local action = logger.pushRemoteLog(remoteLog)
-				print("[RemoteSpy] Action created, type:", action.type)
-				success = store.dispatch(action)
-				print("[RemoteSpy] store.dispatch returned:", success, "type:", type(success))
-
-				-- If we just created a new log, update existingLog so retry uses pushOutgoingSignal
-				if success then
-					existingLog = remoteLog
-				end
-			end
-
-			if not success and dispatchAttempts < maxAttempts then
-				warn("[RemoteSpy] Dispatch failed, retrying... (attempt " .. dispatchAttempts .. "/" .. maxAttempts .. ")")
-				task.wait(0.05) -- Small delay before retry
-			end
-		end
-
-		if success then
-			print("[RemoteSpy] ✓ Signal successfully dispatched to store")
+		end) then
+			store.dispatch(logger.pushOutgoingSignal(remoteId, signal))
 		else
-			warn("[RemoteSpy] ✗ FAILED to dispatch signal after " .. maxAttempts .. " attempts!")
-			warn("[RemoteSpy] Remote:", self:GetFullName())
-			warn("[RemoteSpy] RemoteId:", remoteId)
+			local remoteLog = logger.createRemoteLog(self, signal)
+			store.dispatch(logger.pushRemoteLog(remoteLog))
 		end
 	end)
 end
@@ -310,5 +199,3 @@ refs.__namecall = hookmetamethod(game, "__namecall", function(self, ...)
 
 	return refs.__namecall(self, ...)
 end)
-
-print("[RemoteSpy] All hooks successfully installed and ready to capture remote events!")

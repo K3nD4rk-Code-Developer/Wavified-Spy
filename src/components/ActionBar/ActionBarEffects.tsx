@@ -20,7 +20,7 @@ import {
 } from "reducers/remote-log";
 import { removeRemoteLog } from "reducers/remote-log";
 import { setActionEnabled } from "reducers/action-bar";
-import { setScript, removeScript, selectScriptContent } from "reducers/script";
+import { setScript, removeScript } from "reducers/script";
 import { useActionEffect } from "hooks/use-action-effect";
 import { useEffect, withHooksPure } from "@rbxts/roact-hooked";
 import { useRootDispatch, useRootSelector, useRootStore } from "hooks/use-root-store";
@@ -109,25 +109,13 @@ function ActionBarEffects() {
 			dispatch(removeScript(currentTab.id));
 			dispatch(deleteTab(currentTab.id));
 			notify("Deleted script");
-		} else if (currentTab?.type === TabType.Home) {
-			// Delete all remotes when on home page with no selection
-			const allRemoteIds = selectRemoteLogIds(store.getState());
-			for (const id of allRemoteIds) {
-				dispatch(removeRemoteLog(id));
-				dispatch(deleteTab(id));
-			}
-			notify(`Deleted ${allRemoteIds.size()} remotes`);
 		}
 	});
 
 	useActionEffect("copyScript", () => {
 		// Check if we're viewing a script tab
-		if (currentTab?.type === TabType.Script) {
-			const scriptContent = selectScriptContent(store.getState(), currentTab.id);
-			if (scriptContent) {
-				setclipboard?.(scriptContent);
-				notify("Copied script to clipboard");
-			}
+		if (currentTab?.type === TabType.Script && currentTab.scriptContent) {
+			setclipboard?.(currentTab.scriptContent);
 		} else if (signal) {
 			// Convert Record<number, unknown> to sequential array
 			const paramEntries: [number, unknown][] = [];
@@ -267,29 +255,7 @@ function ActionBarEffects() {
 	});
 
 	useActionEffect("runRemote", () => {
-		// Check if we're viewing a script tab
-		if (currentTab?.type === TabType.Script) {
-			const scriptContent = selectScriptContent(store.getState(), currentTab.id);
-
-			if (scriptContent) {
-				// Execute the script content
-				if (loadstring) {
-					const [func, err] = loadstring(scriptContent);
-					if (func) {
-						const [success, result] = pcall(func);
-						if (!success) {
-							notify("Failed to run script: " + tostring(result), 3, true);
-						} else {
-							notify("Executed script successfully");
-						}
-					} else {
-						notify("Failed to load script: " + tostring(err), 3, true);
-					}
-				} else {
-					notify("loadstring function not available", 3, true);
-				}
-			}
-		} else if (signal) {
+		if (signal) {
 			// Convert Record<number, unknown> to sequential array
 			const paramEntries: [number, unknown][] = [];
 			for (const [key, value] of pairs(signal.parameters)) {
@@ -329,16 +295,16 @@ function ActionBarEffects() {
 
 		dispatch(setActionEnabled("copy", remoteEnabled || signalEnabled));
 		dispatch(setActionEnabled("save", remoteEnabled || signalEnabled));
-		dispatch(setActionEnabled("delete", remoteEnabled || signalEnabled || isScript || isHome));
+		dispatch(setActionEnabled("delete", remoteEnabled || signalEnabled || isScript));
 
 		dispatch(setActionEnabled("traceback", signalEnabled));
 		dispatch(setActionEnabled("copyPath", remoteEnabled || !isHome));
-		dispatch(setActionEnabled("copyScript", signalEnabled || isScript));
+		dispatch(setActionEnabled("copyScript", signalEnabled));
 		dispatch(setActionEnabled("viewScript", signalEnabled));
 
 		dispatch(setActionEnabled("pauseRemote", remoteEnabled));
 		dispatch(setActionEnabled("blockRemote", remoteEnabled));
-		dispatch(setActionEnabled("runRemote", signalEnabled || isScript));
+		dispatch(setActionEnabled("runRemote", signalEnabled));
 	}, [remoteId === undefined, signal, currentTab]);
 
 	return <></>;

@@ -22,17 +22,6 @@ function Page({ id }: Props) {
 	const activeTabId = useRootSelector(selectActiveTabId);
 	const lastActiveTabId = useMutable("");
 
-	print(
-		"[Page] id:",
-		id,
-		"tabType:",
-		tabType,
-		"isActive:",
-		activeTabId === id,
-		"TabType.Home:",
-		TabType.Home,
-	);
-
 	const targetSide = tabOrder < activeTabOrder ? -1 : tabOrder > activeTabOrder ? 1 : 0;
 	const [side, setSide] = useSingleMotor(targetSide === 0 ? 1 : targetSide);
 

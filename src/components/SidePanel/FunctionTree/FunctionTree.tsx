@@ -6,7 +6,7 @@ import { describeFunction, stringifyFunctionSignature } from "utils/function-uti
 import { selectSignalSelected } from "reducers/remote-log";
 import { getInstancePath } from "utils/instance-util";
 import { useRootSelector } from "hooks/use-root-store";
-import { withHooksPure, useEffect, useRef } from "@rbxts/roact-hooked";
+import { withHooksPure, useEffect, useMemo } from "@rbxts/roact-hooked";
 import { formatEscapes } from "utils/format-escapes";
 
 interface FunctionNodeProps {
@@ -122,13 +122,13 @@ function FunctionNode({ fn, index, totalInStack, remotePath, remoteName }: Funct
 function FunctionTree() {
 	const { setUpperHidden, upperHidden, upperSize, setUpperHeight } = useSidePanelContext();
 	const signal = useRootSelector(selectSignalSelected);
-	const scrollFrameRef = useRef<ScrollingFrame>();
+	const scrollFrameRef = useMemo(() => Roact.createRef<ScrollingFrame>(), []);
 
 	const isEmpty = !signal || signal.traceback.size() === 0;
 
 	// Auto-resize panel based on content
 	useEffect(() => {
-		const frame = scrollFrameRef.current;
+		const frame = scrollFrameRef.getValue();
 		if (!frame || isEmpty) return;
 
 		const updateHeight = () => {

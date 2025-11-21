@@ -42,6 +42,7 @@ export function createOutgoingSignal(
 		callback,
 		traceback,
 		isActor,
+		timestamp: 0, // Will be set by reducer when pushed to store
 	};
 }
 

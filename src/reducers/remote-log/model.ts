@@ -11,6 +11,7 @@ export interface RemoteLogState {
 	remoteSelected?: string;
 	signalSelected?: string;
 	remoteForSignalSelected?: string;
+	remotesMultiSelected: Set<string>; // Multi-select for bulk operations
 	paused: boolean;
 	pausedRemotes: Set<string>;
 	blockedRemotes: Set<string>;

@@ -17,7 +17,7 @@ function MainWindow() {
 
 	return (
 		<Root enabled={visible}>
-			<Window.Root initialSize={new UDim2(0, 990, 0, 575)} initialPosition={new UDim2(0.5, -540, 0.5, -350)}>
+			<Window.Root initialSize={new UDim2(0, 1000, 0, 600)} initialPosition={new UDim2(0.5, -540, 0.5, -350)}>
 				<Window.DropShadow />
 				<Acrylic.Paint />
 

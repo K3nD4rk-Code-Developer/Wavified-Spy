@@ -1,8 +1,17 @@
 import { RootState } from "reducers";
 import { createSelector } from "@rbxts/roselect";
 
-export const selectRemoteLogs = (state: RootState) => state.remoteLog.logs;
-export const selectRemoteLogIds = createSelector([selectRemoteLogs], (logs) => logs.map((log) => log.id));
+export const selectRemoteLogs = (state: RootState) => {
+	const logs = state.remoteLog.logs;
+	print("[Selector] selectRemoteLogs called, returning", logs.size(), "logs");
+	return logs;
+};
+
+export const selectRemoteLogIds = createSelector([selectRemoteLogs], (logs) => {
+	const ids = logs.map((log) => log.id);
+	print("[Selector] selectRemoteLogIds computed, returning", ids.size(), "IDs");
+	return ids;
+});
 export const selectRemoteLogsOutgoing = (state: RootState) => state.remoteLog.logs.map((log) => log.outgoing);
 
 export const selectRemoteIdSelected = (state: RootState) => state.remoteLog.remoteSelected;
@@ -20,9 +29,26 @@ export const selectPathNotation = (state: RootState) => state.remoteLog.pathNota
 
 export const makeSelectRemoteLog = () =>
 	createSelector([selectRemoteLogs, (_: unknown, id: string) => id], (logs, id) => logs.find((log) => log.id === id));
-export const makeSelectRemoteLogOutgoing = () => createSelector([makeSelectRemoteLog()], (log) => log?.outgoing);
-export const makeSelectRemoteLogObject = () => createSelector([makeSelectRemoteLog()], (log) => log?.object);
-export const makeSelectRemoteLogType = () => createSelector([makeSelectRemoteLog()], (log) => log?.type);
+
+// Fix: Properly pass id parameter through the selector chain
+export const makeSelectRemoteLogOutgoing = () =>
+	createSelector([selectRemoteLogs, (_: unknown, id: string) => id], (logs, id) => {
+		const log = logs.find((log) => log.id === id);
+		print("[Selector] makeSelectRemoteLogOutgoing computed for id:", id, "outgoing count:", log?.outgoing.size() ?? 0);
+		return log?.outgoing;
+	});
+
+export const makeSelectRemoteLogObject = () =>
+	createSelector([selectRemoteLogs, (_: unknown, id: string) => id], (logs, id) => {
+		const log = logs.find((log) => log.id === id);
+		return log?.object;
+	});
+
+export const makeSelectRemoteLogType = () =>
+	createSelector([selectRemoteLogs, (_: unknown, id: string) => id], (logs, id) => {
+		const log = logs.find((log) => log.id === id);
+		return log?.type;
+	});
 
 const _selectOutgoing = makeSelectRemoteLogOutgoing();
 export const selectSignalSelected = createSelector(

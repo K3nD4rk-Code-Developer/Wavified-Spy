@@ -31,7 +31,7 @@ store.changed.connect(() => {
 	Roact.update(
 		tree,
 		<StoreProvider store={store}>
-			<App key={"app-" + updateCount} />
+			<App Key={"app-" + updateCount} />
 		</StoreProvider>,
 	);
 });

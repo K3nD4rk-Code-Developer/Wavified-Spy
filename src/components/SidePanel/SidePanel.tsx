@@ -9,12 +9,10 @@ import { useBinding, useMemo, useState, withHooksPure } from "@rbxts/roact-hooke
 import { useSpring } from "@rbxts/roact-hooked-plus";
 
 const MIN_PANEL_HEIGHT = 40;
-const DEFAULT_MIDDLE_HEIGHT = 150;
-const DEFAULT_LOWER_HEIGHT = 200;
+const MIDDLE_PANEL_HEIGHT = 150;
 
 function SidePanel() {
-	const [middleHeight, setMiddleHeight] = useBinding(DEFAULT_MIDDLE_HEIGHT);
-	const [lowerHeight, setLowerHeight] = useBinding(DEFAULT_LOWER_HEIGHT);
+	const [lowerHeight, setLowerHeight] = useBinding(200);
 	const [lowerHidden, setLowerHidden] = useState(false);
 	const [middleHidden, setMiddleHidden] = useState(false);
 	const [upperHidden, setUpperHidden] = useState(false);
@@ -47,8 +45,8 @@ function SidePanel() {
 
 	const middleSize = useMemo(
 		() =>
-			Roact.joinBindings([middleHeight, middleAnim]).map(([height, n]) => {
-				const middleShown = new UDim2(1, 0, 0, height);
+			middleAnim.map((n) => {
+				const middleShown = new UDim2(1, 0, 0, MIDDLE_PANEL_HEIGHT);
 				const middleHidden = new UDim2(1, 0, 0, MIN_PANEL_HEIGHT);
 				return middleShown.Lerp(middleHidden, n);
 			}),
@@ -57,8 +55,8 @@ function SidePanel() {
 
 	const middlePosition = useMemo(
 		() =>
-			Roact.joinBindings([lowerHeight, middleHeight, middleAnim, lowerAnim]).map(([lHeight, mHeight, mAnim, lAnim]) => {
-				const middleHeightActual = mHeight * (1 - mAnim) + MIN_PANEL_HEIGHT * mAnim;
+			Roact.joinBindings([lowerHeight, middleAnim, lowerAnim]).map(([lHeight, mAnim, lAnim]) => {
+				const middleHeightActual = MIDDLE_PANEL_HEIGHT * (1 - mAnim) + MIN_PANEL_HEIGHT * mAnim;
 				const lowerHeightActual = lHeight * (1 - lAnim) + MIN_PANEL_HEIGHT * lAnim;
 				return new UDim2(0, 0, 1, -lowerHeightActual - middleHeightActual);
 			}),
@@ -67,19 +65,17 @@ function SidePanel() {
 
 	const upperSize = useMemo(
 		() =>
-			Roact.joinBindings([lowerHeight, middleHeight, upperAnim, lowerAnim, middleAnim]).map(
-				([lHeight, mHeight, uAnim, lAnim, mAnim]) => {
-					const middleHeightActual = mHeight * (1 - mAnim) + MIN_PANEL_HEIGHT * mAnim;
-					const lowerHeightActual = lHeight * (1 - lAnim) + MIN_PANEL_HEIGHT * lAnim;
+			Roact.joinBindings([lowerHeight, upperAnim, lowerAnim, middleAnim]).map(([lHeight, uAnim, lAnim, mAnim]) => {
+				const middleHeightActual = MIDDLE_PANEL_HEIGHT * (1 - mAnim) + MIN_PANEL_HEIGHT * mAnim;
+				const lowerHeightActual = lHeight * (1 - lAnim) + MIN_PANEL_HEIGHT * lAnim;
 
-					// Upper panel takes remaining space
-					const upperShown = new UDim2(1, 0, 1, -middleHeightActual - lowerHeightActual);
-					const upperHidden = new UDim2(1, 0, 0, MIN_PANEL_HEIGHT);
-					const lowerHidden = new UDim2(1, 0, 1, -MIN_PANEL_HEIGHT - middleHeightActual);
+				// Upper panel takes remaining space
+				const upperShown = new UDim2(1, 0, 1, -middleHeightActual - lowerHeightActual);
+				const upperHidden = new UDim2(1, 0, 0, MIN_PANEL_HEIGHT);
+				const lowerHidden = new UDim2(1, 0, 1, -MIN_PANEL_HEIGHT - middleHeightActual);
 
-					return upperShown.Lerp(lowerHidden, lAnim).Lerp(upperHidden, uAnim);
-				},
-			),
+				return upperShown.Lerp(lowerHidden, lAnim).Lerp(upperHidden, uAnim);
+			}),
 		[],
 	);
 
@@ -93,7 +89,6 @@ function SidePanel() {
 				middleSize,
 				middlePosition,
 				setMiddleHidden,
-				setMiddleHeight,
 				lowerHidden,
 				lowerSize,
 				lowerPosition,

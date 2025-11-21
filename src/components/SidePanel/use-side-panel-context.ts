@@ -10,7 +10,6 @@ interface SidePanelContextProps {
 	middleSize: Roact.Binding<UDim2>;
 	middlePosition: Roact.Binding<UDim2>;
 	setMiddleHidden: (hidden: boolean | ((value: boolean) => boolean)) => void;
-	setMiddleHeight: (height: number) => void;
 
 	lowerHidden: boolean;
 	lowerSize: Roact.Binding<UDim2>;

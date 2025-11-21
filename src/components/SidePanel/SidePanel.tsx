@@ -9,12 +9,10 @@ import { useBinding, useMemo, useState, withHooksPure } from "@rbxts/roact-hooke
 import { useSpring } from "@rbxts/roact-hooked-plus";
 
 const MIN_PANEL_HEIGHT = 40;
-const DEFAULT_UPPER_HEIGHT = 200;
 const DEFAULT_MIDDLE_HEIGHT = 150;
 const DEFAULT_LOWER_HEIGHT = 200;
 
 function SidePanel() {
-	const [upperHeight, setUpperHeight] = useBinding(DEFAULT_UPPER_HEIGHT);
 	const [middleHeight, setMiddleHeight] = useBinding(DEFAULT_MIDDLE_HEIGHT);
 	const [lowerHeight, setLowerHeight] = useBinding(DEFAULT_LOWER_HEIGHT);
 	const [lowerHidden, setLowerHidden] = useState(false);
@@ -69,13 +67,16 @@ function SidePanel() {
 
 	const upperSize = useMemo(
 		() =>
-			Roact.joinBindings([upperHeight, lowerHeight, middleHeight, upperAnim, lowerAnim, middleAnim]).map(
-				([uHeight, lHeight, mHeight, uAnim, lAnim, mAnim]) => {
+			Roact.joinBindings([lowerHeight, middleHeight, upperAnim, lowerAnim, middleAnim]).map(
+				([lHeight, mHeight, uAnim, lAnim, mAnim]) => {
 					const middleHeightActual = mHeight * (1 - mAnim) + MIN_PANEL_HEIGHT * mAnim;
 					const lowerHeightActual = lHeight * (1 - lAnim) + MIN_PANEL_HEIGHT * lAnim;
-					const upperShown = new UDim2(1, 0, 0, uHeight);
+
+					// Upper panel takes remaining space
+					const upperShown = new UDim2(1, 0, 1, -middleHeightActual - lowerHeightActual);
 					const upperHidden = new UDim2(1, 0, 0, MIN_PANEL_HEIGHT);
 					const lowerHidden = new UDim2(1, 0, 1, -MIN_PANEL_HEIGHT - middleHeightActual);
+
 					return upperShown.Lerp(lowerHidden, lAnim).Lerp(upperHidden, uAnim);
 				},
 			),
@@ -88,7 +89,6 @@ function SidePanel() {
 				upperHidden,
 				upperSize,
 				setUpperHidden,
-				setUpperHeight,
 				middleHidden,
 				middleSize,
 				middlePosition,

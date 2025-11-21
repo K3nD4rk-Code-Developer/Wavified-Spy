@@ -4,7 +4,16 @@ import { TextService } from "@rbxts/services";
 export const MAX_TAB_CAPTION_WIDTH = 150;
 
 export function createTabColumn(id: string, caption: string, tabType: TabType, canClose = true, scriptContent?: string): TabGroupColumn {
-	return { id, caption, type: tabType, canClose, scriptContent };
+	print("[createTabColumn] Creating tab:", id, "caption:", caption, "tabType:", tabType, "typeof tabType:", typeOf(tabType), "canClose:", canClose);
+	const tab: TabGroupColumn = {
+		id: id,
+		caption: caption,
+		type: tabType,
+		canClose: canClose,
+		scriptContent: scriptContent,
+	};
+	print("[createTabColumn] Created tab object:", tab, "type property:", tab.type, "typeof tab.type:", typeOf(tab.type));
+	return tab;
 }
 
 export function getTabCaptionWidth(tab: TabGroupColumn) {

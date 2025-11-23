@@ -119,6 +119,16 @@ function ActionBarEffects() {
 			dispatch(removeScript(currentTab.id));
 			dispatch(deleteTab(currentTab.id));
 			notify("Deleted script");
+		} else if (currentTab?.type === TabType.Home && !remote && !signal) {
+			// Delete all remotes when on home page with nothing selected
+			const allRemoteIds = remoteIds;
+			if (allRemoteIds.size() > 0) {
+				allRemoteIds.forEach((id) => {
+					dispatch(removeRemoteLog(id));
+					dispatch(deleteTab(id));
+				});
+				notify(`Deleted all ${allRemoteIds.size()} remotes`);
+			}
 		} else if (currentTab && currentTab.type !== TabType.Home && currentTab.type !== TabType.Settings) {
 			// Close any other tab (Event, Function, BindableEvent, BindableFunction)
 			dispatch(deleteTab(currentTab.id));
@@ -374,8 +384,10 @@ function ActionBarEffects() {
 			? store.getState().script.scripts[currentTab.id]?.signalId !== undefined
 			: false;
 
-		// Delete is enabled for any tab except Home and Settings, or when multi-selected
-		const canDelete = hasMultiSelect || remoteEnabled || signalEnabled || !!(currentTab && !isHome && !isSettings);
+		// Delete is enabled for any tab except Settings, or when multi-selected
+		// On Home page, delete is enabled when there are remotes to delete
+		const hasRemotesToDelete = isHome && remoteIds.size() > 0;
+		const canDelete = hasMultiSelect || remoteEnabled || signalEnabled || hasRemotesToDelete || !!(currentTab && !isHome && !isSettings);
 
 		dispatch(setActionEnabled("copy", remoteEnabled || signalEnabled));
 		dispatch(setActionEnabled("save", remoteEnabled || signalEnabled));

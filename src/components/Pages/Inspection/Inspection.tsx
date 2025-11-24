@@ -361,7 +361,7 @@ function Inspection() {
 							/>
 
 							<textlabel
-								Text="🔎 Search Results"
+								Text="Search Results"
 								TextSize={18}
 								Font="GothamBold"
 								TextColor3={new Color3(1, 1, 1)}
@@ -385,7 +385,7 @@ function Inspection() {
 
 						<textbox
 							Size={new UDim2(1, 0, 0, 38)}
-							PlaceholderText="🔍 Type to search..."
+							PlaceholderText="Type to search..."
 							Text={searchQuery}
 							TextSize={14}
 							Font="Gotham"
@@ -471,7 +471,7 @@ function Inspection() {
 							/>
 
 							<textlabel
-								Text={`✨ Results (${filteredResults.size()})`}
+								Text={`Results (${filteredResults.size()})`}
 								TextSize={18}
 								Font="GothamBold"
 								TextColor3={new Color3(1, 1, 1)}
@@ -527,7 +527,7 @@ function Inspection() {
 									/>
 
 									<textlabel
-										Text={`📌 ${result.name}`}
+										Text={result.name}
 										TextSize={15}
 										Font="GothamBold"
 										TextColor3={new Color3(1, 1, 1)}

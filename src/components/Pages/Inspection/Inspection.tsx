@@ -35,7 +35,7 @@ const SCANNER_HOVERED = new Spring(0.05, { frequency: 6 });
 const SCANNER_PRESSED = new Instant(0.08);
 const SCANNER_SELECTED = new Spring(0.12, { frequency: 6 });
 
-function ScannerButton({ scanner, isSelected, onClick }: ScannerButtonProps) {
+const ScannerButton = withHooksPure(({ scanner, isSelected, onClick }: ScannerButtonProps) => {
 	const [background, setBackground] = useSingleMotor(isSelected ? 0.12 : 0);
 
 	useEffect(() => {
@@ -107,7 +107,7 @@ function ScannerButton({ scanner, isSelected, onClick }: ScannerButtonProps) {
 			{isSelected && <uistroke Color={new Color3(0.5, 0.7, 1)} Thickness={2} Transparency={0} />}
 		</Button>
 	);
-}
+});
 
 interface ResultItemProps {
 	result: InspectionResult;
@@ -120,7 +120,7 @@ const RESULT_HOVERED = new Spring(0.10, { frequency: 6 });
 const RESULT_PRESSED = new Instant(0.12);
 const RESULT_SELECTED = new Spring(0.14, { frequency: 6 });
 
-function ResultItem({ result, isSelected, onClick }: ResultItemProps) {
+const ResultItem = withHooksPure(({ result, isSelected, onClick }: ResultItemProps) => {
 	const [background, setBackground] = useSingleMotor(isSelected ? 0.14 : 0.08);
 
 	useEffect(() => {
@@ -187,7 +187,7 @@ function ResultItem({ result, isSelected, onClick }: ResultItemProps) {
 			{isSelected && <uistroke Color={new Color3(0.5, 0.7, 1)} Thickness={2} Transparency={0} />}
 		</Button>
 	);
-}
+});
 
 function Inspection() {
 	const dispatch = useRootDispatch();

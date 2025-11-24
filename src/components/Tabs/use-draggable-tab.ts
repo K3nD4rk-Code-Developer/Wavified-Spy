@@ -10,6 +10,8 @@ interface DragState {
 	tabPosition: number;
 }
 
+const DRAG_THRESHOLD = 5; // pixels to move before dragging starts
+
 export function useDraggableTab(id: string, width: number, canvasPosition: Roact.Binding<Vector2>) {
 	const store = useRootStore();
 	const dispatch = useRootDispatch();
@@ -38,12 +40,20 @@ export function useDraggableTab(id: string, width: number, canvasPosition: Roact
 		const startCanvasPosition = canvasPosition.getValue();
 
 		let lastIndex = estimateNewIndex(0);
+		let isDragging = false;
 
 		const mouseMoved = RunService.Heartbeat.Connect(() => {
 			const current = UserInputService.GetMouseLocation();
 			const position = current.X - dragState.mousePosition + dragState.tabPosition;
 			const canvasDelta = canvasPosition.getValue().X - startCanvasPosition.X;
 
+			// Only start dragging if mouse has moved beyond threshold
+			const dragDistance = math.abs(position);
+			if (!isDragging && dragDistance < DRAG_THRESHOLD) {
+				return;
+			}
+
+			isDragging = true;
 			setDragPosition(position + canvasDelta);
 
 			const newIndex = estimateNewIndex(position + canvasDelta);

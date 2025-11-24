@@ -1,4 +1,4 @@
-import { OutgoingSignal, PathNotation, RemoteLog } from "./model";
+import { InspectionResult, OutgoingSignal, PathNotation, RemoteLog } from "./model";
 import { PersistedSettings } from "utils/settings-persistence";
 
 export function pushRemoteLog(log: RemoteLog) {
@@ -93,6 +93,10 @@ export function loadSettings(settings: PersistedSettings) {
 	return { type: "LOAD_SETTINGS", settings } as const;
 }
 
+export function setInspectionResultSelected(result?: InspectionResult) {
+	return { type: "SET_INSPECTION_RESULT_SELECTED", result } as const;
+}
+
 export type RemoteLogActions =
 	| ReturnType<typeof pushRemoteLog>
 	| ReturnType<typeof removeRemoteLog>
@@ -116,4 +120,5 @@ export type RemoteLogActions =
 	| ReturnType<typeof setMaxInspectionResults>
 	| ReturnType<typeof toggleRemoteMultiSelected>
 	| ReturnType<typeof clearMultiSelection>
-	| ReturnType<typeof loadSettings>;
+	| ReturnType<typeof loadSettings>
+	| ReturnType<typeof setInspectionResultSelected>;

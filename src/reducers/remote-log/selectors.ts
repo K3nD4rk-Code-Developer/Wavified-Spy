@@ -30,6 +30,7 @@ export const selectShowBindableEvents = (state: RootState) => state.remoteLog.sh
 export const selectShowBindableFunctions = (state: RootState) => state.remoteLog.showBindableFunctions;
 export const selectPathNotation = (state: RootState) => state.remoteLog.pathNotation;
 export const selectMaxInspectionResults = (state: RootState) => state.remoteLog.maxInspectionResults;
+export const selectInspectionResultSelected = (state: RootState) => state.remoteLog.inspectionResultSelected;
 
 export const makeSelectRemoteLog = () =>
 	createSelector([selectRemoteLogsSorted, (_: unknown, id: string) => id], (logs, id) => logs.find((log) => log.id === id));

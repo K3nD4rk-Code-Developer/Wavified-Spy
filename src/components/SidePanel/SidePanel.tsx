@@ -1,17 +1,26 @@
 import Container from "components/Container";
 import FunctionTree from "./FunctionTree";
+import InspectionConstants from "./InspectionConstants";
+import InspectionMetadata from "./InspectionMetadata";
+import InspectionUpvalues from "./InspectionUpvalues";
 import Peek from "./Peek";
 import Roact from "@rbxts/roact";
 import Traceback from "./Traceback";
 import { SIDE_PANEL_WIDTH } from "constants";
 import { SidePanelContext } from "./use-side-panel-context";
+import { TabType } from "reducers/tab-group/model";
+import { selectActiveTab } from "reducers/tab-group";
 import { useBinding, useMemo, useState, withHooksPure } from "@rbxts/roact-hooked";
+import { useRootSelector } from "hooks/use-root-store";
 import { useSpring } from "@rbxts/roact-hooked-plus";
 
 const MIN_PANEL_HEIGHT = 40;
 const MIDDLE_PANEL_HEIGHT = 150;
 
 function SidePanel() {
+	const currentTab = useRootSelector(selectActiveTab);
+	const isInspectionTab = currentTab?.type === TabType.Inspection;
+
 	const [lowerHeight, setLowerHeight] = useBinding(200);
 	const [lowerHidden, setLowerHidden] = useState(false);
 	const [middleHidden, setMiddleHidden] = useState(false);
@@ -101,9 +110,19 @@ function SidePanel() {
 				size={new UDim2(0, SIDE_PANEL_WIDTH, 1, -84)}
 				position={new UDim2(1, 0, 0, 84)}
 			>
-				<FunctionTree />
-				<Peek />
-				<Traceback />
+				{isInspectionTab ? (
+					<>
+						<InspectionMetadata />
+						<InspectionUpvalues />
+						<InspectionConstants />
+					</>
+				) : (
+					<>
+						<FunctionTree />
+						<Peek />
+						<Traceback />
+					</>
+				)}
 			</Container>
 		</SidePanelContext.Provider>
 	);

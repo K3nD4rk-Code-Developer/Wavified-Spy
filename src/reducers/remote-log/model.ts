@@ -6,6 +6,27 @@ export enum PathNotation {
 	FindFirstChild = "findfirstchild",
 }
 
+export interface InspectionResult {
+	id: string;
+	name: string;
+	type: string;
+	value?: string;
+	details?: string;
+	rawFunc?: Callback;
+	rawScript?: LuaSourceContainer;
+	rawUpvalues?: Map<string, unknown>;
+	rawConstants?: unknown[];
+	rawInfo?: {
+		name?: string;
+		source?: string;
+		short_src?: string;
+		what?: string;
+		nups?: number;
+		linedefined?: number;
+		lastlinedefined?: number;
+	};
+}
+
 export interface RemoteLogState {
 	logs: RemoteLog[];
 	remoteSelected?: string;
@@ -23,6 +44,7 @@ export interface RemoteLogState {
 	showBindableFunctions: boolean;
 	pathNotation: PathNotation;
 	maxInspectionResults: number;
+	inspectionResultSelected?: InspectionResult;
 }
 
 export interface RemoteLog {

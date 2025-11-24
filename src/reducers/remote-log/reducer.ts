@@ -219,6 +219,11 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				pathNotation: action.settings.pathNotation ?? state.pathNotation,
 				maxInspectionResults: action.settings.maxInspectionResults ?? state.maxInspectionResults,
 			};
+		case "SET_INSPECTION_RESULT_SELECTED":
+			return {
+				...state,
+				inspectionResultSelected: action.result,
+			};
 		default:
 			return state;
 	}

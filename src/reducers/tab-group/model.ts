@@ -19,4 +19,5 @@ export enum TabType {
 	BindableFunction = "bindable-function",
 	Script = "script",
 	Settings = "settings",
+	Inspection = "inspection",
 }

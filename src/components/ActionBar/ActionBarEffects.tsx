@@ -129,7 +129,7 @@ function ActionBarEffects() {
 				});
 				notify(`Deleted all ${allRemoteIds.size()} remotes`);
 			}
-		} else if (currentTab && currentTab.type !== TabType.Home && currentTab.type !== TabType.Settings) {
+		} else if (currentTab && currentTab.type !== TabType.Home && currentTab.type !== TabType.Settings && currentTab.type !== TabType.Inspection) {
 			// Close any other tab (Event, Function, BindableEvent, BindableFunction)
 			dispatch(deleteTab(currentTab.id));
 			notify("Closed tab");
@@ -377,6 +377,7 @@ function ActionBarEffects() {
 		const isHome = currentTab?.type === TabType.Home;
 		const isScript = currentTab?.type === TabType.Script;
 		const isSettings = currentTab?.type === TabType.Settings;
+		const isInspection = currentTab?.type === TabType.Inspection;
 		const hasMultiSelect = multiSelected.size() > 0;
 
 		// Check if current script tab has signal reference for execution
@@ -384,10 +385,10 @@ function ActionBarEffects() {
 			? store.getState().script.scripts[currentTab.id]?.signalId !== undefined
 			: false;
 
-		// Delete is enabled for any tab except Settings, or when multi-selected
+		// Delete is enabled for any tab except Settings and Inspection, or when multi-selected
 		// On Home page, delete is enabled when there are remotes to delete
 		const hasRemotesToDelete = isHome && remoteIds.size() > 0;
-		const canDelete = hasMultiSelect || remoteEnabled || signalEnabled || hasRemotesToDelete || !!(currentTab && !isHome && !isSettings);
+		const canDelete = hasMultiSelect || remoteEnabled || signalEnabled || hasRemotesToDelete || !!(currentTab && !isHome && !isSettings && !isInspection);
 
 		dispatch(setActionEnabled("copy", remoteEnabled || signalEnabled));
 		dispatch(setActionEnabled("save", remoteEnabled || signalEnabled));

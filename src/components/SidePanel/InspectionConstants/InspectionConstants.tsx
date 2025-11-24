@@ -106,8 +106,14 @@ function InspectionConstants() {
 											const source = success[1] as string;
 											// Limit to first 50 lines for preview
 											const lines = source.split("\n");
-											const preview = lines.size() > 50 ? lines.slice(0, 50).join("\n") + "\n\n-- ... (truncated, use View Script button for full source)" : source;
-											return preview;
+											if (lines.size() > 50) {
+												const previewLines: string[] = [];
+												for (let i = 0; i < 50; i++) {
+													previewLines.push(lines[i]);
+												}
+												return previewLines.join("\n") + "\n\n-- ... (truncated, use View Script button for full source)";
+											}
+											return source;
 										} else {
 											return `-- Failed to decompile\n-- Error: ${tostring(success[1])}`;
 										}

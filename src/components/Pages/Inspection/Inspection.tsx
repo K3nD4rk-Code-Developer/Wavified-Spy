@@ -203,11 +203,11 @@ function Inspection() {
 	});
 
 	const scannerInfo = [
-		{ type: ScannerType.Upvalue, name: "Upvalue Scanner", icon: "🔍", color: new Color3(0.4, 0.6, 1), desc: "Examine function upvalues" },
-		{ type: ScannerType.Constant, name: "Constant Scanner", icon: "📊", color: new Color3(0.6, 0.4, 1), desc: "View function constants" },
-		{ type: ScannerType.Script, name: "Script Scanner", icon: "📜", color: new Color3(1, 0.6, 0.4), desc: "Find script instances" },
-		{ type: ScannerType.Module, name: "Module Scanner", icon: "📦", color: new Color3(0.4, 1, 0.6), desc: "Discover modules" },
-		{ type: ScannerType.Closure, name: "Closure Spy", icon: "🕵️", color: new Color3(1, 0.4, 0.6), desc: "Monitor closures" },
+		{ type: ScannerType.Upvalue, name: "Upvalue Scanner", color: new Color3(0.4, 0.6, 1), desc: "Examine function upvalues" },
+		{ type: ScannerType.Constant, name: "Constant Scanner", color: new Color3(0.6, 0.4, 1), desc: "View function constants" },
+		{ type: ScannerType.Script, name: "Script Scanner", color: new Color3(1, 0.6, 0.4), desc: "Find script instances" },
+		{ type: ScannerType.Module, name: "Module Scanner", color: new Color3(0.4, 1, 0.6), desc: "Discover modules" },
+		{ type: ScannerType.Closure, name: "Closure Spy", color: new Color3(1, 0.4, 0.6), desc: "Monitor closures" },
 	];
 
 	return (
@@ -237,7 +237,7 @@ function Inspection() {
 					/>
 
 					<textlabel
-						Text="🔬 Inspection Tools"
+						Text="Inspection Tools"
 						TextSize={28}
 						Font="GothamBold"
 						TextColor3={new Color3(1, 1, 1)}
@@ -298,56 +298,37 @@ function Inspection() {
 									Size={new UDim2(1, 0, 1, 0)}
 									BackgroundTransparency={1}
 								>
+									<uipadding PaddingLeft={new UDim(0, 16)} PaddingRight={new UDim(0, 16)} />
 									<uilistlayout
-										FillDirection={Enum.FillDirection.Horizontal}
+										FillDirection={Enum.FillDirection.Vertical}
+										HorizontalAlignment={Enum.HorizontalAlignment.Left}
 										VerticalAlignment={Enum.VerticalAlignment.Center}
-										Padding={new UDim(0, 8)}
+										Padding={new UDim(0, 4)}
 									/>
-									<uipadding PaddingLeft={new UDim(0, 12)} />
 
 									<textlabel
-										Text={scanner.icon}
-										TextSize={24}
-										Font="Gotham"
+										Text={scanner.name}
+										TextSize={14}
+										Font="GothamBold"
 										TextColor3={new Color3(1, 1, 1)}
-										Size={new UDim2(0, 30, 1, 0)}
+										Size={new UDim2(1, 0, 0, 16)}
 										BackgroundTransparency={1}
-										TextXAlignment="Center"
+										TextXAlignment="Left"
 										TextYAlignment="Center"
+										TextTruncate="AtEnd"
 									/>
 
-									<frame Size={new UDim2(1, -42, 1, 0)} BackgroundTransparency={1}>
-										<uilistlayout
-											FillDirection={Enum.FillDirection.Vertical}
-											HorizontalAlignment={Enum.HorizontalAlignment.Left}
-											VerticalAlignment={Enum.VerticalAlignment.Center}
-											Padding={new UDim(0, 2)}
-										/>
-
-										<textlabel
-											Text={scanner.name}
-											TextSize={14}
-											Font="GothamBold"
-											TextColor3={new Color3(1, 1, 1)}
-											Size={new UDim2(1, 0, 0, 16)}
-											BackgroundTransparency={1}
-											TextXAlignment="Left"
-											TextYAlignment="Center"
-											TextTruncate="AtEnd"
-										/>
-
-										<textlabel
-											Text={scanner.desc}
-											TextSize={11}
-											Font="Gotham"
-											TextColor3={new Color3(0.7, 0.7, 0.7)}
-											Size={new UDim2(1, 0, 0, 14)}
-											BackgroundTransparency={1}
-											TextXAlignment="Left"
-											TextYAlignment="Center"
-											TextTruncate="AtEnd"
-										/>
-									</frame>
+									<textlabel
+										Text={scanner.desc}
+										TextSize={11}
+										Font="Gotham"
+										TextColor3={new Color3(0.7, 0.7, 0.7)}
+										Size={new UDim2(1, 0, 0, 14)}
+										BackgroundTransparency={1}
+										TextXAlignment="Left"
+										TextYAlignment="Center"
+										TextTruncate="AtEnd"
+									/>
 								</frame>
 
 								{/* Glow effect for selected */}
@@ -380,7 +361,7 @@ function Inspection() {
 							/>
 
 							<textlabel
-								Text="🔎 Search Results"
+								Text="Search Results"
 								TextSize={18}
 								Font="GothamBold"
 								TextColor3={new Color3(1, 1, 1)}
@@ -404,7 +385,7 @@ function Inspection() {
 
 						<textbox
 							Size={new UDim2(1, 0, 0, 38)}
-							PlaceholderText="🔍 Type to search..."
+							PlaceholderText="Type to search..."
 							Text={searchQuery}
 							TextSize={14}
 							Font="Gotham"
@@ -429,7 +410,7 @@ function Inspection() {
 					<frame Size={new UDim2(1, 0, 0, 60)} BackgroundColor3={new Color3(0.1, 0.1, 0.1)} BorderSizePixel={0}>
 						<uicorner CornerRadius={new UDim(0, 10)} />
 						<textlabel
-							Text="⏳ Scanning..."
+							Text="Scanning..."
 							TextSize={16}
 							Font="GothamBold"
 							TextColor3={new Color3(0.4, 0.8, 1)}
@@ -451,7 +432,7 @@ function Inspection() {
 							Padding={new UDim(0, 4)}
 						/>
 						<textlabel
-							Text="❌ No Results Found"
+							Text="No Results Found"
 							TextSize={18}
 							Font="GothamBold"
 							TextColor3={new Color3(1, 0.4, 0.4)}
@@ -490,7 +471,7 @@ function Inspection() {
 							/>
 
 							<textlabel
-								Text={`✨ Results (${filteredResults.size()})`}
+								Text={`Results (${filteredResults.size()})`}
 								TextSize={18}
 								Font="GothamBold"
 								TextColor3={new Color3(1, 1, 1)}
@@ -546,7 +527,7 @@ function Inspection() {
 									/>
 
 									<textlabel
-										Text={`📌 ${result.name}`}
+										Text={result.name}
 										TextSize={15}
 										Font="GothamBold"
 										TextColor3={new Color3(1, 1, 1)}

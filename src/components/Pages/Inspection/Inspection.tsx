@@ -84,9 +84,9 @@ function Inspection() {
 								const constants = getconstants?.(func);
 								if (constants && constants.size() > 0) {
 									let constantList = "";
-									constants.forEach((value) => {
+									for (const value of constants) {
 										constantList += `${tostring(value)}, `;
-									});
+									}
 									results.push({
 										id: `constant_${count}`,
 										name: getinfo?.(func)?.name ?? `Function_${count}`,
@@ -193,11 +193,10 @@ function Inspection() {
 	const filteredResults = scanResults.filter((result) => {
 		if (searchQuery === "") return true;
 		const query = searchQuery.lower();
-		return (
-			result.name.lower().find(query)[0] !== undefined ||
-			result.type.lower().find(query)[0] !== undefined ||
-			(result.value && result.value.lower().find(query)[0] !== undefined)
-		);
+		const nameMatch = result.name.lower().find(query)[0] !== undefined;
+		const typeMatch = result.type.lower().find(query)[0] !== undefined;
+		const valueMatch = result.value !== undefined && result.value.lower().find(query)[0] !== undefined;
+		return nameMatch || typeMatch || valueMatch;
 	});
 
 	return (
@@ -508,7 +507,7 @@ function Inspection() {
 										TextTruncate="AtEnd"
 									/>
 
-									{result.value && (
+									{result.value !== undefined ? (
 										<textlabel
 											Text={`Value: ${result.value}`}
 											TextSize={11}
@@ -520,9 +519,9 @@ function Inspection() {
 											TextYAlignment="Top"
 											TextTruncate="AtEnd"
 										/>
-									)}
+									) : undefined}
 
-									{result.details && (
+									{result.details !== undefined ? (
 										<textlabel
 											Text={result.details}
 											TextSize={10}
@@ -534,7 +533,7 @@ function Inspection() {
 											TextYAlignment="Top"
 											TextTruncate="AtEnd"
 										/>
-									)}
+									) : undefined}
 								</frame>
 							))}
 						</scrollingframe>

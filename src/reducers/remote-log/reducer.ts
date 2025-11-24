@@ -14,6 +14,7 @@ const initialState: RemoteLogState = {
 	showBindableEvents: false,
 	showBindableFunctions: false,
 	pathNotation: PathNotation.Dot,
+	maxInspectionResults: 650,
 };
 
 export default function remoteLogReducer(state = initialState, action: RemoteLogActions): RemoteLogState {
@@ -183,6 +184,11 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				...state,
 				pathNotation: action.notation,
 			};
+		case "SET_MAX_INSPECTION_RESULTS":
+			return {
+				...state,
+				maxInspectionResults: action.max,
+			};
 		case "TOGGLE_REMOTE_MULTI_SELECTED": {
 			const remotesMultiSelected = new Set<string>();
 			state.remotesMultiSelected.forEach((id) => remotesMultiSelected.add(id));
@@ -211,6 +217,7 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 				showBindableEvents: action.settings.showBindableEvents ?? state.showBindableEvents,
 				showBindableFunctions: action.settings.showBindableFunctions ?? state.showBindableFunctions,
 				pathNotation: action.settings.pathNotation ?? state.pathNotation,
+				maxInspectionResults: action.settings.maxInspectionResults ?? state.maxInspectionResults,
 			};
 		default:
 			return state;

@@ -22,6 +22,7 @@ export interface RemoteLogState {
 	showBindableEvents: boolean;
 	showBindableFunctions: boolean;
 	pathNotation: PathNotation;
+	maxInspectionResults: number;
 }
 
 export interface RemoteLog {

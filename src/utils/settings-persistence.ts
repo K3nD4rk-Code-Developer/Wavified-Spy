@@ -14,6 +14,7 @@ export interface PersistedSettings {
 	showBindableFunctions?: boolean;
 	pathNotation?: PathNotation;
 	toggleKey?: string; // KeyCode name stored as string
+	maxInspectionResults?: number;
 }
 
 export function saveSettings(settings: PersistedSettings): void {

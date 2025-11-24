@@ -77,6 +77,10 @@ export function setPathNotation(notation: PathNotation) {
 	return { type: "SET_PATH_NOTATION", notation } as const;
 }
 
+export function setMaxInspectionResults(max: number) {
+	return { type: "SET_MAX_INSPECTION_RESULTS", max } as const;
+}
+
 export function toggleRemoteMultiSelected(id: string) {
 	return { type: "TOGGLE_REMOTE_MULTI_SELECTED", id } as const;
 }
@@ -109,6 +113,7 @@ export type RemoteLogActions =
 	| ReturnType<typeof toggleShowBindableEvents>
 	| ReturnType<typeof toggleShowBindableFunctions>
 	| ReturnType<typeof setPathNotation>
+	| ReturnType<typeof setMaxInspectionResults>
 	| ReturnType<typeof toggleRemoteMultiSelected>
 	| ReturnType<typeof clearMultiSelection>
 	| ReturnType<typeof loadSettings>;

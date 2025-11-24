@@ -12,6 +12,7 @@ import {
 	selectShowBindableEvents,
 	selectShowBindableFunctions,
 	selectPathNotation,
+	selectMaxInspectionResults,
 } from "reducers/remote-log";
 import {
 	toggleNoActors,
@@ -21,6 +22,7 @@ import {
 	toggleShowBindableEvents,
 	toggleShowBindableFunctions,
 	setPathNotation,
+	setMaxInspectionResults,
 } from "reducers/remote-log";
 import { PathNotation } from "reducers/remote-log/model";
 import { selectToggleKey } from "reducers/ui";
@@ -36,7 +38,9 @@ function Settings() {
 	const showBindableFunctions = useRootSelector(selectShowBindableFunctions);
 	const pathNotation = useRootSelector(selectPathNotation);
 	const toggleKey = useRootSelector(selectToggleKey);
+	const maxInspectionResults = useRootSelector(selectMaxInspectionResults);
 	const [isListeningForKey, setIsListeningForKey] = useState(false);
+	const [maxResultsInput, setMaxResultsInput] = useState(tostring(maxInspectionResults));
 
 	const handleToggleNoActors = () => {
 		dispatch(toggleNoActors());
@@ -682,6 +686,134 @@ function Settings() {
 						>
 							<textlabel
 								Text="FindFirstChild"
+								TextSize={14}
+								Font="GothamBold"
+								TextColor3={new Color3(1, 1, 1)}
+								Size={new UDim2(1, 0, 1, 0)}
+								BackgroundTransparency={1}
+								TextXAlignment="Center"
+								TextYAlignment="Center"
+							/>
+						</Button>
+					</frame>
+				</frame>
+
+				{/* Inspection Tools Section */}
+				<textlabel
+					Text="Inspection Tools"
+					TextSize={18}
+					Font="GothamBold"
+					TextColor3={new Color3(1, 1, 1)}
+					Size={new UDim2(1, 0, 0, 24)}
+					BackgroundTransparency={1}
+					TextXAlignment="Left"
+					TextYAlignment="Top"
+				/>
+
+				{/* Max Inspection Results Setting */}
+				<frame Size={new UDim2(1, 0, 0, 100)} BackgroundTransparency={1}>
+					<uilistlayout
+						FillDirection={Enum.FillDirection.Vertical}
+						HorizontalAlignment={Enum.HorizontalAlignment.Left}
+						Padding={new UDim(0, 8)}
+					/>
+
+					{/* Setting Label */}
+					<frame Size={new UDim2(1, 0, 0, 56)} BackgroundTransparency={1}>
+						<uilistlayout
+							FillDirection={Enum.FillDirection.Vertical}
+							HorizontalAlignment={Enum.HorizontalAlignment.Left}
+							Padding={new UDim(0, 4)}
+						/>
+
+						<textlabel
+							Text="Maximum Inspection Results"
+							TextSize={16}
+							Font="GothamBold"
+							TextColor3={new Color3(1, 1, 1)}
+							Size={new UDim2(1, 0, 0, 20)}
+							BackgroundTransparency={1}
+							TextXAlignment="Left"
+							TextYAlignment="Center"
+						/>
+
+						<textlabel
+							Text="Set the maximum number of results to display when scanning (higher values may cause lag)"
+							TextSize={12}
+							Font="Gotham"
+							TextColor3={new Color3(0.7, 0.7, 0.7)}
+							Size={new UDim2(1, 0, 0, 32)}
+							BackgroundTransparency={1}
+							TextXAlignment="Left"
+							TextYAlignment="Top"
+							TextWrapped={true}
+						/>
+					</frame>
+
+					{/* Input and Apply Button */}
+					<frame Size={new UDim2(1, 0, 0, 36)} BackgroundTransparency={1}>
+						<uilistlayout
+							FillDirection={Enum.FillDirection.Horizontal}
+							HorizontalAlignment={Enum.HorizontalAlignment.Left}
+							Padding={new UDim(0, 8)}
+						/>
+
+						{/* Current Value Display */}
+						<frame
+							Size={new UDim2(0, 150, 0, 32)}
+							BackgroundColor3={new Color3(0.15, 0.15, 0.15)}
+							BorderSizePixel={0}
+						>
+							<uicorner CornerRadius={new UDim(0, 6)} />
+							<textlabel
+								Text={`Current: ${maxInspectionResults}`}
+								TextSize={14}
+								Font="Gotham"
+								TextColor3={new Color3(1, 1, 1)}
+								Size={new UDim2(1, 0, 1, 0)}
+								BackgroundTransparency={1}
+								TextXAlignment="Center"
+								TextYAlignment="Center"
+							/>
+						</frame>
+
+						{/* Input Box */}
+						<textbox
+							Size={new UDim2(0, 150, 0, 32)}
+							PlaceholderText="Enter number..."
+							Text={maxResultsInput}
+							TextSize={14}
+							Font="Gotham"
+							TextColor3={new Color3(1, 1, 1)}
+							BackgroundColor3={new Color3(0.15, 0.15, 0.15)}
+							BorderSizePixel={0}
+							TextXAlignment="Center"
+							ClearTextOnFocus={false}
+							Change={{
+								Text: (rbx) => setMaxResultsInput(rbx.Text),
+							}}
+						>
+							<uicorner CornerRadius={new UDim(0, 6)} />
+							<uipadding PaddingLeft={new UDim(0, 10)} PaddingRight={new UDim(0, 10)} />
+						</textbox>
+
+						{/* Apply Button */}
+						<Button
+							onClick={() => {
+								const num = tonumber(maxResultsInput);
+								if (num !== undefined && num > 0 && num <= 10000) {
+									dispatch(setMaxInspectionResults(num));
+								} else {
+									setMaxResultsInput(tostring(maxInspectionResults));
+								}
+							}}
+							size={new UDim2(0, 100, 0, 32)}
+							background={new Color3(0.2, 0.5, 0.8)}
+							transparency={0}
+							cornerRadius={new UDim(0, 6)}
+						>
+							<textlabel
+								Text="Apply"
 								TextSize={14}
 								Font="GothamBold"
 								TextColor3={new Color3(1, 1, 1)}

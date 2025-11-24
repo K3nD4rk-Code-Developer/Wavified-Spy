@@ -16,173 +16,136 @@ function InspectionConstants() {
 	// Show constants if available, otherwise show script source
 	const showConstants = selectedResult?.rawConstants && selectedResult.rawConstants.size() > 0;
 	const showScript = selectedResult?.rawScript && !showConstants;
+	const constantCount = selectedResult?.rawConstants?.size() ?? 0;
+	const isEmpty = !selectedResult || (!showConstants && !showScript);
 
 	return (
 		<Container size={lowerSize} position={lowerPosition}>
 			<TitleBar
-				caption={showScript ? "Script Source" : "Constants"}
+				caption={showScript ? "Script Preview" : showConstants ? `Constants (${constantCount})` : "Constants"}
 				hidden={lowerHidden}
 				toggleHidden={() => setLowerHidden(!lowerHidden)}
 			/>
 
-			<scrollingframe
-				Size={new UDim2(1, 0, 1, -40)}
-				Position={new UDim2(0, 0, 0, 40)}
-				BackgroundTransparency={1}
-				BorderSizePixel={0}
-				ScrollBarThickness={4}
-				ScrollBarImageColor3={new Color3(0.3, 0.3, 0.3)}
-				CanvasSize={new UDim2(0, 0, 0, 0)}
-				AutomaticCanvasSize={Enum.AutomaticSize.Y}
-			>
-				<uilistlayout
-					FillDirection={Enum.FillDirection.Vertical}
-					Padding={new UDim(0, 4)}
-					HorizontalAlignment={Enum.HorizontalAlignment.Left}
-				/>
-				<uipadding PaddingLeft={new UDim(0, 12)} PaddingRight={new UDim(0, 12)} PaddingTop={new UDim(0, 8)} />
+			{!isEmpty ? (
+				<scrollingframe
+					Size={new UDim2(1, 0, 1, -30)}
+					Position={new UDim2(0, 0, 0, 30)}
+					BackgroundTransparency={1}
+					BorderSizePixel={0}
+					ScrollBarThickness={1}
+					ScrollBarImageTransparency={0.6}
+					AutomaticCanvasSize="Y"
+				>
+					<uilistlayout FillDirection="Vertical" Padding={new UDim(0, 2)} VerticalAlignment="Top" SortOrder="LayoutOrder" />
+					<uipadding PaddingLeft={new UDim(0, 4)} PaddingRight={new UDim(0, 4)} PaddingTop={new UDim(0, 4)} PaddingBottom={new UDim(0, 4)} />
 
-				{!selectedResult ? (
-					<textlabel
-						Text="Select a result to view details"
-						TextSize={12}
-						Font="Gotham"
-						TextColor3={new Color3(0.6, 0.6, 0.6)}
-						Size={new UDim2(1, 0, 0, 60)}
-						BackgroundTransparency={1}
-						TextXAlignment="Center"
-						TextYAlignment="Center"
-						TextWrapped={true}
-					/>
-				) : showConstants ? (
-					<>
-						<textlabel
-							Text={`${selectedResult.rawConstants!.size()} Constants`}
-							TextSize={11}
-							Font="GothamBold"
-							TextColor3={new Color3(0.8, 0.8, 0.8)}
-							Size={new UDim2(1, 0, 0, 16)}
-							BackgroundTransparency={1}
-							TextXAlignment="Left"
-							TextYAlignment="Center"
-						/>
-
-						{(() => {
+					{showConstants ? (
+						(() => {
 							const elements: Roact.Element[] = [];
-							for (let i = 0; i < selectedResult.rawConstants!.size(); i++) {
-								const value = selectedResult.rawConstants![i];
+							for (let i = 0; i < selectedResult!.rawConstants!.size(); i++) {
+								const value = selectedResult!.rawConstants![i];
 								elements.push(
 									<frame
 										Key={`constant_${i}`}
-										Size={new UDim2(1, 0, 0, 0)}
-										BackgroundColor3={new Color3(0.08, 0.08, 0.08)}
+										AutomaticSize="Y"
+										Size={new UDim2(1, -8, 0, 0)}
+										BackgroundColor3={new Color3(1, 1, 1)}
+										BackgroundTransparency={0.95}
 										BorderSizePixel={0}
-										AutomaticSize={Enum.AutomaticSize.Y}
+										LayoutOrder={i}
 									>
-										<uicorner CornerRadius={new UDim(0, 4)} />
-										<uipadding
-											PaddingLeft={new UDim(0, 8)}
-											PaddingRight={new UDim(0, 8)}
-											PaddingTop={new UDim(0, 6)}
-											PaddingBottom={new UDim(0, 6)}
-										/>
-										<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 2)} />
+										<uilistlayout FillDirection="Vertical" Padding={new UDim(0, 2)} VerticalAlignment="Top" />
+										<uipadding PaddingLeft={new UDim(0, 8)} PaddingRight={new UDim(0, 8)} PaddingTop={new UDim(0, 4)} PaddingBottom={new UDim(0, 4)} />
 
 										<textlabel
-											Text={`[${i + 1}]`}
-											TextSize={10}
+											AutomaticSize="Y"
+											Size={new UDim2(1, -16, 0, 0)}
+											Text={`[${i + 1}] ${typeOf(value)}`}
 											Font="GothamBold"
 											TextColor3={new Color3(0.9, 0.7, 1)}
-											Size={new UDim2(1, 0, 0, 12)}
-											BackgroundTransparency={1}
+											TextSize={10}
 											TextXAlignment="Left"
-											TextYAlignment="Center"
+											BackgroundTransparency={1}
 										/>
 
 										<textlabel
-											Text={`${typeOf(value)} = ${tostring(value).sub(1, 100)}`}
-											TextSize={9}
+											AutomaticSize="Y"
+											Size={new UDim2(1, -16, 0, 0)}
+											Text={tostring(value).sub(1, 150)}
 											Font="Code"
 											TextColor3={new Color3(0.8, 0.8, 0.8)}
-											Size={new UDim2(1, 0, 0, 0)}
-											AutomaticSize={Enum.AutomaticSize.Y}
-											BackgroundTransparency={1}
+											TextSize={9}
 											TextXAlignment="Left"
-											TextYAlignment="Top"
 											TextWrapped={true}
+											BackgroundTransparency={1}
 										/>
 									</frame>
 								);
 							}
 							return elements;
-						})()}
-					</>
-				) : showScript ? (
-					<>
-						<textlabel
-							Text="Decompiled Source"
-							TextSize={11}
-							Font="GothamBold"
-							TextColor3={new Color3(0.8, 0.8, 0.8)}
-							Size={new UDim2(1, 0, 0, 16)}
-							BackgroundTransparency={1}
-							TextXAlignment="Left"
-							TextYAlignment="Center"
-						/>
-
+						})()
+					) : showScript ? (
 						<frame
-							Size={new UDim2(1, 0, 0, 0)}
+							AutomaticSize="Y"
+							Size={new UDim2(1, -8, 0, 0)}
 							BackgroundColor3={new Color3(0.05, 0.05, 0.05)}
+							BackgroundTransparency={0.3}
 							BorderSizePixel={0}
-							AutomaticSize={Enum.AutomaticSize.Y}
+							LayoutOrder={1}
 						>
-							<uicorner CornerRadius={new UDim(0, 4)} />
-							<uipadding
-								PaddingLeft={new UDim(0, 8)}
-								PaddingRight={new UDim(0, 8)}
-								PaddingTop={new UDim(0, 8)}
-								PaddingBottom={new UDim(0, 8)}
-							/>
+							<uipadding PaddingLeft={new UDim(0, 8)} PaddingRight={new UDim(0, 8)} PaddingTop={new UDim(0, 8)} PaddingBottom={new UDim(0, 8)} />
 
 							<textlabel
+								AutomaticSize="Y"
+								Size={new UDim2(1, -16, 0, 0)}
 								Text={(() => {
 									if (decompile) {
-										const success = pcall(() => decompile(selectedResult.rawScript!));
+										const success = pcall(() => decompile(selectedResult!.rawScript!));
 										if (success[0]) {
-											return success[1] as string;
+											const source = success[1] as string;
+											// Limit to first 50 lines for preview
+											const lines = source.split("\n");
+											const preview = lines.size() > 50 ? lines.slice(0, 50).join("\n") + "\n\n-- ... (truncated, use View Script button for full source)" : source;
+											return preview;
 										} else {
 											return `-- Failed to decompile\n-- Error: ${tostring(success[1])}`;
 										}
 									} else {
-										return "-- decompile() function not available\n-- Cannot view source code in this environment";
+										return "-- decompile() function not available\n-- Use View Script button to open in viewer";
 									}
 								})()}
-								TextSize={9}
 								Font="Code"
-								TextColor3={new Color3(0.9, 0.9, 0.9)}
-								Size={new UDim2(1, 0, 0, 0)}
-								AutomaticSize={Enum.AutomaticSize.Y}
-								BackgroundTransparency={1}
+								TextColor3={new Color3(0.85, 0.85, 0.85)}
+								TextSize={9}
 								TextXAlignment="Left"
 								TextYAlignment="Top"
 								TextWrapped={true}
+								BackgroundTransparency={1}
 							/>
 						</frame>
-					</>
-				) : (
+					) : undefined}
+				</scrollingframe>
+			) : (
+				<frame
+					Size={new UDim2(1, 0, 1, -30)}
+					Position={new UDim2(0, 0, 0, 30)}
+					BackgroundTransparency={1}
+					BorderSizePixel={0}
+				>
 					<textlabel
-						Text="No constants or script data available"
-						TextSize={12}
+						AnchorPoint={new Vector2(0.5, 0.5)}
+						Position={new UDim2(0.5, 0, 0.5, 0)}
+						Size={new UDim2(1, -20, 1, 0)}
+						Text="Select a result to view details"
 						Font="Gotham"
-						TextColor3={new Color3(0.6, 0.6, 0.6)}
-						Size={new UDim2(1, 0, 0, 60)}
-						BackgroundTransparency={1}
-						TextXAlignment="Center"
-						TextYAlignment="Center"
+						TextColor3={new Color3(0.5, 0.5, 0.5)}
+						TextSize={12}
 						TextWrapped={true}
+						BackgroundTransparency={1}
 					/>
-				)}
-			</scrollingframe>
+				</frame>
+			)}
 		</Container>
 	);
 }

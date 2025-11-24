@@ -415,24 +415,31 @@ function Inspection() {
 							>
 								<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 4)} />
 
-								{selectedResult.rawConstants.map((value, index) => (
-									<textlabel
-										Key={`constant_${index}`}
-										Text={`[${index + 1}] ${typeOf(value)} = ${tostring(value).sub(1, 60)}`}
-										TextSize={11}
-										Font="Code"
-										TextColor3={new Color3(0.9, 0.9, 0.9)}
-										Size={new UDim2(1, 0, 0, 24)}
-										BackgroundColor3={new Color3(0.08, 0.08, 0.08)}
-										BorderSizePixel={0}
-										TextXAlignment="Left"
-										TextYAlignment="Center"
-										TextTruncate="AtEnd"
-									>
-										<uicorner CornerRadius={new UDim(0, 4)} />
-										<uipadding PaddingLeft={new UDim(0, 8)} />
-									</textlabel>
-								))}
+								{(() => {
+									const constantElements: Roact.Element[] = [];
+									for (let i = 0; i < selectedResult.rawConstants.size(); i++) {
+										const value = selectedResult.rawConstants[i];
+										constantElements.push(
+											<textlabel
+												Key={`constant_${i}`}
+												Text={`[${i + 1}] ${typeOf(value)} = ${tostring(value).sub(1, 60)}`}
+												TextSize={11}
+												Font="Code"
+												TextColor3={new Color3(0.9, 0.9, 0.9)}
+												Size={new UDim2(1, 0, 0, 24)}
+												BackgroundColor3={new Color3(0.08, 0.08, 0.08)}
+												BorderSizePixel={0}
+												TextXAlignment="Left"
+												TextYAlignment="Center"
+												TextTruncate="AtEnd"
+											>
+												<uicorner CornerRadius={new UDim(0, 4)} />
+												<uipadding PaddingLeft={new UDim(0, 8)} />
+											</textlabel>
+										);
+									}
+									return constantElements;
+								})()}
 							</scrollingframe>
 						</frame>
 					)}
@@ -647,7 +654,7 @@ function Inspection() {
 
 						{scannerInfo.map((scanner) => (
 							<Button
-								key={scanner.type}
+								Key={scanner.type}
 								onClick={() => handleScan(scanner.type)}
 								size={new UDim2(0, 190, 0, 60)}
 								background={selectedScanner === scanner.type ? scanner.color : new Color3(0.12, 0.12, 0.12)}
@@ -886,7 +893,7 @@ function Inspection() {
 
 							{filteredResults.map((result) => (
 								<Button
-									key={result.id}
+									Key={result.id}
 									onClick={() => setSelectedResult(result)}
 									size={new UDim2(1, -8, 0, 76)}
 									background={selectedResult?.id === result.id ? new Color3(0.15, 0.15, 0.2) : new Color3(0.11, 0.11, 0.11)}

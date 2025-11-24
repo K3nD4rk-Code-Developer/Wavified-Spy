@@ -389,6 +389,162 @@ function Inspection() {
 						) : undefined}
 					</frame>
 
+					{/* Function Metadata */}
+					{selectedResult.rawInfo && (
+						<frame Size={new UDim2(1, 0, 0, 0)} BackgroundColor3={new Color3(0.08, 0.08, 0.08)} BorderSizePixel={0} AutomaticSize={Enum.AutomaticSize.Y}>
+							<uicorner CornerRadius={new UDim(0, 10)} />
+							<uipadding PaddingLeft={new UDim(0, 16)} PaddingTop={new UDim(0, 14)} PaddingRight={new UDim(0, 16)} PaddingBottom={new UDim(0, 14)} />
+							<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 6)} />
+
+							<textlabel
+								Text="Function Metadata"
+								TextSize={16}
+								Font="GothamBold"
+								TextColor3={new Color3(1, 0.8, 0.4)}
+								Size={new UDim2(1, 0, 0, 22)}
+								BackgroundTransparency={1}
+								TextXAlignment="Left"
+								TextYAlignment="Center"
+							/>
+
+							<frame Size={new UDim2(1, 0, 0, 0)} BackgroundTransparency={1} AutomaticSize={Enum.AutomaticSize.Y}>
+								<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 4)} />
+
+								<textlabel
+									Text={`Name: ${selectedResult.rawInfo.name ?? "anonymous"}`}
+									TextSize={12}
+									Font="Code"
+									TextColor3={new Color3(0.85, 0.85, 0.85)}
+									Size={new UDim2(1, 0, 0, 16)}
+									BackgroundTransparency={1}
+									TextXAlignment="Left"
+									TextYAlignment="Center"
+									TextTruncate="AtEnd"
+								/>
+
+								<textlabel
+									Text={`Source: ${selectedResult.rawInfo.short_src ?? selectedResult.rawInfo.source ?? "unknown"}`}
+									TextSize={12}
+									Font="Code"
+									TextColor3={new Color3(0.85, 0.85, 0.85)}
+									Size={new UDim2(1, 0, 0, 16)}
+									BackgroundTransparency={1}
+									TextXAlignment="Left"
+									TextYAlignment="Center"
+									TextTruncate="AtEnd"
+								/>
+
+								<textlabel
+									Text={`Function Type: ${selectedResult.rawInfo.what ?? "Lua"}`}
+									TextSize={12}
+									Font="Code"
+									TextColor3={new Color3(0.85, 0.85, 0.85)}
+									Size={new UDim2(1, 0, 0, 16)}
+									BackgroundTransparency={1}
+									TextXAlignment="Left"
+									TextYAlignment="Center"
+								/>
+
+								{selectedResult.rawInfo.linedefined !== undefined ? (
+									<textlabel
+										Text={`Lines: ${selectedResult.rawInfo.linedefined} - ${selectedResult.rawInfo.lastlinedefined ?? "?"}`}
+										TextSize={12}
+										Font="Code"
+										TextColor3={new Color3(0.85, 0.85, 0.85)}
+										Size={new UDim2(1, 0, 0, 16)}
+										BackgroundTransparency={1}
+										TextXAlignment="Left"
+										TextYAlignment="Center"
+									/>
+								) : undefined}
+
+								<textlabel
+									Text={`Upvalue Count: ${selectedResult.rawInfo.nups ?? 0}`}
+									TextSize={12}
+									Font="Code"
+									TextColor3={new Color3(0.85, 0.85, 0.85)}
+									Size={new UDim2(1, 0, 0, 16)}
+									BackgroundTransparency={1}
+									TextXAlignment="Left"
+									TextYAlignment="Center"
+								/>
+							</frame>
+						</frame>
+					)}
+
+					{/* Object Hierarchy (for scripts/modules) */}
+					{selectedResult.rawScript && (
+						<frame Size={new UDim2(1, 0, 0, 0)} BackgroundColor3={new Color3(0.08, 0.08, 0.08)} BorderSizePixel={0} AutomaticSize={Enum.AutomaticSize.Y}>
+							<uicorner CornerRadius={new UDim(0, 10)} />
+							<uipadding PaddingLeft={new UDim(0, 16)} PaddingTop={new UDim(0, 14)} PaddingRight={new UDim(0, 16)} PaddingBottom={new UDim(0, 14)} />
+							<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 6)} />
+
+							<textlabel
+								Text="Object Hierarchy"
+								TextSize={16}
+								Font="GothamBold"
+								TextColor3={new Color3(0.4, 1, 0.8)}
+								Size={new UDim2(1, 0, 0, 22)}
+								BackgroundTransparency={1}
+								TextXAlignment="Left"
+								TextYAlignment="Center"
+							/>
+
+							<frame Size={new UDim2(1, 0, 0, 0)} BackgroundTransparency={1} AutomaticSize={Enum.AutomaticSize.Y}>
+								<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 4)} />
+
+								<textlabel
+									Text={`Full Path: ${selectedResult.rawScript.GetFullName()}`}
+									TextSize={12}
+									Font="Code"
+									TextColor3={new Color3(0.85, 0.85, 0.85)}
+									Size={new UDim2(1, 0, 0, 16)}
+									BackgroundTransparency={1}
+									TextXAlignment="Left"
+									TextYAlignment="Center"
+									TextTruncate="AtEnd"
+								/>
+
+								<textlabel
+									Text={`Parent: ${selectedResult.rawScript.Parent?.Name ?? "nil"}`}
+									TextSize={12}
+									Font="Code"
+									TextColor3={new Color3(0.85, 0.85, 0.85)}
+									Size={new UDim2(1, 0, 0, 16)}
+									BackgroundTransparency={1}
+									TextXAlignment="Left"
+									TextYAlignment="Center"
+									TextTruncate="AtEnd"
+								/>
+
+								<textlabel
+									Text={`Class: ${selectedResult.rawScript.ClassName}`}
+									TextSize={12}
+									Font="Code"
+									TextColor3={new Color3(0.85, 0.85, 0.85)}
+									Size={new UDim2(1, 0, 0, 16)}
+									BackgroundTransparency={1}
+									TextXAlignment="Left"
+									TextYAlignment="Center"
+								/>
+
+								{selectedResult.rawScript.Parent !== undefined && (
+									<textlabel
+										Text={`Parent Class: ${selectedResult.rawScript.Parent?.ClassName ?? "nil"}`}
+										TextSize={12}
+										Font="Code"
+										TextColor3={new Color3(0.85, 0.85, 0.85)}
+										Size={new UDim2(1, 0, 0, 16)}
+										BackgroundTransparency={1}
+										TextXAlignment="Left"
+										TextYAlignment="Center"
+										TextTruncate="AtEnd"
+									/>
+								)}
+							</frame>
+						</frame>
+					)}
+
 					{/* Upvalues Section */}
 					{selectedResult.rawUpvalues && selectedResult.rawUpvalues.size() > 0 && (
 						<frame Size={new UDim2(1, 0, 0, math.min(320, selectedResult.rawUpvalues.size() * 32 + 60))} BackgroundColor3={new Color3(0.08, 0.08, 0.08)} BorderSizePixel={0}>

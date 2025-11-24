@@ -11,11 +11,6 @@ declare const getupvalues: ((func: Callback) => Map<string, unknown>) | undefine
 declare const getconstants: ((func: Callback) => unknown[]) | undefined;
 declare const getinfo: ((func: Callback) => { name?: string; source?: string; short_src?: string; what?: string; nups?: number; linedefined?: number; lastlinedefined?: number }) | undefined;
 declare const decompile: ((script: LuaSourceContainer) => string) | undefined;
-declare const debug: {
-	getupvalue?: (func: Callback, index: number) => LuaTuple<[string, unknown]>;
-	getconstant?: (func: Callback, index: number) => unknown;
-	getinfo?: (func: Callback) => { name?: string; source?: string; short_src?: string; what?: string; nups?: number };
-} | undefined;
 
 enum ScannerType {
 	None = "none",
@@ -177,6 +172,8 @@ function Inspection() {
 								const func = item as Callback;
 								const info = getinfo(func);
 								if (info) {
+									const upvalues = getupvalues?.(func);
+									const constants = getconstants?.(func);
 									results.push({
 										id: `closure_${count}`,
 										name: info.name ?? `Closure_${count}`,
@@ -185,6 +182,8 @@ function Inspection() {
 										details: `Upvalues: ${info.nups ?? 0}, Lines: ${info.linedefined ?? "?"}-${info.lastlinedefined ?? "?"}`,
 										rawFunc: func,
 										rawInfo: info,
+										rawUpvalues: upvalues,
+										rawConstants: constants,
 									});
 									count++;
 									if (count >= maxResults) break;
@@ -227,59 +226,60 @@ function Inspection() {
 	];
 
 	const renderDetailPanel = () => {
-		if (!selectedResult) return undefined;
-
-		return (
-			<frame Size={new UDim2(1, 0, 0, 400)} BackgroundColor3={new Color3(0.06, 0.06, 0.06)} BorderSizePixel={0}>
-				<uicorner CornerRadius={new UDim(0, 10)} />
-				<uipadding PaddingLeft={new UDim(0, 16)} PaddingRight={new UDim(0, 16)} PaddingTop={new UDim(0, 16)} PaddingBottom={new UDim(0, 16)} />
-
-				{/* Header */}
-				<frame Size={new UDim2(1, 0, 0, 32)} BackgroundTransparency={1} Position={new UDim2(0, 0, 0, 0)}>
+		if (!selectedResult) {
+			return (
+				<frame Size={new UDim2(1, 0, 1, 0)} BackgroundColor3={new Color3(0.05, 0.05, 0.05)} BorderSizePixel={0}>
+					<uicorner CornerRadius={new UDim(0, 10)} />
 					<uilistlayout
-						FillDirection={Enum.FillDirection.Horizontal}
+						FillDirection={Enum.FillDirection.Vertical}
+						HorizontalAlignment={Enum.HorizontalAlignment.Center}
 						VerticalAlignment={Enum.VerticalAlignment.Center}
-						Padding={new UDim(0, 8)}
+						Padding={new UDim(0, 10)}
+					/>
+
+					<imagelabel
+						Image="rbxassetid://9896633081"
+						Size={new UDim2(0, 80, 0, 80)}
+						BackgroundTransparency={1}
+						ImageColor3={new Color3(0.3, 0.3, 0.3)}
 					/>
 
 					<textlabel
-						Text="Detailed Inspector"
-						TextSize={18}
+						Text="No Selection"
+						TextSize={24}
 						Font="GothamBold"
-						TextColor3={new Color3(1, 1, 1)}
-						Size={new UDim2(1, -40, 0, 32)}
+						TextColor3={new Color3(0.5, 0.5, 0.5)}
+						Size={new UDim2(1, 0, 0, 30)}
 						BackgroundTransparency={1}
-						TextXAlignment="Left"
+						TextXAlignment="Center"
 						TextYAlignment="Center"
 					/>
 
-					<Button
-						onClick={() => setSelectedResult(undefined)}
-						size={new UDim2(0, 32, 0, 32)}
-						background={new Color3(0.8, 0.2, 0.2)}
-						transparency={0}
-						cornerRadius={new UDim(0, 6)}
-					>
-						<textlabel
-							Text="X"
-							TextSize={16}
-							Font="GothamBold"
-							TextColor3={new Color3(1, 1, 1)}
-							Size={new UDim2(1, 0, 1, 0)}
-							BackgroundTransparency={1}
-							TextXAlignment="Center"
-							TextYAlignment="Center"
-						/>
-					</Button>
+					<textlabel
+						Text="Click on any result to view details"
+						TextSize={14}
+						Font="Gotham"
+						TextColor3={new Color3(0.4, 0.4, 0.4)}
+						Size={new UDim2(1, -40, 0, 20)}
+						BackgroundTransparency={1}
+						TextXAlignment="Center"
+						TextYAlignment="Center"
+						TextWrapped={true}
+					/>
 				</frame>
+			);
+		}
 
-				{/* Content */}
+		return (
+			<frame Size={new UDim2(1, 0, 1, 0)} BackgroundColor3={new Color3(0.05, 0.05, 0.05)} BorderSizePixel={0}>
+				<uicorner CornerRadius={new UDim(0, 10)} />
+				<uipadding PaddingLeft={new UDim(0, 20)} PaddingRight={new UDim(0, 20)} PaddingTop={new UDim(0, 20)} PaddingBottom={new UDim(0, 20)} />
+
 				<scrollingframe
-					Size={new UDim2(1, 0, 1, -40)}
-					Position={new UDim2(0, 0, 0, 40)}
+					Size={new UDim2(1, 0, 1, 0)}
 					BackgroundTransparency={1}
 					BorderSizePixel={0}
-					ScrollBarThickness={4}
+					ScrollBarThickness={5}
 					ScrollBarImageColor3={new Color3(0.3, 0.3, 0.3)}
 					CanvasSize={new UDim2(0, 0, 0, 0)}
 					AutomaticCanvasSize={Enum.AutomaticSize.Y}
@@ -287,191 +287,285 @@ function Inspection() {
 					<uilistlayout
 						FillDirection={Enum.FillDirection.Vertical}
 						HorizontalAlignment={Enum.HorizontalAlignment.Left}
-						Padding={new UDim(0, 12)}
+						Padding={new UDim(0, 16)}
 					/>
 
-					{/* Basic Info */}
-					<frame Size={new UDim2(1, -8, 0, 80)} BackgroundColor3={new Color3(0.1, 0.1, 0.1)} BorderSizePixel={0}>
-						<uicorner CornerRadius={new UDim(0, 8)} />
-						<uipadding PaddingLeft={new UDim(0, 12)} PaddingTop={new UDim(0, 12)} />
-						<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 4)} />
+					{/* Header with close button */}
+					<frame Size={new UDim2(1, 0, 0, 36)} BackgroundTransparency={1}>
+						<uilistlayout
+							FillDirection={Enum.FillDirection.Horizontal}
+							VerticalAlignment={Enum.VerticalAlignment.Center}
+							HorizontalAlignment={Enum.HorizontalAlignment.Left}
+							Padding={new UDim(0, 10)}
+						/>
 
 						<textlabel
-							Text={`Name: ${selectedResult.name}`}
-							TextSize={14}
+							Text="Details"
+							TextSize={22}
 							Font="GothamBold"
 							TextColor3={new Color3(1, 1, 1)}
-							Size={new UDim2(1, -12, 0, 16)}
+							Size={new UDim2(1, -46, 0, 36)}
 							BackgroundTransparency={1}
 							TextXAlignment="Left"
 							TextYAlignment="Center"
-							TextWrapped={true}
 						/>
+
+						<Button
+							onClick={() => setSelectedResult(undefined)}
+							size={new UDim2(0, 36, 0, 36)}
+							background={new Color3(0.15, 0.15, 0.15)}
+							transparency={0}
+							cornerRadius={new UDim(0, 8)}
+						>
+							<textlabel
+								Text="✕"
+								TextSize={18}
+								Font="GothamBold"
+								TextColor3={new Color3(0.8, 0.3, 0.3)}
+								Size={new UDim2(1, 0, 1, 0)}
+								BackgroundTransparency={1}
+								TextXAlignment="Center"
+								TextYAlignment="Center"
+							/>
+						</Button>
+					</frame>
+
+					{/* Basic Info Card */}
+					<frame Size={new UDim2(1, 0, 0, 100)} BackgroundColor3={new Color3(0.08, 0.08, 0.08)} BorderSizePixel={0}>
+						<uicorner CornerRadius={new UDim(0, 10)} />
+						<uipadding PaddingLeft={new UDim(0, 16)} PaddingTop={new UDim(0, 14)} PaddingRight={new UDim(0, 16)} />
+						<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 6)} />
+
+						<textlabel
+							Text={selectedResult.name}
+							TextSize={18}
+							Font="GothamBold"
+							TextColor3={new Color3(1, 1, 1)}
+							Size={new UDim2(1, 0, 0, 22)}
+							BackgroundTransparency={1}
+							TextXAlignment="Left"
+							TextYAlignment="Center"
+							TextTruncate="AtEnd"
+						/>
+
 						<textlabel
 							Text={`Type: ${selectedResult.type}`}
-							TextSize={12}
+							TextSize={13}
 							Font="Gotham"
-							TextColor3={new Color3(0.7, 0.8, 1)}
-							Size={new UDim2(1, -12, 0, 14)}
+							TextColor3={new Color3(0.6, 0.8, 1)}
+							Size={new UDim2(1, 0, 0, 16)}
 							BackgroundTransparency={1}
 							TextXAlignment="Left"
 							TextYAlignment="Center"
-							TextWrapped={true}
+							TextTruncate="AtEnd"
 						/>
+
 						{selectedResult.value !== undefined ? (
 							<textlabel
-								Text={`Value: ${selectedResult.value}`}
-								TextSize={11}
-								Font="Gotham"
-								TextColor3={new Color3(0.7, 0.7, 0.7)}
-								Size={new UDim2(1, -12, 0, 13)}
+								Text={`Path: ${selectedResult.value}`}
+								TextSize={12}
+								Font="Code"
+								TextColor3={new Color3(0.6, 0.6, 0.6)}
+								Size={new UDim2(1, 0, 0, 15)}
 								BackgroundTransparency={1}
 								TextXAlignment="Left"
 								TextYAlignment="Center"
-								TextWrapped={true}
+								TextTruncate="AtEnd"
+							/>
+						) : undefined}
+
+						{selectedResult.details !== undefined ? (
+							<textlabel
+								Text={selectedResult.details}
+								TextSize={11}
+								Font="Gotham"
+								TextColor3={new Color3(0.5, 0.5, 0.5)}
+								Size={new UDim2(1, 0, 0, 14)}
+								BackgroundTransparency={1}
+								TextXAlignment="Left"
+								TextYAlignment="Center"
+								TextTruncate="AtEnd"
 							/>
 						) : undefined}
 					</frame>
 
-					{/* Upvalue Details */}
-					{selectedResult.rawUpvalues && (
-						<frame Size={new UDim2(1, -8, 0, math.min(300, selectedResult.rawUpvalues.size() * 28 + 40))} BackgroundColor3={new Color3(0.1, 0.1, 0.1)} BorderSizePixel={0}>
-							<uicorner CornerRadius={new UDim(0, 8)} />
-							<uipadding PaddingLeft={new UDim(0, 12)} PaddingTop={new UDim(0, 12)} />
+					{/* Upvalues Section */}
+					{selectedResult.rawUpvalues && selectedResult.rawUpvalues.size() > 0 && (
+						<frame Size={new UDim2(1, 0, 0, math.min(320, selectedResult.rawUpvalues.size() * 32 + 60))} BackgroundColor3={new Color3(0.08, 0.08, 0.08)} BorderSizePixel={0}>
+							<uicorner CornerRadius={new UDim(0, 10)} />
+							<uipadding PaddingLeft={new UDim(0, 16)} PaddingTop={new UDim(0, 14)} PaddingRight={new UDim(0, 16)} PaddingBottom={new UDim(0, 14)} />
 
 							<textlabel
 								Text={`Upvalues (${selectedResult.rawUpvalues.size()})`}
-								TextSize={14}
+								TextSize={16}
 								Font="GothamBold"
-								TextColor3={new Color3(0.4, 0.8, 1)}
-								Size={new UDim2(1, -12, 0, 20)}
+								TextColor3={new Color3(0.4, 0.7, 1)}
+								Size={new UDim2(1, 0, 0, 24)}
 								BackgroundTransparency={1}
 								TextXAlignment="Left"
 								TextYAlignment="Center"
 							/>
 
 							<scrollingframe
-								Size={new UDim2(1, -12, 1, -28)}
-								Position={new UDim2(0, 0, 0, 28)}
+								Size={new UDim2(1, 0, 1, -32)}
+								Position={new UDim2(0, 0, 0, 32)}
 								BackgroundTransparency={1}
 								BorderSizePixel={0}
-								ScrollBarThickness={3}
-								CanvasSize={new UDim2(0, 0, 0, selectedResult.rawUpvalues.size() * 28)}
+								ScrollBarThickness={4}
+								ScrollBarImageColor3={new Color3(0.25, 0.25, 0.25)}
+								CanvasSize={new UDim2(0, 0, 0, selectedResult.rawUpvalues.size() * 32)}
 							>
 								<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 4)} />
 
 								{(() => {
-									const upvalueElements: Roact.Element[] = [];
+									const elements: Roact.Element[] = [];
 									selectedResult.rawUpvalues.forEach((value, key) => {
-										upvalueElements.push(
-											<textlabel
+										elements.push(
+											<frame
 												Key={tostring(key)}
-												Text={`${key}: ${typeOf(value)} = ${tostring(value).sub(1, 50)}`}
-												TextSize={11}
-												Font="Code"
-												TextColor3={new Color3(0.9, 0.9, 0.9)}
-												Size={new UDim2(1, 0, 0, 24)}
-												BackgroundColor3={new Color3(0.08, 0.08, 0.08)}
+												Size={new UDim2(1, -8, 0, 28)}
+												BackgroundColor3={new Color3(0.06, 0.06, 0.06)}
 												BorderSizePixel={0}
-												TextXAlignment="Left"
-												TextYAlignment="Center"
-												TextTruncate="AtEnd"
 											>
-												<uicorner CornerRadius={new UDim(0, 4)} />
-												<uipadding PaddingLeft={new UDim(0, 8)} />
-											</textlabel>
+												<uicorner CornerRadius={new UDim(0, 6)} />
+												<uipadding PaddingLeft={new UDim(0, 10)} PaddingRight={new UDim(0, 10)} />
+
+												<textlabel
+													Text={`${key}: `}
+													TextSize={11}
+													Font="GothamBold"
+													TextColor3={new Color3(0.7, 0.9, 1)}
+													Size={new UDim2(0, 100, 1, 0)}
+													BackgroundTransparency={1}
+													TextXAlignment="Left"
+													TextYAlignment="Center"
+													TextTruncate="AtEnd"
+												/>
+
+												<textlabel
+													Text={`${typeOf(value)} = ${tostring(value).sub(1, 40)}`}
+													TextSize={11}
+													Font="Code"
+													TextColor3={new Color3(0.8, 0.8, 0.8)}
+													Size={new UDim2(1, -105, 1, 0)}
+													Position={new UDim2(0, 105, 0, 0)}
+													BackgroundTransparency={1}
+													TextXAlignment="Left"
+													TextYAlignment="Center"
+													TextTruncate="AtEnd"
+												/>
+											</frame>
 										);
 									});
-									return upvalueElements;
+									return elements;
 								})()}
 							</scrollingframe>
 						</frame>
 					)}
 
-					{/* Constants Details */}
-					{selectedResult.rawConstants && (
-						<frame Size={new UDim2(1, -8, 0, math.min(300, selectedResult.rawConstants.size() * 28 + 40))} BackgroundColor3={new Color3(0.1, 0.1, 0.1)} BorderSizePixel={0}>
-							<uicorner CornerRadius={new UDim(0, 8)} />
-							<uipadding PaddingLeft={new UDim(0, 12)} PaddingTop={new UDim(0, 12)} />
+					{/* Constants Section */}
+					{selectedResult.rawConstants && selectedResult.rawConstants.size() > 0 && (
+						<frame Size={new UDim2(1, 0, 0, math.min(320, selectedResult.rawConstants.size() * 32 + 60))} BackgroundColor3={new Color3(0.08, 0.08, 0.08)} BorderSizePixel={0}>
+							<uicorner CornerRadius={new UDim(0, 10)} />
+							<uipadding PaddingLeft={new UDim(0, 16)} PaddingTop={new UDim(0, 14)} PaddingRight={new UDim(0, 16)} PaddingBottom={new UDim(0, 14)} />
 
 							<textlabel
 								Text={`Constants (${selectedResult.rawConstants.size()})`}
-								TextSize={14}
+								TextSize={16}
 								Font="GothamBold"
-								TextColor3={new Color3(0.6, 0.4, 1)}
-								Size={new UDim2(1, -12, 0, 20)}
+								TextColor3={new Color3(0.7, 0.4, 1)}
+								Size={new UDim2(1, 0, 0, 24)}
 								BackgroundTransparency={1}
 								TextXAlignment="Left"
 								TextYAlignment="Center"
 							/>
 
 							<scrollingframe
-								Size={new UDim2(1, -12, 1, -28)}
-								Position={new UDim2(0, 0, 0, 28)}
+								Size={new UDim2(1, 0, 1, -32)}
+								Position={new UDim2(0, 0, 0, 32)}
 								BackgroundTransparency={1}
 								BorderSizePixel={0}
-								ScrollBarThickness={3}
-								CanvasSize={new UDim2(0, 0, 0, selectedResult.rawConstants.size() * 28)}
+								ScrollBarThickness={4}
+								ScrollBarImageColor3={new Color3(0.25, 0.25, 0.25)}
+								CanvasSize={new UDim2(0, 0, 0, selectedResult.rawConstants.size() * 32)}
 							>
 								<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 4)} />
 
 								{(() => {
-									const constantElements: Roact.Element[] = [];
+									const elements: Roact.Element[] = [];
 									for (let i = 0; i < selectedResult.rawConstants.size(); i++) {
 										const value = selectedResult.rawConstants[i];
-										constantElements.push(
-											<textlabel
+										elements.push(
+											<frame
 												Key={`constant_${i}`}
-												Text={`[${i + 1}] ${typeOf(value)} = ${tostring(value).sub(1, 60)}`}
-												TextSize={11}
-												Font="Code"
-												TextColor3={new Color3(0.9, 0.9, 0.9)}
-												Size={new UDim2(1, 0, 0, 24)}
-												BackgroundColor3={new Color3(0.08, 0.08, 0.08)}
+												Size={new UDim2(1, -8, 0, 28)}
+												BackgroundColor3={new Color3(0.06, 0.06, 0.06)}
 												BorderSizePixel={0}
-												TextXAlignment="Left"
-												TextYAlignment="Center"
-												TextTruncate="AtEnd"
 											>
-												<uicorner CornerRadius={new UDim(0, 4)} />
-												<uipadding PaddingLeft={new UDim(0, 8)} />
-											</textlabel>
+												<uicorner CornerRadius={new UDim(0, 6)} />
+												<uipadding PaddingLeft={new UDim(0, 10)} PaddingRight={new UDim(0, 10)} />
+
+												<textlabel
+													Text={`[${i + 1}] `}
+													TextSize={11}
+													Font="GothamBold"
+													TextColor3={new Color3(0.9, 0.7, 1)}
+													Size={new UDim2(0, 40, 1, 0)}
+													BackgroundTransparency={1}
+													TextXAlignment="Left"
+													TextYAlignment="Center"
+												/>
+
+												<textlabel
+													Text={`${typeOf(value)} = ${tostring(value).sub(1, 50)}`}
+													TextSize={11}
+													Font="Code"
+													TextColor3={new Color3(0.8, 0.8, 0.8)}
+													Size={new UDim2(1, -45, 1, 0)}
+													Position={new UDim2(0, 45, 0, 0)}
+													BackgroundTransparency={1}
+													TextXAlignment="Left"
+													TextYAlignment="Center"
+													TextTruncate="AtEnd"
+												/>
+											</frame>
 										);
 									}
-									return constantElements;
+									return elements;
 								})()}
 							</scrollingframe>
 						</frame>
 					)}
 
-					{/* Script/Module Source */}
+					{/* Script Viewer */}
 					{selectedResult.rawScript && (
-						<frame Size={new UDim2(1, -8, 0, 300)} BackgroundColor3={new Color3(0.1, 0.1, 0.1)} BorderSizePixel={0}>
-							<uicorner CornerRadius={new UDim(0, 8)} />
-							<uipadding PaddingLeft={new UDim(0, 12)} PaddingTop={new UDim(0, 12)} />
+						<frame Size={new UDim2(1, 0, 0, 400)} BackgroundColor3={new Color3(0.08, 0.08, 0.08)} BorderSizePixel={0}>
+							<uicorner CornerRadius={new UDim(0, 10)} />
+							<uipadding PaddingLeft={new UDim(0, 16)} PaddingTop={new UDim(0, 14)} PaddingRight={new UDim(0, 16)} PaddingBottom={new UDim(0, 14)} />
 
 							<textlabel
-								Text="Source Code"
-								TextSize={14}
+								Text="Script Source"
+								TextSize={16}
 								Font="GothamBold"
-								TextColor3={new Color3(1, 0.6, 0.4)}
-								Size={new UDim2(1, -12, 0, 20)}
+								TextColor3={new Color3(1, 0.7, 0.4)}
+								Size={new UDim2(1, 0, 0, 24)}
 								BackgroundTransparency={1}
 								TextXAlignment="Left"
 								TextYAlignment="Center"
 							/>
 
 							<scrollingframe
-								Size={new UDim2(1, -12, 1, -28)}
-								Position={new UDim2(0, 0, 0, 28)}
-								BackgroundColor3={new Color3(0.05, 0.05, 0.05)}
+								Size={new UDim2(1, 0, 1, -32)}
+								Position={new UDim2(0, 0, 0, 32)}
+								BackgroundColor3={new Color3(0.04, 0.04, 0.04)}
 								BorderSizePixel={0}
-								ScrollBarThickness={4}
+								ScrollBarThickness={5}
+								ScrollBarImageColor3={new Color3(0.25, 0.25, 0.25)}
 								CanvasSize={new UDim2(0, 0, 0, 0)}
 								AutomaticCanvasSize={Enum.AutomaticSize.Y}
 							>
-								<uicorner CornerRadius={new UDim(0, 6)} />
-								<uipadding PaddingLeft={new UDim(0, 8)} PaddingTop={new UDim(0, 8)} PaddingRight={new UDim(0, 8)} />
+								<uicorner CornerRadius={new UDim(0, 8)} />
+								<uipadding PaddingLeft={new UDim(0, 12)} PaddingTop={new UDim(0, 12)} PaddingRight={new UDim(0, 12)} PaddingBottom={new UDim(0, 12)} />
 
 								<textlabel
 									Text={(() => {
@@ -480,10 +574,10 @@ function Inspection() {
 											if (success[0]) {
 												return success[1] as string;
 											} else {
-												return `-- Failed to decompile\n-- ${tostring(success[1])}`;
+												return `-- Failed to decompile\n-- Error: ${tostring(success[1])}`;
 											}
 										} else {
-											return "-- decompile() function not available\n-- Cannot view source code";
+											return "-- decompile() function not available\n-- Cannot view source code in this environment";
 										}
 									})()}
 									TextSize={11}
@@ -499,79 +593,6 @@ function Inspection() {
 							</scrollingframe>
 						</frame>
 					)}
-
-					{/* Function Info */}
-					{selectedResult.rawInfo && (
-						<frame Size={new UDim2(1, -8, 0, 140)} BackgroundColor3={new Color3(0.1, 0.1, 0.1)} BorderSizePixel={0}>
-							<uicorner CornerRadius={new UDim(0, 8)} />
-							<uipadding PaddingLeft={new UDim(0, 12)} PaddingTop={new UDim(0, 12)} />
-							<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 4)} />
-
-							<textlabel
-								Text="Function Information"
-								TextSize={14}
-								Font="GothamBold"
-								TextColor3={new Color3(1, 0.4, 0.6)}
-								Size={new UDim2(1, -12, 0, 20)}
-								BackgroundTransparency={1}
-								TextXAlignment="Left"
-								TextYAlignment="Center"
-							/>
-
-							<textlabel
-								Text={`Name: ${selectedResult.rawInfo.name ?? "anonymous"}`}
-								TextSize={11}
-								Font="Code"
-								TextColor3={new Color3(0.9, 0.9, 0.9)}
-								Size={new UDim2(1, -12, 0, 18)}
-								BackgroundTransparency={1}
-								TextXAlignment="Left"
-								TextYAlignment="Center"
-							/>
-							<textlabel
-								Text={`Source: ${selectedResult.rawInfo.source ?? selectedResult.rawInfo.short_src ?? "unknown"}`}
-								TextSize={11}
-								Font="Code"
-								TextColor3={new Color3(0.9, 0.9, 0.9)}
-								Size={new UDim2(1, -12, 0, 18)}
-								BackgroundTransparency={1}
-								TextXAlignment="Left"
-								TextYAlignment="Center"
-							/>
-							<textlabel
-								Text={`Type: ${selectedResult.rawInfo.what ?? "?"}`}
-								TextSize={11}
-								Font="Code"
-								TextColor3={new Color3(0.9, 0.9, 0.9)}
-								Size={new UDim2(1, -12, 0, 18)}
-								BackgroundTransparency={1}
-								TextXAlignment="Left"
-								TextYAlignment="Center"
-							/>
-							<textlabel
-								Text={`Upvalues: ${selectedResult.rawInfo.nups ?? 0}`}
-								TextSize={11}
-								Font="Code"
-								TextColor3={new Color3(0.9, 0.9, 0.9)}
-								Size={new UDim2(1, -12, 0, 18)}
-								BackgroundTransparency={1}
-								TextXAlignment="Left"
-								TextYAlignment="Center"
-							/>
-							{selectedResult.rawInfo.linedefined !== undefined ? (
-								<textlabel
-									Text={`Lines: ${selectedResult.rawInfo.linedefined}-${selectedResult.rawInfo.lastlinedefined ?? "?"}`}
-									TextSize={11}
-									Font="Code"
-									TextColor3={new Color3(0.9, 0.9, 0.9)}
-									Size={new UDim2(1, -12, 0, 18)}
-									BackgroundTransparency={1}
-									TextXAlignment="Left"
-									TextYAlignment="Center"
-								/>
-							) : undefined}
-						</frame>
-					)}
 				</scrollingframe>
 			</frame>
 		);
@@ -579,396 +600,315 @@ function Inspection() {
 
 	return (
 		<Container>
-			<scrollingframe
-				Size={new UDim2(1, 0, 1, 0)}
-				BackgroundTransparency={1}
-				BorderSizePixel={0}
-				ScrollBarThickness={4}
-				ScrollBarImageTransparency={0.5}
-				CanvasSize={new UDim2(0, 0, 0, 0)}
-				AutomaticCanvasSize={Enum.AutomaticSize.Y}
-			>
-				<uipadding PaddingLeft={new UDim(0, 24)} PaddingRight={new UDim(0, 24)} PaddingTop={new UDim(0, 24)} />
+			<frame Size={new UDim2(1, 0, 1, 0)} BackgroundTransparency={1}>
 				<uilistlayout
-					FillDirection={Enum.FillDirection.Vertical}
+					FillDirection={Enum.FillDirection.Horizontal}
 					HorizontalAlignment={Enum.HorizontalAlignment.Left}
-					Padding={new UDim(0, 20)}
+					Padding={new UDim(0, 16)}
 				/>
 
-				{/* Header */}
-				<frame Size={new UDim2(1, 0, 0, 90)} BackgroundTransparency={1}>
+				{/* Left Side - Scanners and Results */}
+				<scrollingframe
+					Size={new UDim2(0.5, -8, 1, 0)}
+					BackgroundTransparency={1}
+					BorderSizePixel={0}
+					ScrollBarThickness={5}
+					ScrollBarImageColor3={new Color3(0.3, 0.3, 0.3)}
+					CanvasSize={new UDim2(0, 0, 0, 0)}
+					AutomaticCanvasSize={Enum.AutomaticSize.Y}
+				>
+					<uipadding PaddingLeft={new UDim(0, 20)} PaddingRight={new UDim(0, 8)} PaddingTop={new UDim(0, 20)} PaddingBottom={new UDim(0, 20)} />
 					<uilistlayout
 						FillDirection={Enum.FillDirection.Vertical}
 						HorizontalAlignment={Enum.HorizontalAlignment.Left}
-						Padding={new UDim(0, 8)}
+						Padding={new UDim(0, 18)}
 					/>
 
-					<textlabel
-						Text="Inspection Tools"
-						TextSize={28}
-						Font="GothamBold"
-						TextColor3={new Color3(1, 1, 1)}
-						Size={new UDim2(1, 0, 0, 36)}
-						BackgroundTransparency={1}
-						TextXAlignment="Left"
-						TextYAlignment="Center"
-					/>
+					{/* Header */}
+					<frame Size={new UDim2(1, 0, 0, 70)} BackgroundTransparency={1}>
+						<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 6)} />
 
-					<textlabel
-						Text="Professional runtime introspection • Click any result for detailed analysis"
-						TextSize={14}
-						Font="Gotham"
-						TextColor3={new Color3(0.7, 0.7, 0.7)}
-						Size={new UDim2(1, 0, 0, 40)}
-						BackgroundTransparency={1}
-						TextXAlignment="Left"
-						TextYAlignment="Top"
-						TextWrapped={true}
-					/>
-				</frame>
+						<textlabel
+							Text="Runtime Inspection"
+							TextSize={26}
+							Font="GothamBold"
+							TextColor3={new Color3(1, 1, 1)}
+							Size={new UDim2(1, 0, 0, 32)}
+							BackgroundTransparency={1}
+							TextXAlignment="Left"
+							TextYAlignment="Center"
+						/>
 
-				{/* Scanner Buttons Grid */}
-				<frame Size={new UDim2(1, 0, 0, 170)} BackgroundTransparency={1}>
-					<uilistlayout
-						FillDirection={Enum.FillDirection.Vertical}
-						HorizontalAlignment={Enum.HorizontalAlignment.Left}
-						Padding={new UDim(0, 12)}
-					/>
+						<textlabel
+							Text="Select a scanner to begin analyzing runtime data"
+							TextSize={13}
+							Font="Gotham"
+							TextColor3={new Color3(0.6, 0.6, 0.6)}
+							Size={new UDim2(1, 0, 0, 32)}
+							BackgroundTransparency={1}
+							TextXAlignment="Left"
+							TextYAlignment="Top"
+							TextWrapped={true}
+						/>
+					</frame>
 
-					<textlabel
-						Text="Select Scanner"
-						TextSize={20}
-						Font="GothamBold"
-						TextColor3={new Color3(1, 1, 1)}
-						Size={new UDim2(1, 0, 0, 28)}
-						BackgroundTransparency={1}
-						TextXAlignment="Left"
-						TextYAlignment="Center"
-					/>
-
-					<frame Size={new UDim2(1, 0, 0, 130)} BackgroundTransparency={1}>
+					{/* Scanner Grid */}
+					<frame Size={new UDim2(1, 0, 0, 140)} BackgroundTransparency={1}>
 						<uigridlayout
-							CellSize={new UDim2(0, 190, 0, 60)}
-							CellPadding={new UDim2(0, 12, 0, 12)}
+							CellSize={new UDim2(0.48, 0, 0, 64)}
+							CellPadding={new UDim2(0.02, 0, 0, 12)}
 						/>
 
 						{scannerInfo.map((scanner) => (
 							<Button
 								Key={scanner.type}
 								onClick={() => handleScan(scanner.type)}
-								size={new UDim2(0, 190, 0, 60)}
-								background={selectedScanner === scanner.type ? scanner.color : new Color3(0.12, 0.12, 0.12)}
+								size={new UDim2(0.48, 0, 0, 64)}
+								background={selectedScanner === scanner.type ? scanner.color : new Color3(0.1, 0.1, 0.1)}
 								transparency={0}
 								cornerRadius={new UDim(0, 10)}
 							>
-								<frame
-									Size={new UDim2(1, 0, 1, 0)}
+								<uipadding PaddingLeft={new UDim(0, 12)} PaddingRight={new UDim(0, 12)} />
+								<uilistlayout
+									FillDirection={Enum.FillDirection.Horizontal}
+									VerticalAlignment={Enum.VerticalAlignment.Center}
+									Padding={new UDim(0, 10)}
+								/>
+
+								<imagelabel
+									Image={scanner.icon}
+									Size={new UDim2(0, 32, 0, 32)}
 									BackgroundTransparency={1}
-								>
-									<uipadding PaddingLeft={new UDim(0, 12)} PaddingRight={new UDim(0, 12)} />
+									ImageColor3={new Color3(1, 1, 1)}
+								/>
+
+								<frame Size={new UDim2(1, -42, 1, 0)} BackgroundTransparency={1}>
 									<uilistlayout
-										FillDirection={Enum.FillDirection.Horizontal}
+										FillDirection={Enum.FillDirection.Vertical}
 										VerticalAlignment={Enum.VerticalAlignment.Center}
-										Padding={new UDim(0, 10)}
+										Padding={new UDim(0, 3)}
 									/>
 
-									<imagelabel
-										Image={scanner.icon}
-										Size={new UDim2(0, 28, 0, 28)}
+									<textlabel
+										Text={scanner.name}
+										TextSize={13}
+										Font="GothamBold"
+										TextColor3={new Color3(1, 1, 1)}
+										Size={new UDim2(1, 0, 0, 16)}
 										BackgroundTransparency={1}
-										ImageColor3={new Color3(1, 1, 1)}
+										TextXAlignment="Left"
+										TextYAlignment="Center"
+										TextTruncate="AtEnd"
 									/>
 
-									<frame Size={new UDim2(1, -38, 1, 0)} BackgroundTransparency={1}>
-										<uilistlayout
-											FillDirection={Enum.FillDirection.Vertical}
-											HorizontalAlignment={Enum.HorizontalAlignment.Left}
-											VerticalAlignment={Enum.VerticalAlignment.Center}
-											Padding={new UDim(0, 2)}
-										/>
-
-										<textlabel
-											Text={scanner.name}
-											TextSize={14}
-											Font="GothamBold"
-											TextColor3={new Color3(1, 1, 1)}
-											Size={new UDim2(1, 0, 0, 16)}
-											BackgroundTransparency={1}
-											TextXAlignment="Left"
-											TextYAlignment="Center"
-											TextTruncate="AtEnd"
-										/>
-
-										<textlabel
-											Text={scanner.desc}
-											TextSize={11}
-											Font="Gotham"
-											TextColor3={new Color3(0.7, 0.7, 0.7)}
-											Size={new UDim2(1, 0, 0, 14)}
-											BackgroundTransparency={1}
-											TextXAlignment="Left"
-											TextYAlignment="Center"
-											TextTruncate="AtEnd"
-										/>
-									</frame>
+									<textlabel
+										Text={scanner.desc}
+										TextSize={10}
+										Font="Gotham"
+										TextColor3={new Color3(0.7, 0.7, 0.7)}
+										Size={new UDim2(1, 0, 0, 13)}
+										BackgroundTransparency={1}
+										TextXAlignment="Left"
+										TextYAlignment="Center"
+										TextTruncate="AtEnd"
+									/>
 								</frame>
 
-								{/* Glow effect for selected */}
 								{selectedScanner === scanner.type && (
-									<uistroke
-										Color={scanner.color}
-										Thickness={2}
-										Transparency={0.3}
-									/>
+									<uistroke Color={scanner.color} Thickness={2} Transparency={0} />
 								)}
 							</Button>
 						))}
 					</frame>
-				</frame>
 
-				{/* Search Bar */}
-				{selectedScanner !== ScannerType.None && (
-					<frame Size={new UDim2(1, 0, 0, 80)} BackgroundTransparency={1}>
-						<uilistlayout
-							FillDirection={Enum.FillDirection.Vertical}
-							HorizontalAlignment={Enum.HorizontalAlignment.Left}
-							Padding={new UDim(0, 10)}
-						/>
+					{/* Search and Results */}
+					{selectedScanner !== ScannerType.None && (
+						<frame Size={new UDim2(1, 0, 0, 0)} BackgroundTransparency={1} AutomaticSize={Enum.AutomaticSize.Y}>
+							<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 12)} />
 
-						<frame Size={new UDim2(1, 0, 0, 32)} BackgroundTransparency={1}>
-							<uilistlayout
-								FillDirection={Enum.FillDirection.Horizontal}
-								VerticalAlignment={Enum.VerticalAlignment.Center}
-								Padding={new UDim(0, 10)}
-							/>
+							{/* Search Bar */}
+							<frame Size={new UDim2(1, 0, 0, 66)} BackgroundTransparency={1}>
+								<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 8)} />
 
-							<textlabel
-								Text="Search Results"
-								TextSize={18}
-								Font="GothamBold"
-								TextColor3={new Color3(1, 1, 1)}
-								Size={new UDim2(0, 180, 0, 32)}
-								BackgroundTransparency={1}
-								TextXAlignment="Left"
-								TextYAlignment="Center"
-							/>
-
-							<textlabel
-								Text={`Found: ${filteredResults.size()} / ${scanResults.size()}`}
-								TextSize={14}
-								Font="GothamBold"
-								TextColor3={new Color3(0.4, 0.8, 1)}
-								Size={new UDim2(1, -190, 0, 32)}
-								BackgroundTransparency={1}
-								TextXAlignment="Left"
-								TextYAlignment="Center"
-							/>
-						</frame>
-
-						<textbox
-							Size={new UDim2(1, 0, 0, 38)}
-							PlaceholderText="Type to search..."
-							Text={searchQuery}
-							TextSize={14}
-							Font="Gotham"
-							TextColor3={new Color3(1, 1, 1)}
-							BackgroundColor3={new Color3(0.08, 0.08, 0.08)}
-							BorderSizePixel={0}
-							TextXAlignment="Left"
-							ClearTextOnFocus={false}
-							Change={{
-								Text: (rbx) => setSearchQuery(rbx.Text),
-							}}
-						>
-							<uicorner CornerRadius={new UDim(0, 8)} />
-							<uipadding PaddingLeft={new UDim(0, 14)} PaddingRight={new UDim(0, 14)} />
-							<uistroke Color={new Color3(0.2, 0.2, 0.2)} Thickness={1} />
-						</textbox>
-					</frame>
-				)}
-
-				{/* Status Messages */}
-				{isScanning && (
-					<frame Size={new UDim2(1, 0, 0, 60)} BackgroundColor3={new Color3(0.1, 0.1, 0.1)} BorderSizePixel={0}>
-						<uicorner CornerRadius={new UDim(0, 10)} />
-						<textlabel
-							Text="Scanning..."
-							TextSize={16}
-							Font="GothamBold"
-							TextColor3={new Color3(0.4, 0.8, 1)}
-							Size={new UDim2(1, 0, 1, 0)}
-							BackgroundTransparency={1}
-							TextXAlignment="Center"
-							TextYAlignment="Center"
-						/>
-					</frame>
-				)}
-
-				{!isScanning && selectedScanner !== ScannerType.None && filteredResults.size() === 0 && (
-					<frame Size={new UDim2(1, 0, 0, 80)} BackgroundColor3={new Color3(0.1, 0.1, 0.1)} BorderSizePixel={0}>
-						<uicorner CornerRadius={new UDim(0, 10)} />
-						<uilistlayout
-							FillDirection={Enum.FillDirection.Vertical}
-							HorizontalAlignment={Enum.HorizontalAlignment.Center}
-							VerticalAlignment={Enum.VerticalAlignment.Center}
-							Padding={new UDim(0, 4)}
-						/>
-						<textlabel
-							Text="No Results Found"
-							TextSize={18}
-							Font="GothamBold"
-							TextColor3={new Color3(1, 0.4, 0.4)}
-							Size={new UDim2(1, 0, 0, 24)}
-							BackgroundTransparency={1}
-							TextXAlignment="Center"
-							TextYAlignment="Center"
-						/>
-						<textlabel
-							Text="Try a different scanner or adjust your search"
-							TextSize={12}
-							Font="Gotham"
-							TextColor3={new Color3(0.6, 0.6, 0.6)}
-							Size={new UDim2(1, 0, 0, 16)}
-							BackgroundTransparency={1}
-							TextXAlignment="Center"
-							TextYAlignment="Center"
-						/>
-					</frame>
-				)}
-
-				{/* Results */}
-				{!isScanning && filteredResults.size() > 0 && (
-					<frame Size={new UDim2(1, 0, 0, math.min(600, filteredResults.size() * 84 + 40))} BackgroundTransparency={1}>
-						<uilistlayout
-							FillDirection={Enum.FillDirection.Vertical}
-							HorizontalAlignment={Enum.HorizontalAlignment.Left}
-							Padding={new UDim(0, 8)}
-						/>
-
-						<frame Size={new UDim2(1, 0, 0, 28)} BackgroundTransparency={1}>
-							<uilistlayout
-								FillDirection={Enum.FillDirection.Horizontal}
-								VerticalAlignment={Enum.VerticalAlignment.Center}
-								Padding={new UDim(0, 8)}
-							/>
-
-							<textlabel
-								Text={`Results (${filteredResults.size()})`}
-								TextSize={18}
-								Font="GothamBold"
-								TextColor3={new Color3(1, 1, 1)}
-								Size={new UDim2(0.5, 0, 0, 28)}
-								BackgroundTransparency={1}
-								TextXAlignment="Left"
-								TextYAlignment="Center"
-							/>
-
-							<textlabel
-								Text={`Max: ${maxResults} • Click to inspect`}
-								TextSize={12}
-								Font="Gotham"
-								TextColor3={new Color3(0.5, 0.5, 0.5)}
-								Size={new UDim2(0.5, 0, 0, 28)}
-								BackgroundTransparency={1}
-								TextXAlignment="Right"
-								TextYAlignment="Center"
-							/>
-						</frame>
-
-						<scrollingframe
-							Size={new UDim2(1, 0, 0, math.min(560, filteredResults.size() * 84))}
-							BackgroundColor3={new Color3(0.06, 0.06, 0.06)}
-							BorderSizePixel={0}
-							ScrollBarThickness={6}
-							ScrollBarImageColor3={new Color3(0.3, 0.3, 0.3)}
-							CanvasSize={new UDim2(0, 0, 0, filteredResults.size() * 84)}
-						>
-							<uicorner CornerRadius={new UDim(0, 10)} />
-							<uipadding PaddingLeft={new UDim(0, 12)} PaddingRight={new UDim(0, 12)} PaddingTop={new UDim(0, 12)} />
-							<uilistlayout
-								FillDirection={Enum.FillDirection.Vertical}
-								HorizontalAlignment={Enum.HorizontalAlignment.Left}
-								Padding={new UDim(0, 8)}
-							/>
-
-							{filteredResults.map((result) => (
-								<Button
-									Key={result.id}
-									onClick={() => setSelectedResult(result)}
-									size={new UDim2(1, -8, 0, 76)}
-									background={selectedResult?.id === result.id ? new Color3(0.15, 0.15, 0.2) : new Color3(0.11, 0.11, 0.11)}
-									transparency={0}
-									cornerRadius={new UDim(0, 8)}
-								>
-									<uipadding PaddingLeft={new UDim(0, 14)} PaddingTop={new UDim(0, 10)} PaddingRight={new UDim(0, 14)} />
-									<uistroke Color={selectedResult?.id === result.id ? new Color3(0.4, 0.6, 1) : new Color3(0.2, 0.2, 0.2)} Thickness={selectedResult?.id === result.id ? 2 : 1} />
-
+								<frame Size={new UDim2(1, 0, 0, 24)} BackgroundTransparency={1}>
 									<uilistlayout
-										FillDirection={Enum.FillDirection.Vertical}
-										HorizontalAlignment={Enum.HorizontalAlignment.Left}
-										Padding={new UDim(0, 5)}
+										FillDirection={Enum.FillDirection.Horizontal}
+										VerticalAlignment={Enum.VerticalAlignment.Center}
+										Padding={new UDim(0, 8)}
 									/>
 
 									<textlabel
-										Text={result.name}
-										TextSize={15}
+										Text={`Results: ${filteredResults.size()}/${scanResults.size()}`}
+										TextSize={16}
 										Font="GothamBold"
 										TextColor3={new Color3(1, 1, 1)}
-										Size={new UDim2(1, -10, 0, 18)}
+										Size={new UDim2(0.5, 0, 0, 24)}
 										BackgroundTransparency={1}
 										TextXAlignment="Left"
 										TextYAlignment="Center"
-										TextTruncate="AtEnd"
 									/>
 
 									<textlabel
-										Text={`Type: ${result.type}`}
+										Text={`Max: ${maxResults}`}
+										TextSize={11}
+										Font="Gotham"
+										TextColor3={new Color3(0.5, 0.5, 0.5)}
+										Size={new UDim2(0.5, 0, 0, 24)}
+										BackgroundTransparency={1}
+										TextXAlignment="Right"
+										TextYAlignment="Center"
+									/>
+								</frame>
+
+								<textbox
+									Size={new UDim2(1, 0, 0, 34)}
+									PlaceholderText="Search results..."
+									Text={searchQuery}
+									TextSize={13}
+									Font="Gotham"
+									TextColor3={new Color3(1, 1, 1)}
+									BackgroundColor3={new Color3(0.08, 0.08, 0.08)}
+									BorderSizePixel={0}
+									TextXAlignment="Left"
+									ClearTextOnFocus={false}
+									Change={{
+										Text: (rbx) => setSearchQuery(rbx.Text),
+									}}
+								>
+									<uicorner CornerRadius={new UDim(0, 8)} />
+									<uipadding PaddingLeft={new UDim(0, 12)} PaddingRight={new UDim(0, 12)} />
+									<uistroke Color={new Color3(0.15, 0.15, 0.15)} Thickness={1} />
+								</textbox>
+							</frame>
+
+							{/* Status or Results */}
+							{isScanning ? (
+								<frame Size={new UDim2(1, 0, 0, 80)} BackgroundColor3={new Color3(0.08, 0.08, 0.08)} BorderSizePixel={0}>
+									<uicorner CornerRadius={new UDim(0, 10)} />
+									<textlabel
+										Text="Scanning garbage collector..."
+										TextSize={15}
+										Font="GothamBold"
+										TextColor3={new Color3(0.5, 0.7, 1)}
+										Size={new UDim2(1, 0, 1, 0)}
+										BackgroundTransparency={1}
+										TextXAlignment="Center"
+										TextYAlignment="Center"
+									/>
+								</frame>
+							) : filteredResults.size() === 0 ? (
+								<frame Size={new UDim2(1, 0, 0, 100)} BackgroundColor3={new Color3(0.08, 0.08, 0.08)} BorderSizePixel={0}>
+									<uicorner CornerRadius={new UDim(0, 10)} />
+									<uilistlayout
+										FillDirection={Enum.FillDirection.Vertical}
+										HorizontalAlignment={Enum.HorizontalAlignment.Center}
+										VerticalAlignment={Enum.VerticalAlignment.Center}
+										Padding={new UDim(0, 6)}
+									/>
+									<textlabel
+										Text="No Results"
+										TextSize={17}
+										Font="GothamBold"
+										TextColor3={new Color3(0.8, 0.4, 0.4)}
+										Size={new UDim2(1, 0, 0, 22)}
+										BackgroundTransparency={1}
+										TextXAlignment="Center"
+										TextYAlignment="Center"
+									/>
+									<textlabel
+										Text="Try a different scanner or search term"
 										TextSize={12}
 										Font="Gotham"
-										TextColor3={new Color3(0.5, 0.7, 1)}
-										Size={new UDim2(1, -10, 0, 15)}
+										TextColor3={new Color3(0.5, 0.5, 0.5)}
+										Size={new UDim2(1, 0, 0, 16)}
 										BackgroundTransparency={1}
-										TextXAlignment="Left"
+										TextXAlignment="Center"
 										TextYAlignment="Center"
-										TextTruncate="AtEnd"
 									/>
+								</frame>
+							) : (
+								<scrollingframe
+									Size={new UDim2(1, 0, 0, math.min(500, filteredResults.size() * 70))}
+									BackgroundColor3={new Color3(0.05, 0.05, 0.05)}
+									BorderSizePixel={0}
+									ScrollBarThickness={5}
+									ScrollBarImageColor3={new Color3(0.3, 0.3, 0.3)}
+									CanvasSize={new UDim2(0, 0, 0, filteredResults.size() * 70)}
+								>
+									<uicorner CornerRadius={new UDim(0, 10)} />
+									<uipadding PaddingLeft={new UDim(0, 10)} PaddingRight={new UDim(0, 10)} PaddingTop={new UDim(0, 10)} />
+									<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 6)} />
 
-									{result.value !== undefined ? (
-										<textlabel
-											Text={`Value: ${result.value}`}
-											TextSize={11}
-											Font="Gotham"
-											TextColor3={new Color3(0.7, 0.7, 0.7)}
-											Size={new UDim2(1, -10, 0, 13)}
-											BackgroundTransparency={1}
-											TextXAlignment="Left"
-											TextYAlignment="Center"
-											TextTruncate="AtEnd"
-										/>
-									) : undefined}
+									{filteredResults.map((result) => {
+										const isSelected = selectedResult?.id === result.id;
+										return (
+											<Button
+												Key={result.id}
+												onClick={() => setSelectedResult(result)}
+												size={new UDim2(1, -6, 0, 64)}
+												background={isSelected ? new Color3(0.12, 0.14, 0.18) : new Color3(0.08, 0.08, 0.08)}
+												transparency={0}
+												cornerRadius={new UDim(0, 8)}
+											>
+												<uipadding PaddingLeft={new UDim(0, 12)} PaddingTop={new UDim(0, 8)} PaddingRight={new UDim(0, 12)} />
+												<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 4)} />
 
-									{result.details !== undefined ? (
-										<textlabel
-											Text={result.details}
-											TextSize={10}
-											Font="Gotham"
-											TextColor3={new Color3(0.5, 0.5, 0.5)}
-											Size={new UDim2(1, -10, 0, 12)}
-											BackgroundTransparency={1}
-											TextXAlignment="Left"
-											TextYAlignment="Center"
-											TextTruncate="AtEnd"
-										/>
-									) : undefined}
-								</Button>
-							))}
-						</scrollingframe>
-					</frame>
-				)}
+												<textlabel
+													Text={result.name}
+													TextSize={14}
+													Font="GothamBold"
+													TextColor3={new Color3(1, 1, 1)}
+													Size={new UDim2(1, 0, 0, 17)}
+													BackgroundTransparency={1}
+													TextXAlignment="Left"
+													TextYAlignment="Center"
+													TextTruncate="AtEnd"
+												/>
 
-				{/* Detail Panel */}
-				{selectedResult !== undefined && renderDetailPanel()}
-			</scrollingframe>
+												<textlabel
+													Text={`${result.type} • ${result.value ?? "no path"}`}
+													TextSize={11}
+													Font="Gotham"
+													TextColor3={new Color3(0.6, 0.7, 0.9)}
+													Size={new UDim2(1, 0, 0, 14)}
+													BackgroundTransparency={1}
+													TextXAlignment="Left"
+													TextYAlignment="Center"
+													TextTruncate="AtEnd"
+												/>
+
+												{result.details !== undefined ? (
+													<textlabel
+														Text={result.details}
+														TextSize={10}
+														Font="Code"
+														TextColor3={new Color3(0.5, 0.5, 0.5)}
+														Size={new UDim2(1, 0, 0, 13)}
+														BackgroundTransparency={1}
+														TextXAlignment="Left"
+														TextYAlignment="Center"
+														TextTruncate="AtEnd"
+													/>
+												) : undefined}
+
+												{isSelected && (
+													<uistroke Color={new Color3(0.4, 0.6, 1)} Thickness={2} Transparency={0} />
+												)}
+											</Button>
+										);
+									})}
+								</scrollingframe>
+							)}
+						</frame>
+					)}
+				</scrollingframe>
+
+				{/* Right Side - Detail Panel */}
+				<frame Size={new UDim2(0.5, -8, 1, 0)} BackgroundTransparency={1}>
+					<uipadding PaddingLeft={new UDim(0, 8)} PaddingRight={new UDim(0, 20)} PaddingTop={new UDim(0, 20)} PaddingBottom={new UDim(0, 20)} />
+					{renderDetailPanel()}
+				</frame>
+			</frame>
 		</Container>
 	);
 }

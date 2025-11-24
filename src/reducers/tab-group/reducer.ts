@@ -3,7 +3,10 @@ import { TabGroupState, TabType } from "./model";
 import { createTabColumn } from "./utils";
 
 const initialState: TabGroupState = {
-	tabs: [createTabColumn("home", "Home", TabType.Home, false)],
+	tabs: [
+		createTabColumn("home", "Home", TabType.Home, false),
+		createTabColumn("inspection", "Inspection", TabType.Inspection, false),
+	],
 	activeTab: "home",
 };
 

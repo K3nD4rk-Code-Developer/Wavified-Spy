@@ -4,6 +4,7 @@ import Logger from "./Logger";
 import Roact from "@rbxts/roact";
 import Script from "./Script";
 import Settings from "./Settings";
+import Inspection from "./Inspection";
 import { Instant, Spring } from "@rbxts/flipper";
 import { TabType, selectActiveTabId, selectActiveTabOrder, selectTabOrder, selectTabType } from "reducers/tab-group";
 import { useEffect, useMutable, withHooksPure } from "@rbxts/roact-hooked";
@@ -50,6 +51,8 @@ function Page({ id }: Props) {
 				<Script />
 			) : tabType === TabType.Settings ? (
 				<Settings />
+			) : tabType === TabType.Inspection ? (
+				<Inspection />
 			) : undefined}
 		</Container>
 	);

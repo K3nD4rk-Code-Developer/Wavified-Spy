@@ -237,7 +237,7 @@ function Inspection() {
 					/>
 
 					<textlabel
-						Text="🔬 Inspection Tools"
+						Text="Inspection Tools"
 						TextSize={28}
 						Font="GothamBold"
 						TextColor3={new Color3(1, 1, 1)}

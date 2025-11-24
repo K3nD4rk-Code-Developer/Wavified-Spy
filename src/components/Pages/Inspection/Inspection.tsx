@@ -203,11 +203,11 @@ function Inspection() {
 	});
 
 	const scannerInfo = [
-		{ type: ScannerType.Upvalue, name: "Upvalue Scanner", color: new Color3(0.4, 0.6, 1), desc: "Examine function upvalues" },
-		{ type: ScannerType.Constant, name: "Constant Scanner", color: new Color3(0.6, 0.4, 1), desc: "View function constants" },
-		{ type: ScannerType.Script, name: "Script Scanner", color: new Color3(1, 0.6, 0.4), desc: "Find script instances" },
-		{ type: ScannerType.Module, name: "Module Scanner", color: new Color3(0.4, 1, 0.6), desc: "Discover modules" },
-		{ type: ScannerType.Closure, name: "Closure Spy", color: new Color3(1, 0.4, 0.6), desc: "Monitor closures" },
+		{ type: ScannerType.Upvalue, name: "Upvalue Scanner", icon: "rbxassetid://9887697255", color: new Color3(0.4, 0.6, 1), desc: "Examine function upvalues" },
+		{ type: ScannerType.Constant, name: "Constant Scanner", icon: "rbxassetid://9887697099", color: new Color3(0.6, 0.4, 1), desc: "View function constants" },
+		{ type: ScannerType.Script, name: "Script Scanner", icon: "rbxassetid://9896665034", color: new Color3(1, 0.6, 0.4), desc: "Find script instances" },
+		{ type: ScannerType.Module, name: "Module Scanner", icon: "rbxassetid://9887696628", color: new Color3(0.4, 1, 0.6), desc: "Discover modules" },
+		{ type: ScannerType.Closure, name: "Closure Spy", icon: "rbxassetid://9887696242", color: new Color3(1, 0.4, 0.6), desc: "Monitor closures" },
 	];
 
 	return (
@@ -298,37 +298,52 @@ function Inspection() {
 									Size={new UDim2(1, 0, 1, 0)}
 									BackgroundTransparency={1}
 								>
-									<uipadding PaddingLeft={new UDim(0, 16)} PaddingRight={new UDim(0, 16)} />
+									<uipadding PaddingLeft={new UDim(0, 12)} PaddingRight={new UDim(0, 12)} />
 									<uilistlayout
-										FillDirection={Enum.FillDirection.Vertical}
-										HorizontalAlignment={Enum.HorizontalAlignment.Left}
+										FillDirection={Enum.FillDirection.Horizontal}
 										VerticalAlignment={Enum.VerticalAlignment.Center}
-										Padding={new UDim(0, 4)}
+										Padding={new UDim(0, 10)}
 									/>
 
-									<textlabel
-										Text={scanner.name}
-										TextSize={14}
-										Font="GothamBold"
-										TextColor3={new Color3(1, 1, 1)}
-										Size={new UDim2(1, 0, 0, 16)}
+									<imagelabel
+										Image={scanner.icon}
+										Size={new UDim2(0, 28, 0, 28)}
 										BackgroundTransparency={1}
-										TextXAlignment="Left"
-										TextYAlignment="Center"
-										TextTruncate="AtEnd"
+										ImageColor3={new Color3(1, 1, 1)}
 									/>
 
-									<textlabel
-										Text={scanner.desc}
-										TextSize={11}
-										Font="Gotham"
-										TextColor3={new Color3(0.7, 0.7, 0.7)}
-										Size={new UDim2(1, 0, 0, 14)}
-										BackgroundTransparency={1}
-										TextXAlignment="Left"
-										TextYAlignment="Center"
-										TextTruncate="AtEnd"
-									/>
+									<frame Size={new UDim2(1, -38, 1, 0)} BackgroundTransparency={1}>
+										<uilistlayout
+											FillDirection={Enum.FillDirection.Vertical}
+											HorizontalAlignment={Enum.HorizontalAlignment.Left}
+											VerticalAlignment={Enum.VerticalAlignment.Center}
+											Padding={new UDim(0, 2)}
+										/>
+
+										<textlabel
+											Text={scanner.name}
+											TextSize={14}
+											Font="GothamBold"
+											TextColor3={new Color3(1, 1, 1)}
+											Size={new UDim2(1, 0, 0, 16)}
+											BackgroundTransparency={1}
+											TextXAlignment="Left"
+											TextYAlignment="Center"
+											TextTruncate="AtEnd"
+										/>
+
+										<textlabel
+											Text={scanner.desc}
+											TextSize={11}
+											Font="Gotham"
+											TextColor3={new Color3(0.7, 0.7, 0.7)}
+											Size={new UDim2(1, 0, 0, 14)}
+											BackgroundTransparency={1}
+											TextXAlignment="Left"
+											TextYAlignment="Center"
+											TextTruncate="AtEnd"
+										/>
+									</frame>
 								</frame>
 
 								{/* Glow effect for selected */}

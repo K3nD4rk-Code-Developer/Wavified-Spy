@@ -19,6 +19,7 @@ import {
 	selectPathNotation,
 	selectRemotesMultiSelected,
 	selectRemoteLogs,
+	selectInspectionResultSelected,
 } from "reducers/remote-log";
 import { removeRemoteLog } from "reducers/remote-log";
 import { setActionEnabled, setActionCaption } from "reducers/action-bar";
@@ -51,6 +52,7 @@ function ActionBarEffects() {
 	const tabs = useRootSelector(selectTabs);
 	const pathNotation = useRootSelector(selectPathNotation);
 	const multiSelected = useRootSelector(selectRemotesMultiSelected);
+	const inspectionResult = useRootSelector(selectInspectionResultSelected);
 
 	// Auto-populate traceback when signal changes
 	useEffect(() => {
@@ -179,7 +181,44 @@ function ActionBarEffects() {
 	});
 
 	useActionEffect("viewScript", () => {
-		if (signal) {
+		if (inspectionResult?.rawScript) {
+			// Decompile the inspection result script
+			let scriptText = "";
+
+			if (decompile !== undefined) {
+				const success = pcall(() => {
+					scriptText = decompile(inspectionResult.rawScript!);
+				});
+
+				if (!success[0]) {
+					scriptText = "-- Failed to decompile script\n-- " + tostring(success[1]);
+					notify("Failed to decompile script", 3, true);
+				}
+			} else {
+				scriptText = "-- decompile() function not available";
+			}
+
+			// Create unique tab name
+			const baseName = inspectionResult.name;
+			const uniqueName = generateUniqueScriptName(baseName, tabs);
+			const scriptId = HttpService.GenerateGUID(false);
+
+			// Create tab
+			const tab = createTabColumn(scriptId, uniqueName, TabType.Script, true);
+			dispatch(pushTab(tab));
+			dispatch(setActiveTab(scriptId));
+
+			// Store script content
+			dispatch(
+				setScript(scriptId, {
+					id: scriptId,
+					name: uniqueName,
+					content: scriptText,
+				}),
+			);
+
+			notify(`Opened ${uniqueName} in script viewer`);
+		} else if (signal) {
 			// Decompile the script
 			let scriptText = "";
 
@@ -397,12 +436,12 @@ function ActionBarEffects() {
 		dispatch(setActionEnabled("traceback", signalEnabled));
 		dispatch(setActionEnabled("copyPath", remoteEnabled || !isHome));
 		dispatch(setActionEnabled("copyScript", signalEnabled));
-		dispatch(setActionEnabled("viewScript", signalEnabled));
+		dispatch(setActionEnabled("viewScript", signalEnabled || (isInspection && inspectionResult?.rawScript !== undefined)));
 
 		dispatch(setActionEnabled("pauseRemote", hasMultiSelect || remoteEnabled));
 		dispatch(setActionEnabled("blockRemote", hasMultiSelect || remoteEnabled));
 		dispatch(setActionEnabled("runRemote", signalEnabled || scriptHasSignal));
-	}, [remoteId === undefined, signal, currentTab, multiSelected]);
+	}, [remoteId === undefined, signal, currentTab, multiSelected, inspectionResult]);
 
 	// Update button captions based on state
 	const allLogs = useRootSelector(selectRemoteLogs);

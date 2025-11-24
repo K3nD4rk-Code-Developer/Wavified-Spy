@@ -379,7 +379,7 @@ function Inspection() {
 		{ type: ScannerType.Module, name: "Module Scanner", icon: "rbxassetid://95437669844684", desc: "Discover modules" },
 		{ type: ScannerType.Closure, name: "Closure Spy", icon: "rbxassetid://107082546858208", desc: "Monitor closures" },
 	];
-	
+
 	return (
 		<Container>
 			<scrollingframe

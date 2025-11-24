@@ -7,6 +7,6 @@ export const tabIcons: Record<TabType, string> = {
 	[TabType.BindableEvent]: "rbxassetid://76270109328460",
 	[TabType.BindableFunction]: "rbxassetid://87985191222737",
 	[TabType.Script]: "rbxassetid://9896665034",
-	[TabType.Settings]: "rbxassetid://93852438923978",
-	[TabType.Inspection]: "rbxassetid://9896633081",
+	[TabType.Settings]: "rbxassetid://102279067978128",
+	[TabType.Inspection]: "rbxassetid://86206500190741",
 };

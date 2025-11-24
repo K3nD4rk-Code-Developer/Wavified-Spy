@@ -118,7 +118,7 @@ function WindowTitleBar({
 			zIndex={2}
 			>
 				<imagelabel
-					Image="rbxassetid://139434419787623"
+					Image="rbxassetid://102279067978128"
 					ImageColor3={Color3.fromHex("#E0E0E0")}
 					Size={new UDim2(0, 16, 0, 16)}
 					Position={new UDim2(0.5, 0, 0.5, 0)}

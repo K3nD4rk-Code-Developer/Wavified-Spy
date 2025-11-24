@@ -1,11 +1,13 @@
 import Button from "components/Button";
 import Container from "components/Container";
 import Roact from "@rbxts/roact";
-import { withHooksPure, useState } from "@rbxts/roact-hooked";
+import { withHooksPure, useState, useEffect } from "@rbxts/roact-hooked";
 import { useRootDispatch, useRootSelector } from "hooks/use-root-store";
 import { selectInspectionResultSelected, selectMaxInspectionResults } from "reducers/remote-log";
 import { InspectionResult } from "reducers/remote-log/model";
 import { setInspectionResultSelected } from "reducers/remote-log/actions";
+import { useSingleMotor } from "@rbxts/roact-hooked-plus";
+import { Spring, Instant } from "@rbxts/flipper";
 
 // Declare exploit environment functions
 declare const getgc: (() => unknown[]) | undefined;
@@ -20,6 +22,171 @@ enum ScannerType {
 	Script = "script",
 	Module = "module",
 	Closure = "closure",
+}
+
+interface ScannerButtonProps {
+	scanner: { type: ScannerType; name: string; icon: string; desc: string };
+	isSelected: boolean;
+	onClick: () => void;
+}
+
+const SCANNER_DEFAULT = new Spring(0, { frequency: 6 });
+const SCANNER_HOVERED = new Spring(0.05, { frequency: 6 });
+const SCANNER_PRESSED = new Instant(0.08);
+const SCANNER_SELECTED = new Spring(0.12, { frequency: 6 });
+
+function ScannerButton({ scanner, isSelected, onClick }: ScannerButtonProps) {
+	const [background, setBackground] = useSingleMotor(isSelected ? 0.12 : 0);
+
+	useEffect(() => {
+		if (isSelected) {
+			setBackground(SCANNER_SELECTED);
+		} else {
+			setBackground(SCANNER_DEFAULT);
+		}
+	}, [isSelected]);
+
+	return (
+		<Button
+			Key={scanner.type}
+			onClick={onClick}
+			onPress={() => setBackground(SCANNER_PRESSED)}
+			onHover={() => !isSelected && setBackground(SCANNER_HOVERED)}
+			onHoverEnd={() => !isSelected && setBackground(SCANNER_DEFAULT)}
+			size={new UDim2(0.32, 0, 0, 64)}
+			background={background.map((value) => new Color3(value, value, value))}
+			transparency={0}
+			cornerRadius={new UDim(0, 10)}
+		>
+			<uipadding PaddingLeft={new UDim(0, 12)} PaddingRight={new UDim(0, 12)} />
+			<uilistlayout
+				FillDirection={Enum.FillDirection.Horizontal}
+				VerticalAlignment={Enum.VerticalAlignment.Center}
+				Padding={new UDim(0, 10)}
+			/>
+
+			<imagelabel
+				Image={scanner.icon}
+				Size={new UDim2(0, 32, 0, 32)}
+				BackgroundTransparency={1}
+				ImageColor3={new Color3(1, 1, 1)}
+			/>
+
+			<frame Size={new UDim2(1, -42, 1, 0)} BackgroundTransparency={1}>
+				<uilistlayout
+					FillDirection={Enum.FillDirection.Vertical}
+					VerticalAlignment={Enum.VerticalAlignment.Center}
+					Padding={new UDim(0, 3)}
+				/>
+
+				<textlabel
+					Text={scanner.name}
+					TextSize={13}
+					Font="GothamBold"
+					TextColor3={new Color3(1, 1, 1)}
+					Size={new UDim2(1, 0, 0, 16)}
+					BackgroundTransparency={1}
+					TextXAlignment="Left"
+					TextYAlignment="Center"
+					TextTruncate="AtEnd"
+				/>
+
+				<textlabel
+					Text={scanner.desc}
+					TextSize={10}
+					Font="Gotham"
+					TextColor3={new Color3(0.7, 0.7, 0.7)}
+					Size={new UDim2(1, 0, 0, 13)}
+					BackgroundTransparency={1}
+					TextXAlignment="Left"
+					TextYAlignment="Center"
+					TextTruncate="AtEnd"
+				/>
+			</frame>
+
+			{isSelected && <uistroke Color={new Color3(0.5, 0.7, 1)} Thickness={2} Transparency={0} />}
+		</Button>
+	);
+}
+
+interface ResultItemProps {
+	result: InspectionResult;
+	isSelected: boolean;
+	onClick: () => void;
+}
+
+const RESULT_DEFAULT = new Spring(0.08, { frequency: 6 });
+const RESULT_HOVERED = new Spring(0.10, { frequency: 6 });
+const RESULT_PRESSED = new Instant(0.12);
+const RESULT_SELECTED = new Spring(0.14, { frequency: 6 });
+
+function ResultItem({ result, isSelected, onClick }: ResultItemProps) {
+	const [background, setBackground] = useSingleMotor(isSelected ? 0.14 : 0.08);
+
+	useEffect(() => {
+		if (isSelected) {
+			setBackground(RESULT_SELECTED);
+		} else {
+			setBackground(RESULT_DEFAULT);
+		}
+	}, [isSelected]);
+
+	return (
+		<Button
+			Key={result.id}
+			onClick={onClick}
+			onPress={() => setBackground(RESULT_PRESSED)}
+			onHover={() => !isSelected && setBackground(RESULT_HOVERED)}
+			onHoverEnd={() => !isSelected && setBackground(RESULT_DEFAULT)}
+			size={new UDim2(1, -6, 0, 64)}
+			background={background.map((value) => new Color3(value, value, value))}
+			transparency={0}
+			cornerRadius={new UDim(0, 8)}
+		>
+			<uipadding PaddingLeft={new UDim(0, 12)} PaddingTop={new UDim(0, 8)} PaddingRight={new UDim(0, 12)} />
+			<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 4)} />
+
+			<textlabel
+				Text={result.name}
+				TextSize={14}
+				Font="GothamBold"
+				TextColor3={new Color3(1, 1, 1)}
+				Size={new UDim2(1, 0, 0, 17)}
+				BackgroundTransparency={1}
+				TextXAlignment="Left"
+				TextYAlignment="Center"
+				TextTruncate="AtEnd"
+			/>
+
+			<textlabel
+				Text={`${result.type} • ${result.value ?? "no path"}`}
+				TextSize={11}
+				Font="Gotham"
+				TextColor3={new Color3(0.7, 0.75, 0.8)}
+				Size={new UDim2(1, 0, 0, 14)}
+				BackgroundTransparency={1}
+				TextXAlignment="Left"
+				TextYAlignment="Center"
+				TextTruncate="AtEnd"
+			/>
+
+			{result.details !== undefined && (
+				<textlabel
+					Text={result.details}
+					TextSize={10}
+					Font="Code"
+					TextColor3={new Color3(0.5, 0.5, 0.5)}
+					Size={new UDim2(1, 0, 0, 13)}
+					BackgroundTransparency={1}
+					TextXAlignment="Left"
+					TextYAlignment="Center"
+					TextTruncate="AtEnd"
+				/>
+			)}
+
+			{isSelected && <uistroke Color={new Color3(0.5, 0.7, 1)} Thickness={2} Transparency={0} />}
+		</Button>
+	);
 }
 
 function Inspection() {
@@ -206,11 +373,11 @@ function Inspection() {
 	});
 
 	const scannerInfo = [
-		{ type: ScannerType.Upvalue, name: "Upvalue Scanner", icon: "rbxassetid://9887697255", color: new Color3(0.4, 0.6, 1), desc: "Examine function upvalues" },
-		{ type: ScannerType.Constant, name: "Constant Scanner", icon: "rbxassetid://9887697099", color: new Color3(0.6, 0.4, 1), desc: "View function constants" },
-		{ type: ScannerType.Script, name: "Script Scanner", icon: "rbxassetid://9896665034", color: new Color3(1, 0.6, 0.4), desc: "Find script instances" },
-		{ type: ScannerType.Module, name: "Module Scanner", icon: "rbxassetid://9887696628", color: new Color3(0.4, 1, 0.6), desc: "Discover modules" },
-		{ type: ScannerType.Closure, name: "Closure Spy", icon: "rbxassetid://9887696242", color: new Color3(1, 0.4, 0.6), desc: "Monitor closures" },
+		{ type: ScannerType.Upvalue, name: "Upvalue Scanner", icon: "rbxassetid://9887697255", desc: "Examine function upvalues" },
+		{ type: ScannerType.Constant, name: "Constant Scanner", icon: "rbxassetid://9887697099", desc: "View function constants" },
+		{ type: ScannerType.Script, name: "Script Scanner", icon: "rbxassetid://9896665034", desc: "Find script instances" },
+		{ type: ScannerType.Module, name: "Module Scanner", icon: "rbxassetid://9887696628", desc: "Discover modules" },
+		{ type: ScannerType.Closure, name: "Closure Spy", icon: "rbxassetid://9887696242", desc: "Monitor closures" },
 	];
 
 	return (
@@ -219,8 +386,8 @@ function Inspection() {
 				Size={new UDim2(1, 0, 1, 0)}
 				BackgroundTransparency={1}
 				BorderSizePixel={0}
-				ScrollBarThickness={5}
-				ScrollBarImageColor3={new Color3(0.3, 0.3, 0.3)}
+				ScrollBarThickness={1}
+				ScrollBarImageTransparency={0.6}
 				CanvasSize={new UDim2(0, 0, 0, 0)}
 				AutomaticCanvasSize={Enum.AutomaticSize.Y}
 			>
@@ -267,64 +434,12 @@ function Inspection() {
 					/>
 
 					{scannerInfo.map((scanner) => (
-						<Button
+						<ScannerButton
 							Key={scanner.type}
+							scanner={scanner}
+							isSelected={selectedScanner === scanner.type}
 							onClick={() => handleScan(scanner.type)}
-							size={new UDim2(0.32, 0, 0, 64)}
-							background={selectedScanner === scanner.type ? scanner.color : new Color3(0.1, 0.1, 0.1)}
-							transparency={0}
-							cornerRadius={new UDim(0, 10)}
-						>
-							<uipadding PaddingLeft={new UDim(0, 12)} PaddingRight={new UDim(0, 12)} />
-							<uilistlayout
-								FillDirection={Enum.FillDirection.Horizontal}
-								VerticalAlignment={Enum.VerticalAlignment.Center}
-								Padding={new UDim(0, 10)}
-							/>
-
-							<imagelabel
-								Image={scanner.icon}
-								Size={new UDim2(0, 32, 0, 32)}
-								BackgroundTransparency={1}
-								ImageColor3={new Color3(1, 1, 1)}
-							/>
-
-							<frame Size={new UDim2(1, -42, 1, 0)} BackgroundTransparency={1}>
-								<uilistlayout
-									FillDirection={Enum.FillDirection.Vertical}
-									VerticalAlignment={Enum.VerticalAlignment.Center}
-									Padding={new UDim(0, 3)}
-								/>
-
-								<textlabel
-									Text={scanner.name}
-									TextSize={13}
-									Font="GothamBold"
-									TextColor3={new Color3(1, 1, 1)}
-									Size={new UDim2(1, 0, 0, 16)}
-									BackgroundTransparency={1}
-									TextXAlignment="Left"
-									TextYAlignment="Center"
-									TextTruncate="AtEnd"
-								/>
-
-								<textlabel
-									Text={scanner.desc}
-									TextSize={10}
-									Font="Gotham"
-									TextColor3={new Color3(0.7, 0.7, 0.7)}
-									Size={new UDim2(1, 0, 0, 13)}
-									BackgroundTransparency={1}
-									TextXAlignment="Left"
-									TextYAlignment="Center"
-									TextTruncate="AtEnd"
-								/>
-							</frame>
-
-							{selectedScanner === scanner.type && (
-								<uistroke Color={scanner.color} Thickness={2} Transparency={0} />
-							)}
-						</Button>
+						/>
 					))}
 				</frame>
 
@@ -438,72 +553,22 @@ function Inspection() {
 								Size={new UDim2(1, 0, 0, math.min(500, filteredResults.size() * 70))}
 								BackgroundColor3={new Color3(0.05, 0.05, 0.05)}
 								BorderSizePixel={0}
-								ScrollBarThickness={5}
-								ScrollBarImageColor3={new Color3(0.3, 0.3, 0.3)}
+								ScrollBarThickness={1}
+								ScrollBarImageTransparency={0.6}
 								CanvasSize={new UDim2(0, 0, 0, filteredResults.size() * 70)}
 							>
 								<uicorner CornerRadius={new UDim(0, 10)} />
 								<uipadding PaddingLeft={new UDim(0, 10)} PaddingRight={new UDim(0, 10)} PaddingTop={new UDim(0, 10)} />
 								<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 6)} />
 
-								{filteredResults.map((result) => {
-									const isSelected = selectedResult?.id === result.id;
-									return (
-										<Button
-											Key={result.id}
-											onClick={() => dispatch(setInspectionResultSelected(result))}
-											size={new UDim2(1, -6, 0, 64)}
-											background={isSelected ? new Color3(0.12, 0.14, 0.18) : new Color3(0.08, 0.08, 0.08)}
-											transparency={0}
-											cornerRadius={new UDim(0, 8)}
-										>
-											<uipadding PaddingLeft={new UDim(0, 12)} PaddingTop={new UDim(0, 8)} PaddingRight={new UDim(0, 12)} />
-											<uilistlayout FillDirection={Enum.FillDirection.Vertical} Padding={new UDim(0, 4)} />
-
-											<textlabel
-												Text={result.name}
-												TextSize={14}
-												Font="GothamBold"
-												TextColor3={new Color3(1, 1, 1)}
-												Size={new UDim2(1, 0, 0, 17)}
-												BackgroundTransparency={1}
-												TextXAlignment="Left"
-												TextYAlignment="Center"
-												TextTruncate="AtEnd"
-											/>
-
-											<textlabel
-												Text={`${result.type} • ${result.value ?? "no path"}`}
-												TextSize={11}
-												Font="Gotham"
-												TextColor3={new Color3(0.6, 0.7, 0.9)}
-												Size={new UDim2(1, 0, 0, 14)}
-												BackgroundTransparency={1}
-												TextXAlignment="Left"
-												TextYAlignment="Center"
-												TextTruncate="AtEnd"
-											/>
-
-											{result.details !== undefined ? (
-												<textlabel
-													Text={result.details}
-													TextSize={10}
-													Font="Code"
-													TextColor3={new Color3(0.5, 0.5, 0.5)}
-													Size={new UDim2(1, 0, 0, 13)}
-													BackgroundTransparency={1}
-													TextXAlignment="Left"
-													TextYAlignment="Center"
-													TextTruncate="AtEnd"
-												/>
-											) : undefined}
-
-											{isSelected && (
-												<uistroke Color={new Color3(0.4, 0.6, 1)} Thickness={2} Transparency={0} />
-											)}
-										</Button>
-									);
-								})}
+								{filteredResults.map((result) => (
+									<ResultItem
+										Key={result.id}
+										result={result}
+										isSelected={selectedResult?.id === result.id}
+										onClick={() => dispatch(setInspectionResultSelected(result))}
+									/>
+								))}
 							</scrollingframe>
 						)}
 					</frame>

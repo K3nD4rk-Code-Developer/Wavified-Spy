@@ -1,7 +1,7 @@
 import Button from "components/Button";
 import Roact from "@rbxts/roact";
 import { Instant, Spring } from "@rbxts/flipper";
-import { OutgoingSignal } from "reducers/remote-log";
+import { Signal } from "reducers/remote-log";
 import { formatEscapes } from "utils/format-escapes";
 import { getInstancePath } from "utils/instance-util";
 import { multiply } from "utils/number-util";
@@ -10,7 +10,7 @@ import { useGroupMotor } from "@rbxts/roact-hooked-plus";
 import { withHooksPure } from "@rbxts/roact-hooked";
 
 interface Props {
-	signal: OutgoingSignal;
+	signal: Signal;
 	open: boolean;
 	onClick: () => void;
 }
@@ -57,12 +57,26 @@ function RowHeader({ signal, open, onClick }: Props) {
 				BackgroundTransparency={1}
 			/>
 
-			{/* Icon */}
+			{/* Icon - different for incoming vs outgoing */}
 			<imagelabel
-				Image={"rbxassetid://9913356706"}
+				Image={signal.direction === "incoming" ? "rbxassetid://9913356706" : "rbxassetid://9913356706"}
 				ImageTransparency={rowButton.foreground}
 				Size={new UDim2(0, 24, 0, 24)}
 				Position={new UDim2(0, 18, 0, 20)}
+				BackgroundTransparency={1}
+			/>
+
+			{/* Direction indicator */}
+			<textlabel
+				Text={signal.direction === "incoming" ? "↓ IN" : "↑ OUT"}
+				Font="GothamBold"
+				TextColor3={signal.direction === "incoming" ? new Color3(0.4, 0.8, 1) : new Color3(1, 0.8, 0.4)}
+				TextTransparency={rowButton.foreground}
+				TextSize={10}
+				TextXAlignment="Right"
+				TextYAlignment="Center"
+				Size={new UDim2(0, 40, 0, 12)}
+				Position={new UDim2(1, -70, 0, 26)}
 				BackgroundTransparency={1}
 			/>
 
@@ -70,14 +84,14 @@ function RowHeader({ signal, open, onClick }: Props) {
 			<textlabel
 				Text={`${
 					signal.caller ? formatEscapes(signal.caller.Name) : "No script"
-				} • ${stringifyFunctionSignature(signal.callback)}`}
+				} • ${signal.direction === "outgoing" && signal.callback ? stringifyFunctionSignature(signal.callback) : signal.direction === "incoming" ? "OnClientEvent" : "Unknown"}`}
 				Font="Gotham"
 				TextColor3={new Color3(1, 1, 1)}
 				TextTransparency={rowButton.foreground}
 				TextSize={13}
 				TextXAlignment="Left"
 				TextYAlignment="Bottom"
-				Size={new UDim2(1, -100, 0, 12)}
+				Size={new UDim2(1, -120, 0, 12)}
 				Position={new UDim2(0, 58, 0, 18)}
 				BackgroundTransparency={1}
 			>
@@ -86,14 +100,14 @@ function RowHeader({ signal, open, onClick }: Props) {
 
 			{/* Source path */}
 			<textlabel
-				Text={signal.caller ? formatEscapes(getInstancePath(signal.caller)) : "Not called from a script"}
+				Text={signal.caller ? formatEscapes(getInstancePath(signal.caller)) : signal.direction === "incoming" ? "Server → Client" : "Not called from a script"}
 				Font="Gotham"
 				TextColor3={new Color3(1, 1, 1)}
 				TextTransparency={rowButton.foreground.map((t) => multiply(t, 0.2))}
 				TextSize={11}
 				TextXAlignment="Left"
 				TextYAlignment="Top"
-				Size={new UDim2(1, -100, 0, 12)}
+				Size={new UDim2(1, -120, 0, 12)}
 				Position={new UDim2(0, 58, 0, 39)}
 				BackgroundTransparency={1}
 			>

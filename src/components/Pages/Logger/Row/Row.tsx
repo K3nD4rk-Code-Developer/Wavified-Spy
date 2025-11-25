@@ -1,13 +1,13 @@
 import Container from "components/Container";
 import Roact from "@rbxts/roact";
 import RowView from "./RowView";
-import { OutgoingSignal } from "reducers/remote-log";
+import { Signal } from "reducers/remote-log";
 import { Spring } from "@rbxts/flipper";
 import { useBinding, useEffect, withHooksPure } from "@rbxts/roact-hooked";
 import { useSingleMotor } from "@rbxts/roact-hooked-plus";
 
 interface Props {
-	signal: OutgoingSignal;
+	signal: Signal;
 	order: number;
 	selected: boolean;
 }

@@ -198,6 +198,7 @@ end)
 -- This catches server-to-client communications
 
 local wrappedConnections = setmetatable({}, { __mode = "k" })
+local wrappedExistingConnections = setmetatable({}, { __mode = "k" })
 
 local function onIncomingReceive(remote, params, callingScript, callback)
 	task.defer(function()
@@ -309,6 +310,70 @@ refs.__namecall = hookmetamethod(game, "__namecall", newcclosure(function(self, 
 
 	return refs.__namecall(self, ...)
 end))
+
+-- Hook existing connections on remotes (for connections made before spy loaded)
+local function hookExistingConnections()
+	if not getconnections then return end
+
+	local function processRemote(remote)
+		local signalName = remote:IsA("RemoteEvent") and "OnClientEvent" or "OnClientInvoke"
+		local signal = remote[signalName]
+
+		if not signal then return end
+
+		local connections = getconnections(signal)
+		if not connections then return end
+
+		for _, connection in connections do
+			if connection and connection.Function and not wrappedExistingConnections[connection] then
+				wrappedExistingConnections[connection] = true
+
+				local originalFunc = connection.Function
+				local wrappedFunc = wrapCallback(remote, originalFunc, nil)
+
+				-- Replace the connection's function if possible
+				if connection.Disable and connection.Enable then
+					-- Some executors allow modifying connection.Function directly
+					pcall(function()
+						connection.Function = wrappedFunc
+					end)
+				end
+			end
+		end
+	end
+
+	-- Find all RemoteEvents and RemoteFunctions
+	local function scanDescendants(parent)
+		for _, child in parent:GetDescendants() do
+			if child:IsA("RemoteEvent") or child:IsA("RemoteFunction") then
+				pcall(processRemote, child)
+			end
+		end
+	end
+
+	pcall(scanDescendants, game)
+end
+
+-- Hook firesignal if available (used to replay OnClientEvent)
+if firesignal then
+	local originalFiresignal = firesignal
+	firesignal = newcclosure(function(signal, ...)
+		local args = { ... }
+
+		-- Try to get the remote from the signal
+		if typeof(signal) == "RBXScriptSignal" then
+			local signalInfo = wrappedConnections[signal]
+			if signalInfo and store.isActive() then
+				onIncomingReceive(signalInfo.remote, args, nil, nil)
+			end
+		end
+
+		return originalFiresignal(signal, ...)
+	end)
+end
+
+-- Initialize existing connection hooks
+task.defer(hookExistingConnections)
 
 -- Actor Hook System
 -- This catches remotes fired from Actor scripts (parallel Luau contexts)

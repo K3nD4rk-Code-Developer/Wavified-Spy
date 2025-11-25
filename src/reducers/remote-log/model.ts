@@ -52,6 +52,7 @@ export interface RemoteLog {
 	object: RemoteEvent | RemoteFunction | BindableEvent | BindableFunction;
 	type: TabType.Event | TabType.Function | TabType.BindableEvent | TabType.BindableFunction;
 	outgoing: OutgoingSignal[];
+	incoming: IncomingSignal[];
 }
 
 export interface OutgoingSignal {
@@ -68,4 +69,18 @@ export interface OutgoingSignal {
 	traceback: Callback[];
 	isActor?: boolean;
 	timestamp: number; // os.clock() timestamp when signal was captured
+}
+
+export interface IncomingSignal {
+	id: string;
+	remote: RemoteEvent | RemoteFunction | BindableEvent | BindableFunction;
+	remoteId: string;
+	name: string;
+	path: string;
+	pathFmt: string;
+	parameters: Record<number, unknown>;
+	caller?: LocalScript | ModuleScript;
+	callback?: Callback;
+	isActor?: boolean;
+	timestamp: number;
 }

@@ -123,17 +123,19 @@ function FunctionTree() {
 	const { setUpperHidden, upperHidden, upperSize } = useSidePanelContext();
 	const signal = useRootSelector(selectSignalSelected);
 
-	const isEmpty = !signal || signal.traceback.size() === 0;
+	// Only show traceback for outgoing signals
+	const hasTraceback = signal && signal.direction === "outgoing" && signal.traceback.size() > 0;
+	const tracebackSize = signal && signal.direction === "outgoing" ? signal.traceback.size() : 0;
 
 	return (
 		<Container size={upperSize}>
 			<TitleBar
-				caption={`Function Tree${signal ? ` (${signal.traceback.size()})` : ""}`}
+				caption={`Function Tree${signal ? ` (${tracebackSize})` : ""}`}
 				hidden={upperHidden}
 				toggleHidden={() => setUpperHidden(!upperHidden)}
 			/>
 
-			{!isEmpty && signal ? (
+			{hasTraceback && signal.direction === "outgoing" ? (
 				<scrollingframe
 					Size={new UDim2(1, 0, 1, -30)}
 					Position={new UDim2(0, 0, 0, 30)}
@@ -157,7 +159,7 @@ function FunctionTree() {
 						PaddingBottom={new UDim(0, 4)}
 					/>
 
-					{signal.traceback.map((fn, index) => (
+					{signal.traceback.map((fn: Callback, index: number) => (
 						<FunctionNode
 							fn={fn}
 							index={index}
@@ -179,7 +181,7 @@ function FunctionTree() {
 						AnchorPoint={new Vector2(0.5, 0.5)}
 						Position={new UDim2(0.5, 0, 0.5, 0)}
 						Size={new UDim2(1, -20, 1, 0)}
-						Text="Select a signal to view function tree"
+						Text={signal && signal.direction === "incoming" ? "Function tree not available for incoming signals" : "Select a signal to view function tree"}
 						Font="Gotham"
 						TextColor3={new Color3(0.5, 0.5, 0.5)}
 						TextSize={12}

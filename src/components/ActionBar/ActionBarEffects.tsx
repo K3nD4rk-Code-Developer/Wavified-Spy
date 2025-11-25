@@ -54,9 +54,9 @@ function ActionBarEffects() {
 	const multiSelected = useRootSelector(selectRemotesMultiSelected);
 	const inspectionResult = useRootSelector(selectInspectionResultSelected);
 
-	// Auto-populate traceback when signal changes
+	// Auto-populate traceback when signal changes (only for outgoing signals)
 	useEffect(() => {
-		if (signal) {
+		if (signal && signal.direction === "outgoing") {
 			dispatch(setTracebackCallStack(signal.traceback));
 		}
 	}, [signal]);
@@ -65,9 +65,13 @@ function ActionBarEffects() {
 		if (remote) {
 			setclipboard?.(getInstancePath(remote.object));
 			notify("Copied remote path to clipboard");
-		} else if (signal) {
+		} else if (signal && signal.direction === "outgoing") {
 			setclipboard?.(codifyOutgoingSignal(signal));
 			notify("Copied signal to clipboard");
+		} else if (signal) {
+			// For incoming signals, just copy basic info
+			setclipboard?.(`-- Incoming signal from ${signal.name}\n-- Path: ${signal.path}`);
+			notify("Copied incoming signal info to clipboard");
 		}
 	});
 
@@ -262,7 +266,7 @@ function ActionBarEffects() {
 	});
 
 	useActionEffect("traceback", () => {
-		if (signal) {
+		if (signal && signal.direction === "outgoing") {
 			dispatch(setTracebackCallStack(signal.traceback));
 		}
 	});
@@ -363,7 +367,10 @@ function ActionBarEffects() {
 				// If script has signal reference, use that signal
 				if (scriptData.signalId && scriptData.remoteId) {
 					const remoteLog = selectRemoteLog(store.getState(), scriptData.remoteId);
-					signalToRun = remoteLog?.outgoing.find((s) => s.id === scriptData.signalId);
+					const foundSignal = remoteLog?.outgoing.find((s) => s.id === scriptData.signalId);
+					if (foundSignal) {
+						signalToRun = { ...foundSignal, direction: "outgoing" as const };
+					}
 				}
 			}
 		}

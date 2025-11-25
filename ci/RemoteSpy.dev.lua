@@ -655,7 +655,7 @@ local function ActionBarEffects()
 	local multiSelected = useRootSelector(selectRemotesMultiSelected)
 	local inspectionResult = useRootSelector(selectInspectionResultSelected)
 	useEffect(function()
-		if signal then
+		if signal and signal.direction == "outgoing" then
 			dispatch(setTracebackCallStack(signal.traceback))
 		end
 	end, { signal })
@@ -666,12 +666,18 @@ local function ActionBarEffects()
 				_result(getInstancePath(remote.object))
 			end
 			notify("Copied remote path to clipboard")
-		elseif signal then
+		elseif signal and signal.direction == "outgoing" then
 			local _result = setclipboard
 			if _result ~= nil then
 				_result(codifyOutgoingSignal(signal))
 			end
 			notify("Copied signal to clipboard")
+		elseif signal then
+			local _result = setclipboard
+			if _result ~= nil then
+				_result("-- Incoming signal from " .. (signal.name .. ("\n-- Path: " .. signal.path)))
+			end
+			notify("Copied incoming signal info to clipboard")
 		end
 	end)
 	useActionEffect("copyPath", function()
@@ -922,7 +928,7 @@ local function ActionBarEffects()
 		end
 	end)
 	useActionEffect("traceback", function()
-		if signal then
+		if signal and signal.direction == "outgoing" then
 			dispatch(setTracebackCallStack(signal.traceback))
 		end
 	end)
@@ -1046,24 +1052,32 @@ local function ActionBarEffects()
 				end
 				if _condition ~= "" and _condition then
 					local remoteLog = selectRemoteLog(store:getState(), scriptData.remoteId)
-					local _result_2 = remoteLog
-					if _result_2 ~= nil then
-						local _outgoing = _result_2.outgoing
+					local _foundSignal = remoteLog
+					if _foundSignal ~= nil then
+						local _outgoing = _foundSignal.outgoing
 						local _arg0 = function(s)
 							return s.id == scriptData.signalId
 						end
 						-- ▼ ReadonlyArray.find ▼
-						local _result_3
+						local _result_2
 						for _i, _v in ipairs(_outgoing) do
 							if _arg0(_v, _i - 1, _outgoing) == true then
-								_result_3 = _v
+								_result_2 = _v
 								break
 							end
 						end
 						-- ▲ ReadonlyArray.find ▲
-						_result_2 = _result_3
+						_foundSignal = _result_2
 					end
-					signalToRun = _result_2
+					local foundSignal = _foundSignal
+					if foundSignal then
+						local _object = {}
+						for _k, _v in pairs(foundSignal) do
+							_object[_k] = _v
+						end
+						_object.direction = "outgoing"
+						signalToRun = _object
+					end
 				end
 			end
 		end
@@ -3152,7 +3166,7 @@ local Row = TS.import(script, script.Parent, "Row").default
 local Selection = TS.import(script, script.Parent.Parent.Parent, "Selection").default
 local arrayToMap = TS.import(script, TS.getModule(script, "@rbxts", "roact-hooked-plus").out).arrayToMap
 local _remote_log = TS.import(script, script.Parent.Parent.Parent.Parent, "reducers", "remote-log")
-local makeSelectRemoteLogOutgoing = _remote_log.makeSelectRemoteLogOutgoing
+local makeSelectRemoteLogSignals = _remote_log.makeSelectRemoteLogSignals
 local selectSignalIdSelected = _remote_log.selectSignalIdSelected
 local _roact_hooked = TS.import(script, TS.getModule(script, "@rbxts", "roact-hooked").src)
 local useBinding = _roact_hooked.useBinding
@@ -3161,13 +3175,13 @@ local withHooksPure = _roact_hooked.withHooksPure
 local useRootSelector = TS.import(script, script.Parent.Parent.Parent.Parent, "hooks", "use-root-store").useRootSelector
 local function Logger(_param)
 	local id = _param.id
-	local selectOutgoing = useMemo(makeSelectRemoteLogOutgoing, {})
-	local outgoing = useRootSelector(function(state)
-		return selectOutgoing(state, id)
+	local selectSignals = useMemo(makeSelectRemoteLogSignals, {})
+	local signals = useRootSelector(function(state)
+		return selectSignals(state, id)
 	end)
 	local selection = useRootSelector(selectSignalIdSelected)
 	local selectionOrder = useMemo(function()
-		local _result = outgoing
+		local _result = signals
 		if _result ~= nil then
 			local _arg0 = function(signal)
 				return signal.id == selection
@@ -3188,9 +3202,9 @@ local function Logger(_param)
 			_condition = -1
 		end
 		return _condition
-	end, { outgoing, selection })
+	end, { signals, selection })
 	local contentHeight, setContentHeight = useBinding(0)
-	if not outgoing then
+	if not signals then
 		return Roact.createFragment()
 	end
 	local _attributes = {
@@ -3231,7 +3245,7 @@ local function Logger(_param)
 		}),
 	}
 	local _length_1 = #_children_1
-	for _k, _v in pairs(arrayToMap(outgoing, function(signal, order)
+	for _k, _v in pairs(arrayToMap(signals, function(signal, order)
 		return { signal.id, Roact.createElement(Row, {
 			signal = signal,
 			order = order,
@@ -3341,11 +3355,25 @@ local function stringifyTypesAndValues(list)
 end
 local function RowBody(_param)
 	local signal = _param.signal
+	local isOutgoing = signal.direction == "outgoing"
+	local outgoingSignal = if isOutgoing then signal else nil
 	local description = useMemo(function()
-		return describeFunction(signal.callback)
+		local _result = outgoingSignal
+		if _result ~= nil then
+			_result = _result.callback
+		end
+		if _result then
+			return describeFunction(outgoingSignal.callback)
+		end
+		return {
+			source = "N/A (incoming signal)",
+		}
 	end, {})
 	local tracebackNames = useMemo(function()
-		return stringifySignalTraceback(signal)
+		if outgoingSignal then
+			return stringifySignalTraceback(outgoingSignal)
+		end
+		return { "N/A (incoming signal)" }
 	end, {})
 	local _binding = useMemo(function()
 		return stringifyTypesAndValues(signal.parameters)
@@ -3353,10 +3381,71 @@ local function RowBody(_param)
 	local parameterTypes = _binding[1]
 	local parameterValues = _binding[2]
 	local _binding_1 = useMemo(function()
-		return if signal.returns then stringifyTypesAndValues(signal.returns) else { { "void" }, { "void" } }
+		local _result = outgoingSignal
+		if _result ~= nil then
+			_result = _result.returns
+		end
+		if _result then
+			return stringifyTypesAndValues(outgoingSignal.returns)
+		end
+		return { { "N/A" }, { "N/A" } }
 	end, {})
 	local returnTypes = _binding_1[1]
 	local returnValues = _binding_1[2]
+	local _condition = #parameterTypes > 0
+	if _condition then
+		local _children = {
+			Roact.createElement(RowLine),
+		}
+		local _length = #_children
+		local _condition_1 = isOutgoing
+		if _condition_1 then
+			local _result = outgoingSignal
+			if _result ~= nil then
+				_result = _result.returns
+			end
+			_condition_1 = _result
+			if _condition_1 then
+				_condition_1 = (Roact.createElement(RowDoubleCaption, {
+					text = "Returns",
+					hint = table.concat(returnTypes, "\n"),
+					description = table.concat(returnValues, "\n"),
+				}))
+			end
+		end
+		local _attributes = {
+			AutomaticSize = "Y",
+			Size = UDim2.new(1, 0, 0, 0),
+			BackgroundColor3 = Color3.new(1, 1, 1),
+			BackgroundTransparency = 0.98,
+			BorderSizePixel = 0,
+		}
+		local _children_1 = {
+			Roact.createElement(RowDoubleCaption, {
+				text = if isOutgoing then "Parameters" else "Received Data",
+				hint = table.concat(parameterTypes, "\n"),
+				description = table.concat(parameterValues, "\n"),
+			}),
+		}
+		local _length_1 = #_children_1
+		if _condition_1 then
+			_children_1[_length_1 + 1] = _condition_1
+		end
+		_length_1 = #_children_1
+		_children_1[_length_1 + 1] = Roact.createElement("UIPadding", {
+			PaddingLeft = UDim.new(0, 58),
+			PaddingRight = UDim.new(0, 58),
+			PaddingTop = UDim.new(0, 6),
+			PaddingBottom = UDim.new(0, 6),
+		})
+		_children_1[_length_1 + 2] = Roact.createElement("UIListLayout", {
+			FillDirection = "Vertical",
+			Padding = UDim.new(),
+			VerticalAlignment = "Top",
+		})
+		_children[_length + 1] = Roact.createElement("Frame", _attributes, _children_1)
+		_condition = (Roact.createFragment(_children))
+	end
 	local _children = {
 		Roact.createElement(RowLine),
 		Roact.createElement("Frame", {
@@ -3366,6 +3455,11 @@ local function RowBody(_param)
 			BackgroundTransparency = 0.98,
 			BorderSizePixel = 0,
 		}, {
+			Roact.createElement(RowCaption, {
+				text = "Direction",
+				description = if isOutgoing then "Outgoing (Client → Server)" else "Incoming (Server → Client)",
+				wrapped = true,
+			}),
 			Roact.createElement(RowCaption, {
 				text = "Remote name",
 				description = formatEscapes(signal.name),
@@ -3378,7 +3472,7 @@ local function RowBody(_param)
 			}),
 			Roact.createElement(RowCaption, {
 				text = "Remote caller",
-				description = if signal.caller then formatEscapes(getInstancePath(signal.caller)) else "No script found",
+				description = if signal.caller then formatEscapes(getInstancePath(signal.caller)) elseif isOutgoing then "No script found" else "Server",
 				wrapped = true,
 			}),
 			Roact.createElement(RowCaption, {
@@ -3399,25 +3493,37 @@ local function RowBody(_param)
 		}),
 	}
 	local _length = #_children
-	local _child = #parameterTypes > 0 and (Roact.createFragment({
+	if _condition then
+		_children[_length + 1] = _condition
+	end
+	_length = #_children
+	local _child = isOutgoing and (outgoingSignal and (Roact.createFragment({
 		Roact.createElement(RowLine),
-		Roact.createElement("Frame", {
+		Roact.createElement("ImageLabel", {
 			AutomaticSize = "Y",
+			Image = "rbxassetid://9913871236",
+			ImageColor3 = Color3.new(1, 1, 1),
+			ImageTransparency = 0.98,
+			ScaleType = "Slice",
+			SliceCenter = Rect.new(4, 4, 4, 4),
 			Size = UDim2.new(1, 0, 0, 0),
-			BackgroundColor3 = Color3.new(1, 1, 1),
-			BackgroundTransparency = 0.98,
-			BorderSizePixel = 0,
+			BackgroundTransparency = 1,
 		}, {
-			Roact.createElement(RowDoubleCaption, {
-				text = "Parameters",
-				hint = table.concat(parameterTypes, "\n"),
-				description = table.concat(parameterValues, "\n"),
+			Roact.createElement(RowCaption, {
+				text = "Signature",
+				description = if outgoingSignal.callback then stringifyFunctionSignature(outgoingSignal.callback) else "N/A",
+				wrapped = true,
 			}),
-			returnTypes and (Roact.createElement(RowDoubleCaption, {
-				text = "Returns",
-				hint = table.concat(returnTypes, "\n"),
-				description = table.concat(returnValues, "\n"),
-			})),
+			Roact.createElement(RowCaption, {
+				text = "Source",
+				description = description.source,
+				wrapped = true,
+			}),
+			Roact.createElement(RowCaption, {
+				text = "Traceback",
+				wrapped = true,
+				description = table.concat(tracebackNames, "\n"),
+			}),
 			Roact.createElement("UIPadding", {
 				PaddingLeft = UDim.new(0, 58),
 				PaddingRight = UDim.new(0, 58),
@@ -3430,49 +3536,10 @@ local function RowBody(_param)
 				VerticalAlignment = "Top",
 			}),
 		}),
-	}))
+	})))
 	if _child then
 		_children[_length + 1] = _child
 	end
-	_length = #_children
-	_children[_length + 1] = Roact.createElement(RowLine)
-	_children[_length + 2] = Roact.createElement("ImageLabel", {
-		AutomaticSize = "Y",
-		Image = "rbxassetid://9913871236",
-		ImageColor3 = Color3.new(1, 1, 1),
-		ImageTransparency = 0.98,
-		ScaleType = "Slice",
-		SliceCenter = Rect.new(4, 4, 4, 4),
-		Size = UDim2.new(1, 0, 0, 0),
-		BackgroundTransparency = 1,
-	}, {
-		Roact.createElement(RowCaption, {
-			text = "Signature",
-			description = stringifyFunctionSignature(signal.callback),
-			wrapped = true,
-		}),
-		Roact.createElement(RowCaption, {
-			text = "Source",
-			description = description.source,
-			wrapped = true,
-		}),
-		Roact.createElement(RowCaption, {
-			text = "Traceback",
-			wrapped = true,
-			description = table.concat(tracebackNames, "\n"),
-		}),
-		Roact.createElement("UIPadding", {
-			PaddingLeft = UDim.new(0, 58),
-			PaddingRight = UDim.new(0, 58),
-			PaddingTop = UDim.new(0, 6),
-			PaddingBottom = UDim.new(0, 6),
-		}),
-		Roact.createElement("UIListLayout", {
-			FillDirection = "Vertical",
-			Padding = UDim.new(),
-			VerticalAlignment = "Top",
-		}),
-	})
 	return Roact.createFragment(_children)
 end
 local default = withHooksPure(RowBody)
@@ -3664,21 +3731,33 @@ local function RowHeader(_param)
 			BackgroundTransparency = 1,
 		}),
 		Roact.createElement("ImageLabel", {
-			Image = "rbxassetid://9913356706",
+			Image = if signal.direction == "incoming" then "rbxassetid://9913356706" else "rbxassetid://9913356706",
 			ImageTransparency = rowButton.foreground,
 			Size = UDim2.new(0, 24, 0, 24),
 			Position = UDim2.new(0, 18, 0, 20),
 			BackgroundTransparency = 1,
 		}),
 		Roact.createElement("TextLabel", {
-			Text = (if signal.caller then formatEscapes(signal.caller.Name) else "No script") .. (" • " .. stringifyFunctionSignature(signal.callback)),
+			Text = if signal.direction == "incoming" then "↓ IN" else "↑ OUT",
+			Font = "GothamBold",
+			TextColor3 = if signal.direction == "incoming" then Color3.new(0.4, 0.8, 1) else Color3.new(1, 0.8, 0.4),
+			TextTransparency = rowButton.foreground,
+			TextSize = 10,
+			TextXAlignment = "Right",
+			TextYAlignment = "Center",
+			Size = UDim2.new(0, 40, 0, 12),
+			Position = UDim2.new(1, -90, 0, 26),
+			BackgroundTransparency = 1,
+		}),
+		Roact.createElement("TextLabel", {
+			Text = (if signal.caller then formatEscapes(signal.caller.Name) else "No script") .. (" • " .. (if signal.direction == "outgoing" and signal.callback then stringifyFunctionSignature(signal.callback) elseif signal.direction == "incoming" then "OnClientEvent" else "Unknown")),
 			Font = "Gotham",
 			TextColor3 = Color3.new(1, 1, 1),
 			TextTransparency = rowButton.foreground,
 			TextSize = 13,
 			TextXAlignment = "Left",
 			TextYAlignment = "Bottom",
-			Size = UDim2.new(1, -100, 0, 12),
+			Size = UDim2.new(1, -120, 0, 12),
 			Position = UDim2.new(0, 58, 0, 18),
 			BackgroundTransparency = 1,
 		}, {
@@ -3687,7 +3766,7 @@ local function RowHeader(_param)
 			}),
 		}),
 		Roact.createElement("TextLabel", {
-			Text = if signal.caller then formatEscapes(getInstancePath(signal.caller)) else "Not called from a script",
+			Text = if signal.caller then formatEscapes(getInstancePath(signal.caller)) elseif signal.direction == "incoming" then "Server → Client" else "Not called from a script",
 			Font = "Gotham",
 			TextColor3 = Color3.new(1, 1, 1),
 			TextTransparency = rowButton.foreground:map(function(t)
@@ -3696,7 +3775,7 @@ local function RowHeader(_param)
 			TextSize = 11,
 			TextXAlignment = "Left",
 			TextYAlignment = "Top",
-			Size = UDim2.new(1, -100, 0, 12),
+			Size = UDim2.new(1, -120, 0, 12),
 			Position = UDim2.new(0, 58, 0, 39),
 			BackgroundTransparency = 1,
 		}, {
@@ -5224,9 +5303,10 @@ local function FunctionTree()
 	local upperHidden = _binding.upperHidden
 	local upperSize = _binding.upperSize
 	local signal = useRootSelector(selectSignalSelected)
-	local isEmpty = not signal or #signal.traceback == 0
+	local hasTraceback = signal and (signal.direction == "outgoing" and #signal.traceback > 0)
+	local tracebackSize = if signal and signal.direction == "outgoing" then #signal.traceback else 0
 	local _result
-	if not isEmpty and signal then
+	if hasTraceback and signal.direction == "outgoing" then
 		local _traceback = signal.traceback
 		local _arg0 = function(fn, index)
 			return Roact.createElement(FunctionNode, {
@@ -5283,7 +5363,7 @@ local function FunctionTree()
 				AnchorPoint = Vector2.new(0.5, 0.5),
 				Position = UDim2.new(0.5, 0, 0.5, 0),
 				Size = UDim2.new(1, -20, 1, 0),
-				Text = "Select a signal to view function tree",
+				Text = if signal and signal.direction == "incoming" then "Function tree not available for incoming signals" else "Select a signal to view function tree",
 				Font = "Gotham",
 				TextColor3 = Color3.new(0.5, 0.5, 0.5),
 				TextSize = 12,
@@ -5297,7 +5377,7 @@ local function FunctionTree()
 	}
 	local _children = {
 		Roact.createElement(TitleBar, {
-			caption = "Function Tree" .. (if signal then " (" .. (tostring(#signal.traceback) .. ")") else ""),
+			caption = "Function Tree" .. (if signal then " (" .. (tostring(tracebackSize) .. ")") else ""),
 			hidden = upperHidden,
 			toggleHidden = function()
 				return setUpperHidden(not upperHidden)
@@ -7845,6 +7925,10 @@ local IsA = game.IsA
 local refs = {}
 local selectRemoteLog = makeSelectRemoteLog()
 
+-- Actor hook support
+local actorHooksEnabled = false
+local actorCommChannel = nil
+
 if not hookfunction then
 	return
 end
@@ -8019,9 +8103,131 @@ refs.BindableFunction_Invoke = hookfunction(BindableFunction_Invoke, function(se
 	return refs.BindableFunction_Invoke(self, ...)
 end)
 
-refs.__namecall = hookmetamethod(game, "__namecall", function(self, ...)
-	local method = getnamecallmethod()
+-- Incoming Signal Hooks (OnClientEvent / OnClientInvoke)
+-- This catches server-to-client communications
 
+local wrappedConnections = setmetatable({}, { __mode = "k" })
+local wrappedExistingConnections = setmetatable({}, { __mode = "k" })
+
+local function onIncomingReceive(remote, params, callingScript, callback)
+	task.defer(function()
+		if not store.isActive() then
+			return
+		end
+
+		local remoteId = getInstanceId(remote)
+
+		-- Check if logging is allowed
+		if not store.isRemoteAllowed(remoteId) then
+			return
+		end
+
+		-- Check type filters
+		if remote:IsA("RemoteEvent") and not store.isShowRemoteEvents() then
+			return
+		end
+		if remote:IsA("RemoteFunction") and not store.isShowRemoteFunctions() then
+			return
+		end
+
+		-- Filter out executor calls
+		if store.isNoExecutor() and checkcaller() then
+			return
+		end
+
+		local isActor = isFromActor(callingScript, callback)
+		if store.isNoActors() and isActor then
+			return
+		end
+
+		local signal = logger.createIncomingSignal(remote, callingScript, callback, params, isActor)
+
+		if store.get(function(state)
+			return selectRemoteLog(state, remoteId)
+		end) then
+			store.dispatch(logger.pushIncomingSignal(remoteId, signal))
+		else
+			local remoteLog = logger.createRemoteLog(remote, nil, signal)
+			store.dispatch(logger.pushRemoteLog(remoteLog))
+		end
+	end)
+end
+
+local function wrapCallback(remote, originalCallback, callingScript)
+	if not originalCallback or type(originalCallback) ~= "function" then
+		return originalCallback
+	end
+
+	return function(...)
+		onIncomingReceive(remote, { ... }, callingScript, originalCallback)
+		return originalCallback(...)
+	end
+end
+
+-- Track wrapped OnClientInvoke callbacks for RemoteFunctions
+local wrappedInvokeCallbacks = setmetatable({}, { __mode = "k" })
+
+-- Hook __index to track OnClientEvent signal accesses (RemoteFunctions use __newindex for OnClientInvoke)
+refs.__index = hookmetamethod(game, "__index", newcclosure(function(self, key)
+	local value = refs.__index(self, key)
+
+	-- Check if accessing OnClientEvent (RemoteEvents only - RemoteFunctions use callback assignment)
+	if store.isActive() and typeof(self) == "Instance" then
+		if key == "OnClientEvent" and self:IsA("RemoteEvent") then
+			-- Track the signal for Connect interception
+			if typeof(value) == "RBXScriptSignal" and not wrappedConnections[value] then
+				wrappedConnections[value] = { remote = self, signalType = key }
+			end
+		end
+	end
+
+	return value
+end))
+
+-- Hook __newindex to intercept OnClientInvoke callback assignments on RemoteFunctions
+refs.__newindex = hookmetamethod(game, "__newindex", newcclosure(function(self, key, value)
+	-- Check if setting OnClientInvoke on a RemoteFunction
+	if store.isActive() and typeof(self) == "Instance" and self:IsA("RemoteFunction") and key == "OnClientInvoke" then
+		if type(value) == "function" and not wrappedInvokeCallbacks[value] then
+			local originalCallback = value
+			local callingScript = getcallingscript()
+
+			-- Create wrapped callback
+			local wrappedCallback = function(...)
+				onIncomingReceive(self, { ... }, callingScript, originalCallback)
+				return originalCallback(...)
+			end
+
+			wrappedInvokeCallbacks[originalCallback] = true
+			wrappedInvokeCallbacks[wrappedCallback] = true -- Mark wrapped one too to avoid double-wrapping
+
+			-- Set the wrapped callback instead
+			return refs.__newindex(self, key, wrappedCallback)
+		end
+	end
+
+	return refs.__newindex(self, key, value)
+end))
+
+-- Combined __namecall hook for both outgoing signals and Connect wrapping
+refs.__namecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+	local method = getnamecallmethod()
+	local args = { ... }
+
+	-- Check if this is a Connect call on a tracked signal (for incoming)
+	if method == "Connect" and typeof(self) == "RBXScriptSignal" then
+		local signalInfo = wrappedConnections[self]
+		if signalInfo and store.isActive() then
+			local callback = args[1]
+			if callback and type(callback) == "function" then
+				local callingScript = getcallingscript()
+				args[1] = wrapCallback(signalInfo.remote, callback, callingScript)
+				return refs.__namecall(self, unpack(args))
+			end
+		end
+	end
+
+	-- Handle outgoing signals (FireServer, InvokeServer, etc.)
 	if
 		(store.isActive() and method == "FireServer" and IsA(self, "RemoteEvent")) or
 		(store.isActive() and method == "InvokeServer" and IsA(self, "RemoteFunction")) or
@@ -8035,10 +8241,280 @@ refs.__namecall = hookmetamethod(game, "__namecall", function(self, ...)
 			return -- Block the remote from firing
 		end
 
-		onReceive(self, { ... })
+		onReceive(self, args)
 	end
 
 	return refs.__namecall(self, ...)
+end))
+
+-- Hook existing connections on remotes (for connections made before spy loaded)
+local function hookExistingConnections()
+	if not getconnections then return end
+
+	local function processRemoteEvent(remote)
+		-- Only process RemoteEvents - RemoteFunctions use OnClientInvoke which is a callback, not a signal
+		if not remote:IsA("RemoteEvent") then return end
+
+		local signal = remote.OnClientEvent
+
+		if not signal then return end
+
+		local connections = getconnections(signal)
+		if not connections then return end
+
+		for _, connection in connections do
+			if connection and connection.Function and not wrappedExistingConnections[connection] then
+				wrappedExistingConnections[connection] = true
+
+				local originalFunc = connection.Function
+				local wrappedFunc = wrapCallback(remote, originalFunc, nil)
+
+				-- Replace the connection's function if possible
+				if connection.Disable and connection.Enable then
+					-- Some executors allow modifying connection.Function directly
+					pcall(function()
+						connection.Function = wrappedFunc
+					end)
+				end
+			end
+		end
+	end
+
+	-- Find all RemoteEvents (not RemoteFunctions - they use callbacks, not signals)
+	local function scanDescendants(parent)
+		for _, child in parent:GetDescendants() do
+			if child:IsA("RemoteEvent") then
+				pcall(processRemoteEvent, child)
+			end
+		end
+	end
+
+	pcall(scanDescendants, game)
+end
+
+-- Hook firesignal if available (used to replay OnClientEvent)
+if firesignal then
+	local originalFiresignal = firesignal
+	firesignal = newcclosure(function(signal, ...)
+		local args = { ... }
+
+		-- Try to get the remote from the signal
+		if typeof(signal) == "RBXScriptSignal" then
+			local signalInfo = wrappedConnections[signal]
+			if signalInfo and store.isActive() then
+				onIncomingReceive(signalInfo.remote, args, nil, nil)
+			end
+		end
+
+		return originalFiresignal(signal, ...)
+	end)
+end
+
+-- Initialize existing connection hooks
+task.defer(hookExistingConnections)
+
+-- Actor Hook System
+-- This catches remotes fired from Actor scripts (parallel Luau contexts)
+
+local function onActorReceive(remote, params, callingScript)
+	task.defer(function()
+		if not store.isActive() then
+			return
+		end
+
+		local remoteId = getInstanceId(remote)
+
+		-- Check if logging is allowed
+		if not store.isRemoteAllowed(remoteId) then
+			return
+		end
+
+		-- Check type filters
+		if remote:IsA("RemoteEvent") and not store.isShowRemoteEvents() then
+			return
+		end
+		if remote:IsA("RemoteFunction") and not store.isShowRemoteFunctions() then
+			return
+		end
+		if remote:IsA("BindableEvent") and not store.isShowBindableEvents() then
+			return
+		end
+		if remote:IsA("BindableFunction") and not store.isShowBindableFunctions() then
+			return
+		end
+
+		-- Filter out actor calls if NoActors is enabled
+		if store.isNoActors() then
+			return
+		end
+
+		local signal = logger.createOutgoingSignal(remote, callingScript, nil, {}, params, nil, true)
+
+		if store.get(function(state)
+			return selectRemoteLog(state, remoteId)
+		end) then
+			store.dispatch(logger.pushOutgoingSignal(remoteId, signal))
+		else
+			local remoteLog = logger.createRemoteLog(remote, signal)
+			store.dispatch(logger.pushRemoteLog(remoteLog))
+		end
+	end)
+end
+
+local function generateActorHookCode(channelId)
+	return [[
+		local channelId = ]] .. channelId .. [[
+
+		local commChannel = game:GetService("ReplicatedStorage"):FindFirstChild("__WAVIFIED_ACTOR_COMM_" .. channelId)
+		if not commChannel then return end
+
+		local refs = {}
+		local FireServer = Instance.new("RemoteEvent").FireServer
+		local InvokeServer = Instance.new("RemoteFunction").InvokeServer
+		local BindableEvent_Fire = Instance.new("BindableEvent").Fire
+		local BindableFunction_Invoke = Instance.new("BindableFunction").Invoke
+
+		local function sendToMain(remote, method, args)
+			pcall(function()
+				commChannel:Fire(remote, method, args, script)
+			end)
+		end
+
+		if hookfunction then
+			refs.FireServer = hookfunction(FireServer, function(self, ...)
+				if self and typeof(self) == "Instance" and self:IsA("RemoteEvent") then
+					sendToMain(self, "FireServer", {...})
+				end
+				return refs.FireServer(self, ...)
+			end)
+
+			refs.InvokeServer = hookfunction(InvokeServer, function(self, ...)
+				if self and typeof(self) == "Instance" and self:IsA("RemoteFunction") then
+					sendToMain(self, "InvokeServer", {...})
+				end
+				return refs.InvokeServer(self, ...)
+			end)
+
+			refs.BindableEvent_Fire = hookfunction(BindableEvent_Fire, function(self, ...)
+				if self and typeof(self) == "Instance" and self:IsA("BindableEvent") then
+					sendToMain(self, "Fire", {...})
+				end
+				return refs.BindableEvent_Fire(self, ...)
+			end)
+
+			refs.BindableFunction_Invoke = hookfunction(BindableFunction_Invoke, function(self, ...)
+				if self and typeof(self) == "Instance" and self:IsA("BindableFunction") then
+					sendToMain(self, "Invoke", {...})
+				end
+				return refs.BindableFunction_Invoke(self, ...)
+			end)
+		end
+
+		if hookmetamethod then
+			refs.__namecall = hookmetamethod(game, "__namecall", function(self, ...)
+				local method = getnamecallmethod()
+				if typeof(self) == "Instance" then
+					if (method == "FireServer" and self:IsA("RemoteEvent")) or
+					   (method == "InvokeServer" and self:IsA("RemoteFunction")) or
+					   (method == "Fire" and self:IsA("BindableEvent")) or
+					   (method == "Invoke" and self:IsA("BindableFunction")) then
+						sendToMain(self, method, {...})
+					end
+				end
+				return refs.__namecall(self, ...)
+			end)
+		end
+	]]
+end
+
+local function initActorHooks()
+	-- Check if executor supports actor functions
+	if not getactors or not run_on_actor then
+		return false
+	end
+
+	-- Generate unique channel ID
+	local channelId = math.random(100000, 999999)
+
+	-- Create communication channel in ReplicatedStorage
+	actorCommChannel = Instance.new("BindableEvent")
+	actorCommChannel.Name = "__WAVIFIED_ACTOR_COMM_" .. channelId
+	actorCommChannel.Parent = game:GetService("ReplicatedStorage")
+
+	-- Listen for actor hook data
+	actorCommChannel.Event:Connect(function(remote, method, args, callingScript)
+		if typeof(remote) == "Instance" then
+			onActorReceive(remote, args, callingScript)
+		end
+	end)
+
+	-- Generate hook code once
+	local actorCode = generateActorHookCode(channelId)
+
+	-- Track which actors we've already hooked
+	local hookedActors = {}
+
+	-- Function to hook a single actor
+	local function hookActor(actor)
+		if hookedActors[actor] then return end
+		hookedActors[actor] = true
+		pcall(run_on_actor, actor, actorCode)
+	end
+
+	-- Hook all existing actors
+	local actors = getactors()
+	if actors then
+		for _, actor in actors do
+			hookActor(actor)
+		end
+	end
+
+	-- Watch for newly created actors in common locations
+	local function watchForActors(parent)
+		if not parent then return end
+
+		pcall(function()
+			parent.DescendantAdded:Connect(function(descendant)
+				if descendant:IsA("Actor") then
+					task.defer(function()
+						hookActor(descendant)
+					end)
+				end
+			end)
+		end)
+	end
+
+	-- Watch common actor spawn locations
+	watchForActors(game:GetService("Workspace"))
+	watchForActors(game:GetService("ReplicatedStorage"))
+	watchForActors(game:GetService("ReplicatedFirst"))
+	pcall(function()
+		watchForActors(game:GetService("Players").LocalPlayer)
+	end)
+
+	-- Periodically check for new actors (backup method)
+	task.spawn(function()
+		while actorHooksEnabled do
+			task.wait(2)
+			local currentActors = getactors and getactors()
+			if currentActors then
+				for _, actor in currentActors do
+					hookActor(actor)
+				end
+			end
+		end
+	end)
+
+	actorHooksEnabled = true
+	return true
+end
+
+-- Initialize actor hooks
+task.defer(function()
+	local success = initActorHooks()
+	if success then
+		print("[Wavified-Spy] Actor hooks initialized successfully")
+	end
 end) end, _env("RemoteSpy.receiver"))() end)
 
 _module("reducers", "ModuleScript", "RemoteSpy.reducers", "RemoteSpy", function () return setfenv(function() -- Compiled with roblox-ts v1.3.3
@@ -8356,6 +8832,13 @@ local function pushOutgoingSignal(id, signal)
 		signal = signal,
 	}
 end
+local function pushIncomingSignal(id, signal)
+	return {
+		type = "PUSH_INCOMING_SIGNAL",
+		id = id,
+		signal = signal,
+	}
+end
 local function removeOutgoingSignal(id, signalId)
 	return {
 		type = "REMOVE_OUTGOING_SIGNAL",
@@ -8480,6 +8963,7 @@ return {
 	pushRemoteLog = pushRemoteLog,
 	removeRemoteLog = removeRemoteLog,
 	pushOutgoingSignal = pushOutgoingSignal,
+	pushIncomingSignal = pushIncomingSignal,
 	removeOutgoingSignal = removeOutgoingSignal,
 	clearOutgoingSignals = clearOutgoingSignals,
 	setRemoteSelected = setRemoteSelected,
@@ -8569,12 +9053,29 @@ local function remoteLogReducer(state, action)
 			end
 			-- ▲ ReadonlyArray.map ▲
 			_object[_left] = _newValue
+			local _left_1 = "incoming"
+			local _exp_1 = (action.log.incoming or {})
+			local _arg0_1 = function(signal)
+				local _object_1 = {}
+				for _k, _v in pairs(signal) do
+					_object_1[_k] = _v
+				end
+				_object_1.timestamp = os.clock()
+				return _object_1
+			end
+			-- ▼ ReadonlyArray.map ▼
+			local _newValue_1 = table.create(#_exp_1)
+			for _k, _v in ipairs(_exp_1) do
+				_newValue_1[_k] = _arg0_1(_v, _k - 1, _exp_1)
+			end
+			-- ▲ ReadonlyArray.map ▲
+			_object[_left_1] = _newValue_1
 			local logWithTimestamps = _object
 			local _object_1 = {}
 			for _k, _v in pairs(state) do
 				_object_1[_k] = _v
 			end
-			local _left_1 = "logs"
+			local _left_2 = "logs"
 			local _array = {}
 			local _length = #_array
 			local _array_1 = state.logs
@@ -8582,7 +9083,7 @@ local function remoteLogReducer(state, action)
 			table.move(_array_1, 1, _Length, _length + 1, _array)
 			_length += _Length
 			_array[_length + 1] = logWithTimestamps
-			_object_1[_left_1] = _array
+			_object_1[_left_2] = _array
 			return _object_1
 		end
 		if _exp == "REMOVE_REMOTE_LOG" then
@@ -8633,6 +9134,44 @@ local function remoteLogReducer(state, action)
 						_object_2[_k] = _v
 					end
 					_object_2.outgoing = outgoing
+					return _object_2
+				end
+				return log
+			end
+			-- ▼ ReadonlyArray.map ▼
+			local _newValue = table.create(#_logs)
+			for _k, _v in ipairs(_logs) do
+				_newValue[_k] = _arg0(_v, _k - 1, _logs)
+			end
+			-- ▲ ReadonlyArray.map ▲
+			_object[_left] = _newValue
+			return _object
+		end
+		if _exp == "PUSH_INCOMING_SIGNAL" then
+			local _object = {}
+			for _k, _v in pairs(state) do
+				_object[_k] = _v
+			end
+			local _left = "logs"
+			local _logs = state.logs
+			local _arg0 = function(log)
+				if log.id == action.id then
+					local _object_1 = {}
+					for _k, _v in pairs(action.signal) do
+						_object_1[_k] = _v
+					end
+					_object_1.timestamp = os.clock()
+					local signalWithTimestamp = _object_1
+					local _array = { signalWithTimestamp }
+					local _length = #_array
+					local _array_1 = (log.incoming or {})
+					table.move(_array_1, 1, #_array_1, _length + 1, _array)
+					local incoming = _array
+					local _object_2 = {}
+					for _k, _v in pairs(log) do
+						_object_2[_k] = _v
+					end
+					_object_2.incoming = incoming
 					return _object_2
 				end
 				return log
@@ -9022,8 +9561,8 @@ local selectRemoteLogsSorted = createSelector({ selectRemoteLogs }, function(log
 		if _condition == nil then
 			_condition = -math.huge
 		end
-		local aTimestamp = _condition
-		local _result_1 = b.outgoing[1]
+		local aOutgoing = _condition
+		local _result_1 = (a.incoming or {})[1]
 		if _result_1 ~= nil then
 			_result_1 = _result_1.timestamp
 		end
@@ -9031,7 +9570,27 @@ local selectRemoteLogsSorted = createSelector({ selectRemoteLogs }, function(log
 		if _condition_1 == nil then
 			_condition_1 = -math.huge
 		end
-		local bTimestamp = _condition_1
+		local aIncoming = _condition_1
+		local aTimestamp = math.max(aOutgoing, aIncoming)
+		local _result_2 = b.outgoing[1]
+		if _result_2 ~= nil then
+			_result_2 = _result_2.timestamp
+		end
+		local _condition_2 = _result_2
+		if _condition_2 == nil then
+			_condition_2 = -math.huge
+		end
+		local bOutgoing = _condition_2
+		local _result_3 = (b.incoming or {})[1]
+		if _result_3 ~= nil then
+			_result_3 = _result_3.timestamp
+		end
+		local _condition_3 = _result_3
+		if _condition_3 == nil then
+			_condition_3 = -math.huge
+		end
+		local bIncoming = _condition_3
+		local bTimestamp = math.max(bOutgoing, bIncoming)
 		return aTimestamp > bTimestamp
 	end
 	table.sort(_array, _arg0)
@@ -9156,17 +9715,68 @@ local makeSelectRemoteLogType = function()
 		return _result
 	end)
 end
+local makeSelectRemoteLogSignals = function()
+	return createSelector({ makeSelectRemoteLog() }, function(log)
+		if not log then
+			return nil
+		end
+		local _outgoing = log.outgoing
+		local _arg0 = function(s)
+			local _object = {}
+			for _k, _v in pairs(s) do
+				_object[_k] = _v
+			end
+			_object.direction = "outgoing"
+			return _object
+		end
+		-- ▼ ReadonlyArray.map ▼
+		local _newValue = table.create(#_outgoing)
+		for _k, _v in ipairs(_outgoing) do
+			_newValue[_k] = _arg0(_v, _k - 1, _outgoing)
+		end
+		-- ▲ ReadonlyArray.map ▲
+		local outgoing = _newValue
+		local _exp = (log.incoming or {})
+		local _arg0_1 = function(s)
+			local _object = {}
+			for _k, _v in pairs(s) do
+				_object[_k] = _v
+			end
+			_object.direction = "incoming"
+			return _object
+		end
+		-- ▼ ReadonlyArray.map ▼
+		local _newValue_1 = table.create(#_exp)
+		for _k, _v in ipairs(_exp) do
+			_newValue_1[_k] = _arg0_1(_v, _k - 1, _exp)
+		end
+		-- ▲ ReadonlyArray.map ▲
+		local incoming = _newValue_1
+		local _array = {}
+		local _length = #_array
+		local _outgoingLength = #outgoing
+		table.move(outgoing, 1, _outgoingLength, _length + 1, _array)
+		_length += _outgoingLength
+		table.move(incoming, 1, #incoming, _length + 1, _array)
+		local _arg0_2 = function(a, b)
+			return b.timestamp > a.timestamp
+		end
+		table.sort(_array, _arg0_2)
+		return _array
+	end)
+end
 local _selectOutgoing = makeSelectRemoteLogOutgoing()
+local _selectSignals = makeSelectRemoteLogSignals()
 local selectSignalSelected = createSelector({ function(state)
 	local _condition = selectSignalIdSelectedRemote(state)
 	if _condition == nil then
 		_condition = ""
 	end
-	return _selectOutgoing(state, _condition)
-end, selectSignalIdSelected }, function(outgoing, id)
+	return _selectSignals(state, _condition)
+end, selectSignalIdSelected }, function(signals, id)
 	local _result
-	if outgoing and id ~= nil then
-		local _result_1 = outgoing
+	if signals and id ~= nil then
+		local _result_1 = signals
 		if _result_1 ~= nil then
 			local _arg0 = function(signal)
 				return signal.id == id
@@ -9213,6 +9823,7 @@ return {
 	makeSelectRemoteLogOutgoing = makeSelectRemoteLogOutgoing,
 	makeSelectRemoteLogObject = makeSelectRemoteLogObject,
 	makeSelectRemoteLogType = makeSelectRemoteLogType,
+	makeSelectRemoteLogSignals = makeSelectRemoteLogSignals,
 	selectSignalSelected = selectSignalSelected,
 }
  end, _env("RemoteSpy.reducers.remote-log.selectors"))() end)
@@ -9225,7 +9836,7 @@ local getInstanceId = _instance_util.getInstanceId
 local getInstancePath = _instance_util.getInstancePath
 local stringifyFunctionSignature = TS.import(script, script.Parent.Parent.Parent, "utils", "function-util").stringifyFunctionSignature
 local nextId = 0
-local function createRemoteLog(object, signal)
+local function createRemoteLog(object, signal, incomingSignal)
 	local id = getInstanceId(object)
 	local remoteType = if object:IsA("RemoteEvent") then TabType.Event elseif object:IsA("RemoteFunction") then TabType.Function elseif object:IsA("BindableEvent") then TabType.BindableEvent else TabType.BindableFunction
 	return {
@@ -9233,6 +9844,7 @@ local function createRemoteLog(object, signal)
 		object = object,
 		type = remoteType,
 		outgoing = if signal then { signal } else {},
+		incoming = if incomingSignal then { incomingSignal } else {},
 	}
 end
 local function createOutgoingSignal(object, caller, callback, traceback, parameters, returns, isActor)
@@ -9255,7 +9867,28 @@ local function createOutgoingSignal(object, caller, callback, traceback, paramet
 	_object.timestamp = 0
 	return _object
 end
+local function createIncomingSignal(object, caller, callback, parameters, isActor)
+	local _object = {}
+	local _left = "id"
+	local _original = nextId
+	nextId += 1
+	_object[_left] = "signal-" .. tostring(_original)
+	_object.remote = object
+	_object.remoteId = getInstanceId(object)
+	_object.name = object.Name
+	_object.path = getInstancePath(object)
+	_object.pathFmt = getInstancePath(object)
+	_object.parameters = parameters
+	_object.caller = caller
+	_object.callback = callback
+	_object.isActor = isActor
+	_object.timestamp = 0
+	return _object
+end
 local function stringifySignalTraceback(signal)
+	if not signal.traceback or #signal.traceback == 0 then
+		return { "(no traceback available)" }
+	end
 	local _exp = signal.traceback
 	-- ▼ ReadonlyArray.map ▼
 	local _newValue = table.create(#_exp)
@@ -9265,6 +9898,9 @@ local function stringifySignalTraceback(signal)
 	-- ▲ ReadonlyArray.map ▲
 	local mapped = _newValue
 	local length = #mapped
+	if length == 0 then
+		return { "(no traceback available)" }
+	end
 	do
 		local i = 0
 		local _shouldIncrement = false
@@ -9282,12 +9918,15 @@ local function stringifySignalTraceback(signal)
 			mapped[length - i - 1 + 1] = temp
 		end
 	end
-	mapped[length - 1 + 1] = "→ " .. (mapped[length - 1 + 1] .. " ←")
+	if mapped[length - 1 + 1] ~= nil then
+		mapped[length - 1 + 1] = "→ " .. (mapped[length - 1 + 1] .. " ←")
+	end
 	return mapped
 end
 return {
 	createRemoteLog = createRemoteLog,
 	createOutgoingSignal = createOutgoingSignal,
+	createIncomingSignal = createIncomingSignal,
 	stringifySignalTraceback = stringifySignalTraceback,
 }
  end, _env("RemoteSpy.reducers.remote-log.utils"))() end)

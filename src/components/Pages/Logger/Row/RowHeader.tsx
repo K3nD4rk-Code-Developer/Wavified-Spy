@@ -76,7 +76,7 @@ function RowHeader({ signal, open, onClick }: Props) {
 				TextXAlignment="Right"
 				TextYAlignment="Center"
 				Size={new UDim2(0, 40, 0, 12)}
-				Position={new UDim2(1, -70, 0, 26)}
+				Position={new UDim2(1, -90, 0, 26)}
 				BackgroundTransparency={1}
 			/>
 

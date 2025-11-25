@@ -2,7 +2,7 @@ import Roact from "@rbxts/roact";
 import RowCaption from "./RowCaption";
 import RowDoubleCaption from "./RowDoubleCaption";
 import RowLine from "./RowLine";
-import { OutgoingSignal, stringifySignalTraceback } from "reducers/remote-log";
+import { Signal, OutgoingSignal, stringifySignalTraceback } from "reducers/remote-log";
 import { codify } from "utils/codify";
 import { describeFunction, stringifyFunctionSignature } from "utils/function-util";
 import { formatEscapes } from "utils/format-escapes";
@@ -10,15 +10,15 @@ import { getInstancePath } from "utils/instance-util";
 import { useMemo, withHooksPure } from "@rbxts/roact-hooked";
 
 interface Props {
-	signal: OutgoingSignal;
+	signal: Signal;
 }
 
 function stringifyTypesAndValues(list: Record<number, unknown>) {
-	const types = [];
-	const values = [];
+	const types: string[] = [];
+	const values: string[] = [];
 
 	for (const [index, value] of pairs(list)) {
-		if (index > 12) {
+		if ((index as number) > 12) {
 			types.push("...");
 			values.push("...");
 			break;
@@ -35,14 +35,30 @@ function stringifyTypesAndValues(list: Record<number, unknown>) {
 }
 
 function RowBody({ signal }: Props) {
-	const description = useMemo(() => describeFunction(signal.callback), []);
-	const tracebackNames = useMemo(() => stringifySignalTraceback(signal), []);
+	const isOutgoing = signal.direction === "outgoing";
+	const outgoingSignal = isOutgoing ? (signal as OutgoingSignal & { direction: "outgoing" }) : undefined;
+
+	const description = useMemo(() => {
+		if (outgoingSignal?.callback) {
+			return describeFunction(outgoingSignal.callback);
+		}
+		return { source: "N/A (incoming signal)" };
+	}, []);
+
+	const tracebackNames = useMemo(() => {
+		if (outgoingSignal) {
+			return stringifySignalTraceback(outgoingSignal);
+		}
+		return ["N/A (incoming signal)"];
+	}, []);
 
 	const [parameterTypes, parameterValues] = useMemo(() => stringifyTypesAndValues(signal.parameters), []);
-	const [returnTypes, returnValues] = useMemo(
-		() => (signal.returns ? stringifyTypesAndValues(signal.returns) : [["void"], ["void"]]),
-		[],
-	);
+	const [returnTypes, returnValues] = useMemo(() => {
+		if (outgoingSignal?.returns) {
+			return stringifyTypesAndValues(outgoingSignal.returns);
+		}
+		return [["N/A"], ["N/A"]];
+	}, []);
 
 	return (
 		<>
@@ -55,11 +71,12 @@ function RowBody({ signal }: Props) {
 				BackgroundTransparency={0.98}
 				BorderSizePixel={0}
 			>
+				<RowCaption text="Direction" description={isOutgoing ? "Outgoing (Client → Server)" : "Incoming (Server → Client)"} wrapped />
 				<RowCaption text="Remote name" description={formatEscapes(signal.name)} wrapped />
 				<RowCaption text="Remote location" description={formatEscapes(signal.path)} wrapped />
 				<RowCaption
 					text="Remote caller"
-					description={signal.caller ? formatEscapes(getInstancePath(signal.caller)) : "No script found"}
+					description={signal.caller ? formatEscapes(getInstancePath(signal.caller)) : isOutgoing ? "No script found" : "Server"}
 					wrapped
 				/>
 				<RowCaption
@@ -88,11 +105,11 @@ function RowBody({ signal }: Props) {
 						BorderSizePixel={0}
 					>
 						<RowDoubleCaption
-							text="Parameters"
+							text={isOutgoing ? "Parameters" : "Received Data"}
 							hint={parameterTypes.join("\n")}
 							description={parameterValues.join("\n")}
 						/>
-						{returnTypes && (
+						{isOutgoing && outgoingSignal?.returns && (
 							<RowDoubleCaption
 								text="Returns"
 								hint={returnTypes.join("\n")}
@@ -111,30 +128,34 @@ function RowBody({ signal }: Props) {
 				</>
 			)}
 
-			<RowLine />
+			{isOutgoing && outgoingSignal && (
+				<>
+					<RowLine />
 
-			<imagelabel
-				AutomaticSize="Y"
-				Image={"rbxassetid://9913871236"}
-				ImageColor3={new Color3(1, 1, 1)}
-				ImageTransparency={0.98}
-				ScaleType="Slice"
-				SliceCenter={new Rect(4, 4, 4, 4)}
-				Size={new UDim2(1, 0, 0, 0)}
-				BackgroundTransparency={1}
-			>
-				<RowCaption text="Signature" description={stringifyFunctionSignature(signal.callback)} wrapped />
-				<RowCaption text="Source" description={description.source} wrapped />
-				<RowCaption text="Traceback" wrapped description={tracebackNames.join("\n")} />
+					<imagelabel
+						AutomaticSize="Y"
+						Image={"rbxassetid://9913871236"}
+						ImageColor3={new Color3(1, 1, 1)}
+						ImageTransparency={0.98}
+						ScaleType="Slice"
+						SliceCenter={new Rect(4, 4, 4, 4)}
+						Size={new UDim2(1, 0, 0, 0)}
+						BackgroundTransparency={1}
+					>
+						<RowCaption text="Signature" description={outgoingSignal.callback ? stringifyFunctionSignature(outgoingSignal.callback) : "N/A"} wrapped />
+						<RowCaption text="Source" description={description.source} wrapped />
+						<RowCaption text="Traceback" wrapped description={tracebackNames.join("\n")} />
 
-				<uipadding
-					PaddingLeft={new UDim(0, 58)}
-					PaddingRight={new UDim(0, 58)}
-					PaddingTop={new UDim(0, 6)}
-					PaddingBottom={new UDim(0, 6)}
-				/>
-				<uilistlayout FillDirection="Vertical" Padding={new UDim()} VerticalAlignment="Top" />
-			</imagelabel>
+						<uipadding
+							PaddingLeft={new UDim(0, 58)}
+							PaddingRight={new UDim(0, 58)}
+							PaddingTop={new UDim(0, 6)}
+							PaddingBottom={new UDim(0, 6)}
+						/>
+						<uilistlayout FillDirection="Vertical" Padding={new UDim()} VerticalAlignment="Top" />
+					</imagelabel>
+				</>
+			)}
 		</>
 	);
 }

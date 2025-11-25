@@ -4,7 +4,7 @@ import Roact from "@rbxts/roact";
 import Row from "./Row";
 import Selection from "components/Selection";
 import { arrayToMap } from "@rbxts/roact-hooked-plus";
-import { makeSelectRemoteLogOutgoing, selectSignalIdSelected } from "reducers/remote-log";
+import { makeSelectRemoteLogSignals, selectSignalIdSelected } from "reducers/remote-log";
 import { useBinding, useMemo, withHooksPure } from "@rbxts/roact-hooked";
 import { useRootSelector } from "hooks/use-root-store";
 
@@ -13,18 +13,18 @@ interface Props {
 }
 
 function Logger({ id }: Props) {
-	const selectOutgoing = useMemo(makeSelectRemoteLogOutgoing, []);
+	const selectSignals = useMemo(makeSelectRemoteLogSignals, []);
 
-	const outgoing = useRootSelector((state) => selectOutgoing(state, id));
+	const signals = useRootSelector((state) => selectSignals(state, id));
 	const selection = useRootSelector(selectSignalIdSelected);
 	const selectionOrder = useMemo(
-		() => outgoing?.findIndex((signal) => signal.id === selection) ?? -1,
-		[outgoing, selection],
+		() => signals?.findIndex((signal) => signal.id === selection) ?? -1,
+		[signals, selection],
 	);
 
 	const [contentHeight, setContentHeight] = useBinding(0);
 
-	if (!outgoing) {
+	if (!signals) {
 		return <></>;
 	}
 
@@ -58,7 +58,7 @@ function Logger({ id }: Props) {
 
 				<Header id={id} />
 
-				{arrayToMap(outgoing, (signal, order) => [
+				{arrayToMap(signals, (signal, order) => [
 					signal.id,
 					<Row signal={signal} order={order} selected={selection === signal.id} />,
 				])}

@@ -84,3 +84,6 @@ export interface IncomingSignal {
 	isActor?: boolean;
 	timestamp: number;
 }
+
+// Combined signal type for UI display
+export type Signal = (OutgoingSignal & { direction: "outgoing" }) | (IncomingSignal & { direction: "incoming" });

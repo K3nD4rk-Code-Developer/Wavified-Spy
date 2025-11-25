@@ -2,12 +2,12 @@ import Container from "components/Container";
 import Roact from "@rbxts/roact";
 import RowBody from "./RowBody";
 import RowHeader from "./RowHeader";
-import { OutgoingSignal, toggleSignalSelected } from "reducers/remote-log";
+import { Signal, toggleSignalSelected } from "reducers/remote-log";
 import { useBinding, useCallback, withHooksPure } from "@rbxts/roact-hooked";
 import { useRootDispatch } from "hooks/use-root-store";
 
 interface Props {
-	signal: OutgoingSignal;
+	signal: Signal;
 	selected: boolean;
 	onHeightChange: (height: number) => void;
 }

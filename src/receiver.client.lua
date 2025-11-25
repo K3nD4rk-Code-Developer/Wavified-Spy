@@ -255,14 +255,16 @@ local function wrapCallback(remote, originalCallback, callingScript)
 	end
 end
 
--- Hook __index to track OnClientEvent/OnClientInvoke signal accesses
+-- Track wrapped OnClientInvoke callbacks for RemoteFunctions
+local wrappedInvokeCallbacks = setmetatable({}, { __mode = "k" })
+
+-- Hook __index to track OnClientEvent signal accesses (RemoteFunctions use __newindex for OnClientInvoke)
 refs.__index = hookmetamethod(game, "__index", newcclosure(function(self, key)
 	local value = refs.__index(self, key)
 
-	-- Check if accessing OnClientEvent or OnClientInvoke
+	-- Check if accessing OnClientEvent (RemoteEvents only - RemoteFunctions use callback assignment)
 	if store.isActive() and typeof(self) == "Instance" then
-		if (key == "OnClientEvent" and self:IsA("RemoteEvent")) or
-		   (key == "OnClientInvoke" and self:IsA("RemoteFunction")) then
+		if key == "OnClientEvent" and self:IsA("RemoteEvent") then
 			-- Track the signal for Connect interception
 			if typeof(value) == "RBXScriptSignal" and not wrappedConnections[value] then
 				wrappedConnections[value] = { remote = self, signalType = key }
@@ -271,6 +273,31 @@ refs.__index = hookmetamethod(game, "__index", newcclosure(function(self, key)
 	end
 
 	return value
+end))
+
+-- Hook __newindex to intercept OnClientInvoke callback assignments on RemoteFunctions
+refs.__newindex = hookmetamethod(game, "__newindex", newcclosure(function(self, key, value)
+	-- Check if setting OnClientInvoke on a RemoteFunction
+	if store.isActive() and typeof(self) == "Instance" and self:IsA("RemoteFunction") and key == "OnClientInvoke" then
+		if type(value) == "function" and not wrappedInvokeCallbacks[value] then
+			local originalCallback = value
+			local callingScript = getcallingscript()
+
+			-- Create wrapped callback
+			local wrappedCallback = function(...)
+				onIncomingReceive(self, { ... }, callingScript, originalCallback)
+				return originalCallback(...)
+			end
+
+			wrappedInvokeCallbacks[originalCallback] = true
+			wrappedInvokeCallbacks[wrappedCallback] = true -- Mark wrapped one too to avoid double-wrapping
+
+			-- Set the wrapped callback instead
+			return refs.__newindex(self, key, wrappedCallback)
+		end
+	end
+
+	return refs.__newindex(self, key, value)
 end))
 
 -- Combined __namecall hook for both outgoing signals and Connect wrapping
@@ -315,9 +342,11 @@ end))
 local function hookExistingConnections()
 	if not getconnections then return end
 
-	local function processRemote(remote)
-		local signalName = remote:IsA("RemoteEvent") and "OnClientEvent" or "OnClientInvoke"
-		local signal = remote[signalName]
+	local function processRemoteEvent(remote)
+		-- Only process RemoteEvents - RemoteFunctions use OnClientInvoke which is a callback, not a signal
+		if not remote:IsA("RemoteEvent") then return end
+
+		local signal = remote.OnClientEvent
 
 		if not signal then return end
 
@@ -342,11 +371,11 @@ local function hookExistingConnections()
 		end
 	end
 
-	-- Find all RemoteEvents and RemoteFunctions
+	-- Find all RemoteEvents (not RemoteFunctions - they use callbacks, not signals)
 	local function scanDescendants(parent)
 		for _, child in parent:GetDescendants() do
-			if child:IsA("RemoteEvent") or child:IsA("RemoteFunction") then
-				pcall(processRemote, child)
+			if child:IsA("RemoteEvent") then
+				pcall(processRemoteEvent, child)
 			end
 		end
 	end

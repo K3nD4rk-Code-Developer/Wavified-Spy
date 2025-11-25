@@ -76,8 +76,17 @@ export function createIncomingSignal(
 }
 
 export function stringifySignalTraceback(signal: OutgoingSignal) {
+	// Guard against empty or undefined traceback
+	if (!signal.traceback || signal.traceback.size() === 0) {
+		return ["(no traceback available)"];
+	}
+
 	const mapped = signal.traceback.map(stringifyFunctionSignature);
 	const length = mapped.size();
+
+	if (length === 0) {
+		return ["(no traceback available)"];
+	}
 
 	// Reverse order so that the remote caller is last.
 	for (let i = 0; i < length / 2; i++) {
@@ -87,7 +96,9 @@ export function stringifySignalTraceback(signal: OutgoingSignal) {
 	}
 
 	// Highlight the remote caller.
-	mapped[length - 1] = `→ ${mapped[length - 1]} ←`;
+	if (mapped[length - 1] !== undefined) {
+		mapped[length - 1] = `→ ${mapped[length - 1]} ←`;
+	}
 
 	return mapped;
 }

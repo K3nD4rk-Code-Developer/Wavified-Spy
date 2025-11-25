@@ -27,6 +27,10 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 					...signal,
 					timestamp: os.clock(),
 				})),
+				incoming: (action.log.incoming || []).map((signal) => ({
+					...signal,
+					timestamp: os.clock(),
+				})),
 			};
 			return {
 				...state,
@@ -51,6 +55,24 @@ export default function remoteLogReducer(state = initialState, action: RemoteLog
 						return {
 							...log,
 							outgoing,
+						};
+					}
+					return log;
+				}),
+			};
+		case "PUSH_INCOMING_SIGNAL":
+			return {
+				...state,
+				logs: state.logs.map((log) => {
+					if (log.id === action.id) {
+						const signalWithTimestamp = {
+							...action.signal,
+							timestamp: os.clock(),
+						};
+						const incoming = [signalWithTimestamp, ...(log.incoming || [])];
+						return {
+							...log,
+							incoming,
 						};
 					}
 					return log;

@@ -194,9 +194,103 @@ refs.BindableFunction_Invoke = hookfunction(BindableFunction_Invoke, function(se
 	return refs.BindableFunction_Invoke(self, ...)
 end)
 
-refs.__namecall = hookmetamethod(game, "__namecall", function(self, ...)
-	local method = getnamecallmethod()
+-- Incoming Signal Hooks (OnClientEvent / OnClientInvoke)
+-- This catches server-to-client communications
 
+local wrappedConnections = setmetatable({}, { __mode = "k" })
+
+local function onIncomingReceive(remote, params, callingScript, callback)
+	task.defer(function()
+		if not store.isActive() then
+			return
+		end
+
+		local remoteId = getInstanceId(remote)
+
+		-- Check if logging is allowed
+		if not store.isRemoteAllowed(remoteId) then
+			return
+		end
+
+		-- Check type filters
+		if remote:IsA("RemoteEvent") and not store.isShowRemoteEvents() then
+			return
+		end
+		if remote:IsA("RemoteFunction") and not store.isShowRemoteFunctions() then
+			return
+		end
+
+		-- Filter out executor calls
+		if store.isNoExecutor() and checkcaller() then
+			return
+		end
+
+		local isActor = isFromActor(callingScript, callback)
+		if store.isNoActors() and isActor then
+			return
+		end
+
+		local signal = logger.createIncomingSignal(remote, callingScript, callback, params, isActor)
+
+		if store.get(function(state)
+			return selectRemoteLog(state, remoteId)
+		end) then
+			store.dispatch(logger.pushIncomingSignal(remoteId, signal))
+		else
+			local remoteLog = logger.createRemoteLog(remote, nil, signal)
+			store.dispatch(logger.pushRemoteLog(remoteLog))
+		end
+	end)
+end
+
+local function wrapCallback(remote, originalCallback, callingScript)
+	if not originalCallback or type(originalCallback) ~= "function" then
+		return originalCallback
+	end
+
+	return function(...)
+		onIncomingReceive(remote, { ... }, callingScript, originalCallback)
+		return originalCallback(...)
+	end
+end
+
+-- Hook __index to track OnClientEvent/OnClientInvoke signal accesses
+refs.__index = hookmetamethod(game, "__index", newcclosure(function(self, key)
+	local value = refs.__index(self, key)
+
+	-- Check if accessing OnClientEvent or OnClientInvoke
+	if store.isActive() and typeof(self) == "Instance" then
+		if (key == "OnClientEvent" and self:IsA("RemoteEvent")) or
+		   (key == "OnClientInvoke" and self:IsA("RemoteFunction")) then
+			-- Track the signal for Connect interception
+			if typeof(value) == "RBXScriptSignal" and not wrappedConnections[value] then
+				wrappedConnections[value] = { remote = self, signalType = key }
+			end
+		end
+	end
+
+	return value
+end))
+
+-- Combined __namecall hook for both outgoing signals and Connect wrapping
+refs.__namecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+	local method = getnamecallmethod()
+	local args = { ... }
+
+	-- Check if this is a Connect call on a tracked signal (for incoming)
+	if method == "Connect" and typeof(self) == "RBXScriptSignal" then
+		local signalInfo = wrappedConnections[self]
+		if signalInfo and store.isActive() then
+			local callback = args[1]
+			if callback and type(callback) == "function" then
+				local callingScript = getcallingscript()
+				args[1] = wrapCallback(signalInfo.remote, callback, callingScript)
+				return refs.__namecall(self, unpack(args))
+			end
+		end
+	end
+
+	-- Handle outgoing signals (FireServer, InvokeServer, etc.)
 	if
 		(store.isActive() and method == "FireServer" and IsA(self, "RemoteEvent")) or
 		(store.isActive() and method == "InvokeServer" and IsA(self, "RemoteFunction")) or
@@ -210,11 +304,11 @@ refs.__namecall = hookmetamethod(game, "__namecall", function(self, ...)
 			return -- Block the remote from firing
 		end
 
-		onReceive(self, { ... })
+		onReceive(self, args)
 	end
 
 	return refs.__namecall(self, ...)
-end)
+end))
 
 -- Actor Hook System
 -- This catches remotes fired from Actor scripts (parallel Luau contexts)

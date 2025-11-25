@@ -1,4 +1,4 @@
-import { OutgoingSignal, RemoteLog } from "./model";
+import { IncomingSignal, OutgoingSignal, RemoteLog } from "./model";
 import { TabType } from "reducers/tab-group";
 import { getInstanceId, getInstancePath } from "utils/instance-util";
 import { stringifyFunctionSignature } from "utils/function-util";
@@ -8,6 +8,7 @@ let nextId = 0;
 export function createRemoteLog(
 	object: RemoteEvent | RemoteFunction | BindableEvent | BindableFunction,
 	signal?: OutgoingSignal,
+	incomingSignal?: IncomingSignal,
 ): RemoteLog {
 	const id = getInstanceId(object);
 	const remoteType = object.IsA("RemoteEvent")
@@ -17,7 +18,13 @@ export function createRemoteLog(
 			: object.IsA("BindableEvent")
 				? TabType.BindableEvent
 				: TabType.BindableFunction;
-	return { id, object, type: remoteType, outgoing: signal ? [signal] : [] };
+	return {
+		id,
+		object,
+		type: remoteType,
+		outgoing: signal ? [signal] : [],
+		incoming: incomingSignal ? [incomingSignal] : [],
+	};
 }
 
 export function createOutgoingSignal(
@@ -43,6 +50,28 @@ export function createOutgoingSignal(
 		traceback,
 		isActor,
 		timestamp: 0, // Will be set by reducer when pushed to store
+	};
+}
+
+export function createIncomingSignal(
+	object: RemoteEvent | RemoteFunction | BindableEvent | BindableFunction,
+	caller: LocalScript | ModuleScript | undefined,
+	callback: Callback | undefined,
+	parameters: Record<number, unknown>,
+	isActor?: boolean,
+): IncomingSignal {
+	return {
+		id: `signal-${nextId++}`,
+		remote: object,
+		remoteId: getInstanceId(object),
+		name: object.Name,
+		path: getInstancePath(object),
+		pathFmt: getInstancePath(object),
+		parameters,
+		caller,
+		callback,
+		isActor,
+		timestamp: 0,
 	};
 }
 

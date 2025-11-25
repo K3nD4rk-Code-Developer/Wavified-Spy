@@ -1,4 +1,4 @@
-import { InspectionResult, OutgoingSignal, PathNotation, RemoteLog } from "./model";
+import { IncomingSignal, InspectionResult, OutgoingSignal, PathNotation, RemoteLog } from "./model";
 import { PersistedSettings } from "utils/settings-persistence";
 
 export function pushRemoteLog(log: RemoteLog) {
@@ -11,6 +11,10 @@ export function removeRemoteLog(id: string) {
 
 export function pushOutgoingSignal(id: string, signal: OutgoingSignal) {
 	return { type: "PUSH_OUTGOING_SIGNAL", id, signal } as const;
+}
+
+export function pushIncomingSignal(id: string, signal: IncomingSignal) {
+	return { type: "PUSH_INCOMING_SIGNAL", id, signal } as const;
 }
 
 export function removeOutgoingSignal(id: string, signalId: string) {
@@ -101,6 +105,7 @@ export type RemoteLogActions =
 	| ReturnType<typeof pushRemoteLog>
 	| ReturnType<typeof removeRemoteLog>
 	| ReturnType<typeof pushOutgoingSignal>
+	| ReturnType<typeof pushIncomingSignal>
 	| ReturnType<typeof removeOutgoingSignal>
 	| ReturnType<typeof clearOutgoingSignals>
 	| ReturnType<typeof setRemoteSelected>

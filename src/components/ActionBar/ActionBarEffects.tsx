@@ -144,9 +144,16 @@ function ActionBarEffects() {
 
 	useActionEffect("copyScript", () => {
 		// Check if we're viewing a script tab
-		if (currentTab?.type === TabType.Script && currentTab.scriptContent) {
-			setclipboard?.(currentTab.scriptContent);
-		} else if (signal) {
+		if (currentTab?.type === TabType.Script) {
+			const scriptData = store.getState().script.scripts[currentTab.id];
+			if (scriptData?.content) {
+				setclipboard?.(scriptData.content);
+				notify("Copied script to clipboard");
+				return;
+			}
+		}
+
+		if (signal) {
 			// Convert Record<number, unknown> to sequential array
 			const paramEntries: [number, unknown][] = [];
 			for (const [key, value] of pairs(signal.parameters)) {
@@ -442,7 +449,7 @@ function ActionBarEffects() {
 
 		dispatch(setActionEnabled("traceback", signalEnabled));
 		dispatch(setActionEnabled("copyPath", remoteEnabled || !isHome));
-		dispatch(setActionEnabled("copyScript", signalEnabled));
+		dispatch(setActionEnabled("copyScript", signalEnabled || isScript));
 		dispatch(setActionEnabled("viewScript", signalEnabled || (isInspection && inspectionResult?.rawScript !== undefined)));
 
 		dispatch(setActionEnabled("pauseRemote", hasMultiSelect || remoteEnabled));
@@ -483,6 +490,9 @@ function ActionBarEffects() {
 		// Update block all button caption
 		const allBlocked = allLogs.size() > 0 && allLogs.every((log) => blockedRemotes.has(log.id));
 		dispatch(setActionCaption("blockAll", allBlocked ? "Unblock All" : "Block All"));
+
+		// Update copyScript button caption - "Copy" when viewing script, "Generate" otherwise
+		dispatch(setActionCaption("copyScript", currentTab?.type === TabType.Script ? "Copy" : "Generate"));
 	}, [paused, pausedRemotes, blockedRemotes, remoteId, currentTab, allLogs]);
 
 	return <></>;

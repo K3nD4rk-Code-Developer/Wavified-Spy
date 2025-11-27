@@ -807,16 +807,22 @@ local function ActionBarEffects()
 		if _result ~= nil then
 			_result = _result.type
 		end
-		local _condition = _result == TabType.Script
-		if _condition then
-			_condition = currentTab.scriptContent
-		end
-		if _condition ~= "" and _condition then
-			local _result_1 = setclipboard
+		if _result == TabType.Script then
+			local scriptData = store:getState().script.scripts[currentTab.id]
+			local _result_1 = scriptData
 			if _result_1 ~= nil then
-				_result_1(currentTab.scriptContent)
+				_result_1 = _result_1.content
 			end
-		elseif signal then
+			if _result_1 ~= "" and _result_1 then
+				local _result_2 = setclipboard
+				if _result_2 ~= nil then
+					_result_2(scriptData.content)
+				end
+				notify("Copied script to clipboard")
+				return nil
+			end
+		end
+		if signal then
 			local paramEntries = {}
 			for key, value in pairs(signal.parameters) do
 				local _arg0 = { key, value }
@@ -1188,7 +1194,7 @@ local function ActionBarEffects()
 		dispatch(setActionEnabled("delete", canDelete))
 		dispatch(setActionEnabled("traceback", signalEnabled))
 		dispatch(setActionEnabled("copyPath", remoteEnabled or not isHome))
-		dispatch(setActionEnabled("copyScript", signalEnabled))
+		dispatch(setActionEnabled("copyScript", signalEnabled or isScript))
 		local _condition_2 = signalEnabled
 		if not _condition_2 then
 			local _condition_3 = isInspection
@@ -1245,6 +1251,11 @@ local function ActionBarEffects()
 		end
 		local allBlocked = _condition_1
 		dispatch(setActionCaption("blockAll", if allBlocked then "Unblock All" else "Block All"))
+		local _result = currentTab
+		if _result ~= nil then
+			_result = _result.type
+		end
+		dispatch(setActionCaption("copyScript", if _result == TabType.Script then "Copy" else "Generate"))
 	end, { paused, pausedRemotes, blockedRemotes, remoteId, currentTab, allLogs })
 	return Roact.createFragment()
 end

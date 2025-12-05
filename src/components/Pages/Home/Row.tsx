@@ -82,9 +82,24 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 			cornerRadius={new UDim(0, 4)}
 			layoutOrder={order}
 		>
-			{/* Transparent background box */}
+			{/* Order number - outside the box */}
+			<textlabel
+				Text={`${order + 1}.`}
+				Font="GothamBold"
+				TextColor3={new Color3(1, 1, 1)}
+				TextTransparency={foregroundTransparency.map((t) => multiply(t, 0.4))}
+				TextSize={15}
+				TextXAlignment="Right"
+				TextYAlignment="Center"
+				Size={new UDim2(0, 32, 1, 0)}
+				Position={new UDim2(0, 0, 0, 0)}
+				BackgroundTransparency={1}
+			/>
+
+			{/* Transparent background box - offset to not cover number */}
 			<frame
-				Size={new UDim2(1, 0, 1, 0)}
+				Size={new UDim2(1, -40, 1, 0)}
+				Position={new UDim2(0, 40, 0, 0)}
 				BackgroundColor3={new Color3(1, 1, 1)}
 				BackgroundTransparency={0.92}
 				BorderSizePixel={0}
@@ -94,7 +109,8 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 
 			{/* Hover highlight */}
 			<frame
-				Size={new UDim2(1, 0, 1, 0)}
+				Size={new UDim2(1, -40, 1, 0)}
+				Position={new UDim2(0, 40, 0, 0)}
 				BackgroundColor3={new Color3(1, 1, 1)}
 				BackgroundTransparency={backgroundTransparency}
 				BorderSizePixel={0}
@@ -104,7 +120,8 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 
 			{/* Selection highlight */}
 			<frame
-				Size={new UDim2(1, 0, 1, 0)}
+				Size={new UDim2(1, -40, 1, 0)}
+				Position={new UDim2(0, 40, 0, 0)}
 				BackgroundColor3={new Color3(1, 1, 1)}
 				BackgroundTransparency={highlight}
 			>
@@ -114,7 +131,8 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 			{/* Multi-select indicator (blue border) */}
 			{multiSelected && (
 				<frame
-					Size={new UDim2(1, 0, 1, 0)}
+					Size={new UDim2(1, -40, 1, 0)}
+					Position={new UDim2(0, 40, 0, 0)}
 					BackgroundTransparency={1}
 					BorderSizePixel={0}
 				>
@@ -122,20 +140,6 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 					<uistroke Color={Color3.fromRGB(0, 170, 255)} Thickness={2} />
 				</frame>
 			)}
-
-			{/* Order number */}
-			<textlabel
-				Text={`${order + 1}.`}
-				Font="GothamBold"
-				TextColor3={new Color3(1, 1, 1)}
-				TextTransparency={foregroundTransparency.map((t) => multiply(t, 0.4))}
-				TextSize={12}
-				TextXAlignment="Right"
-				TextYAlignment="Center"
-				Size={new UDim2(0, 28, 1, 0)}
-				Position={new UDim2(0, 6, 0, 0)}
-				BackgroundTransparency={1}
-			/>
 
 			{/* Icon */}
 			<imagelabel
@@ -152,7 +156,7 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 				}
 				ImageTransparency={foregroundTransparency}
 				Size={new UDim2(0, 24, 0, 24)}
-				Position={new UDim2(0, 42, 0, 20)}
+				Position={new UDim2(0, 52, 0, 20)}
 				BackgroundTransparency={1}
 			/>
 
@@ -167,8 +171,8 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 				TextSize={13}
 				TextXAlignment="Left"
 				TextYAlignment="Bottom"
-				Size={new UDim2(1, -100, 0, 12)}
-				Position={new UDim2(0, 76, 0, 18)}
+				Size={new UDim2(1, -120, 0, 12)}
+				Position={new UDim2(0, 86, 0, 18)}
 				BackgroundTransparency={1}
 			>
 				<uigradient
@@ -191,8 +195,8 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 				TextSize={11}
 				TextXAlignment="Left"
 				TextYAlignment="Top"
-				Size={new UDim2(1, -100, 0, 12)}
-				Position={new UDim2(0, 76, 0, 39)}
+				Size={new UDim2(1, -120, 0, 12)}
+				Position={new UDim2(0, 86, 0, 39)}
 				BackgroundTransparency={1}
 			>
 				<uigradient

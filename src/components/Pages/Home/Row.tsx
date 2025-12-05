@@ -78,17 +78,37 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 			onHoverEnd={() => setGoal(ROW_DEFAULT)}
 			size={new UDim2(1, 0, 0, 64)}
 			position={yOffset.map((y) => new UDim2(0, 0, 0, y))}
-			transparency={backgroundTransparency}
+			transparency={1}
 			cornerRadius={new UDim(0, 4)}
 			layoutOrder={order}
 		>
+			{/* Transparent background box */}
+			<frame
+				Size={new UDim2(1, 0, 1, 0)}
+				BackgroundColor3={new Color3(1, 1, 1)}
+				BackgroundTransparency={0.92}
+				BorderSizePixel={0}
+			>
+				<uicorner CornerRadius={new UDim(0, 6)} />
+			</frame>
+
+			{/* Hover highlight */}
+			<frame
+				Size={new UDim2(1, 0, 1, 0)}
+				BackgroundColor3={new Color3(1, 1, 1)}
+				BackgroundTransparency={backgroundTransparency}
+				BorderSizePixel={0}
+			>
+				<uicorner CornerRadius={new UDim(0, 6)} />
+			</frame>
+
 			{/* Selection highlight */}
 			<frame
 				Size={new UDim2(1, 0, 1, 0)}
 				BackgroundColor3={new Color3(1, 1, 1)}
 				BackgroundTransparency={highlight}
 			>
-				<uicorner CornerRadius={new UDim(0, 4)} />
+				<uicorner CornerRadius={new UDim(0, 6)} />
 			</frame>
 
 			{/* Multi-select indicator (blue border) */}
@@ -98,10 +118,24 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 					BackgroundTransparency={1}
 					BorderSizePixel={0}
 				>
-					<uicorner CornerRadius={new UDim(0, 4)} />
+					<uicorner CornerRadius={new UDim(0, 6)} />
 					<uistroke Color={Color3.fromRGB(0, 170, 255)} Thickness={2} />
 				</frame>
 			)}
+
+			{/* Order number */}
+			<textlabel
+				Text={`${order + 1}.`}
+				Font="GothamBold"
+				TextColor3={new Color3(1, 1, 1)}
+				TextTransparency={foregroundTransparency.map((t) => multiply(t, 0.4))}
+				TextSize={12}
+				TextXAlignment="Right"
+				TextYAlignment="Center"
+				Size={new UDim2(0, 28, 1, 0)}
+				Position={new UDim2(0, 6, 0, 0)}
+				BackgroundTransparency={1}
+			/>
 
 			{/* Icon */}
 			<imagelabel
@@ -118,7 +152,7 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 				}
 				ImageTransparency={foregroundTransparency}
 				Size={new UDim2(0, 24, 0, 24)}
-				Position={new UDim2(0, 18, 0, 20)}
+				Position={new UDim2(0, 42, 0, 20)}
 				BackgroundTransparency={1}
 			/>
 
@@ -134,7 +168,7 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 				TextXAlignment="Left"
 				TextYAlignment="Bottom"
 				Size={new UDim2(1, -100, 0, 12)}
-				Position={new UDim2(0, 58, 0, 18)}
+				Position={new UDim2(0, 76, 0, 18)}
 				BackgroundTransparency={1}
 			>
 				<uigradient
@@ -158,7 +192,7 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 				TextXAlignment="Left"
 				TextYAlignment="Top"
 				Size={new UDim2(1, -100, 0, 12)}
-				Position={new UDim2(0, 58, 0, 39)}
+				Position={new UDim2(0, 76, 0, 39)}
 				BackgroundTransparency={1}
 			>
 				<uigradient

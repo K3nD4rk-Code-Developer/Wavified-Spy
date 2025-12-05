@@ -197,7 +197,7 @@ function Traceback() {
 						BackgroundTransparency={1}
 					/>
 				</frame>
-			))}
+			)}
 		</Container>
 	);
 }

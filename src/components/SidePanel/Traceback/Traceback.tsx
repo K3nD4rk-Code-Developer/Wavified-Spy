@@ -87,14 +87,14 @@ function Traceback() {
 	const isEmpty = callStack.size() === 0;
 
 	return (
-		<Container size={lowerSize} position={lowerPosition}>
+		<Container size={lowerSize} position={lowerPosition} clipChildren={true}>
 			<TitleBar
 				caption={`Traceback (${callStack.size()})`}
 				hidden={lowerHidden}
 				toggleHidden={() => setLowerHidden(!lowerHidden)}
 			/>
 
-			{!lowerHidden && (!isEmpty && signal ? (
+			{!isEmpty && signal ? (
 				<scrollingframe
 					Size={new UDim2(1, 0, 1, -30)}
 					Position={new UDim2(0, 0, 0, 30)}

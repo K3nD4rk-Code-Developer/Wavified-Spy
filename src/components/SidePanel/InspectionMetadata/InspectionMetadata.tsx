@@ -14,14 +14,14 @@ function InspectionMetadata() {
 	const isEmpty = !selectedResult;
 
 	return (
-		<Container size={upperSize}>
+		<Container size={upperSize} clipChildren={true}>
 			<TitleBar
 				caption={`Metadata${selectedResult ? ` - ${selectedResult.name}` : ""}`}
 				hidden={upperHidden}
 				toggleHidden={() => setUpperHidden(!upperHidden)}
 			/>
 
-			{!upperHidden && (!isEmpty ? (
+			{!isEmpty ? (
 				<scrollingframe
 					Size={new UDim2(1, 0, 1, -30)}
 					Position={new UDim2(0, 0, 0, 30)}
@@ -216,7 +216,7 @@ function InspectionMetadata() {
 						BackgroundTransparency={1}
 					/>
 				</frame>
-			))}
+			)}
 		</Container>
 	);
 }

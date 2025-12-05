@@ -14,14 +14,14 @@ function InspectionUpvalues() {
 	const upvalueCount = selectedResult?.rawUpvalues?.size() ?? 0;
 
 	return (
-		<Container size={middleSize} position={middlePosition}>
+		<Container size={middleSize} position={middlePosition} clipChildren={true}>
 			<TitleBar
 				caption={`Upvalues${upvalueCount > 0 ? ` (${upvalueCount})` : ""}`}
 				hidden={middleHidden}
 				toggleHidden={() => setMiddleHidden(!middleHidden)}
 			/>
 
-			{!middleHidden && (!isEmpty ? (
+			{!isEmpty ? (
 				<scrollingframe
 					Size={new UDim2(1, 0, 1, -30)}
 					Position={new UDim2(0, 0, 0, 30)}
@@ -99,7 +99,7 @@ function InspectionUpvalues() {
 						BackgroundTransparency={1}
 					/>
 				</frame>
-			))}
+			)}
 		</Container>
 	);
 }

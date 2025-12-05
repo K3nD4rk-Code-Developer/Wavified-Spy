@@ -2034,29 +2034,65 @@ local function Row(_param)
 		position = yOffset:map(function(y)
 			return UDim2.new(0, 0, 0, y)
 		end),
-		transparency = backgroundTransparency,
+		transparency = 1,
 		cornerRadius = UDim.new(0, 4),
 		layoutOrder = order,
 	}
 	local _children = {
+		Roact.createElement("TextLabel", {
+			Text = tostring(order + 1) .. ".",
+			Font = "GothamBold",
+			TextColor3 = Color3.new(1, 1, 1),
+			TextTransparency = 0.4,
+			TextSize = 15,
+			TextXAlignment = "Right",
+			TextYAlignment = "Center",
+			Size = UDim2.new(0, 28, 1, 0),
+			Position = UDim2.new(0, -8, 0, 0),
+			BackgroundTransparency = 1,
+		}),
 		Roact.createElement("Frame", {
-			Size = UDim2.new(1, 0, 1, 0),
+			Size = UDim2.new(1, -40, 1, 0),
+			Position = UDim2.new(0, 40, 0, 0),
+			BackgroundColor3 = Color3.new(0.89, 0.89, 0.89),
+			BackgroundTransparency = 0.96,
+			BorderSizePixel = 0,
+		}, {
+			Roact.createElement("UICorner", {
+				CornerRadius = UDim.new(0, 6),
+			}),
+		}),
+		Roact.createElement("Frame", {
+			Size = UDim2.new(1, -40, 1, 0),
+			Position = UDim2.new(0, 40, 0, 0),
+			BackgroundColor3 = Color3.new(1, 1, 1),
+			BackgroundTransparency = backgroundTransparency,
+			BorderSizePixel = 0,
+		}, {
+			Roact.createElement("UICorner", {
+				CornerRadius = UDim.new(0, 6),
+			}),
+		}),
+		Roact.createElement("Frame", {
+			Size = UDim2.new(1, -40, 1, 0),
+			Position = UDim2.new(0, 40, 0, 0),
 			BackgroundColor3 = Color3.new(1, 1, 1),
 			BackgroundTransparency = highlight,
 		}, {
 			Roact.createElement("UICorner", {
-				CornerRadius = UDim.new(0, 4),
+				CornerRadius = UDim.new(0, 6),
 			}),
 		}),
 	}
 	local _length = #_children
 	local _child = multiSelected and (Roact.createElement("Frame", {
-		Size = UDim2.new(1, 0, 1, 0),
+		Size = UDim2.new(1, -40, 1, 0),
+		Position = UDim2.new(0, 40, 0, 0),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 	}, {
 		Roact.createElement("UICorner", {
-			CornerRadius = UDim.new(0, 4),
+			CornerRadius = UDim.new(0, 6),
 		}),
 		Roact.createElement("UIStroke", {
 			Color = Color3.fromRGB(0, 170, 255),
@@ -2071,7 +2107,7 @@ local function Row(_param)
 		Image = if remoteType == TabType.Event then "rbxassetid://111467142036224" elseif remoteType == TabType.Function then "rbxassetid://104664672211257" elseif remoteType == TabType.BindableEvent then "rbxassetid://76270109328460" elseif remoteType == TabType.BindableFunction then "rbxassetid://87985191222737" else "",
 		ImageTransparency = foregroundTransparency,
 		Size = UDim2.new(0, 24, 0, 24),
-		Position = UDim2.new(0, 18, 0, 20),
+		Position = UDim2.new(0, 52, 0, 20),
 		BackgroundTransparency = 1,
 	})
 	_children[_length + 2] = Roact.createElement("TextLabel", {
@@ -2082,8 +2118,8 @@ local function Row(_param)
 		TextSize = 13,
 		TextXAlignment = "Left",
 		TextYAlignment = "Bottom",
-		Size = UDim2.new(1, -100, 0, 12),
-		Position = UDim2.new(0, 58, 0, 18),
+		Size = UDim2.new(1, -120, 0, 12),
+		Position = UDim2.new(0, 86, 0, 18),
 		BackgroundTransparency = 1,
 	}, {
 		Roact.createElement("UIGradient", {
@@ -2100,8 +2136,8 @@ local function Row(_param)
 		TextSize = 11,
 		TextXAlignment = "Left",
 		TextYAlignment = "Top",
-		Size = UDim2.new(1, -100, 0, 12),
-		Position = UDim2.new(0, 58, 0, 39),
+		Size = UDim2.new(1, -120, 0, 12),
+		Position = UDim2.new(0, 86, 0, 39),
 		BackgroundTransparency = 1,
 	}, {
 		Roact.createElement("UIGradient", {
@@ -2207,9 +2243,9 @@ local ScannerButton = withHooksPure(function(_param)
 		end,
 		size = UDim2.new(0.32, 0, 0, 64),
 		background = background:map(function(value)
-			return Color3.new(value, value, value)
+			return Color3.new(0.96, 0.96, 0.96)
 		end),
-		transparency = 0,
+		transparency = 0.96,
 		cornerRadius = UDim.new(0, 10),
 	}
 	local _children = {
@@ -2313,7 +2349,7 @@ local ResultItem = withHooksPure(function(_param)
 		background = background:map(function(value)
 			return Color3.new(value, value, value)
 		end),
-		transparency = 0,
+		transparency = 0.45,
 		cornerRadius = UDim.new(0, 8),
 	}
 	local _children = {
@@ -2895,6 +2931,7 @@ local function Inspection()
 					BorderSizePixel = 0,
 					ScrollBarThickness = 1,
 					ScrollBarImageTransparency = 0.6,
+					BackgroundTransparency = 0.8,
 					CanvasSize = UDim2.new(0, 0, 0, #filteredResults * 70),
 				}
 				local _children_3 = {
@@ -2952,9 +2989,9 @@ local function Inspection()
 						Font = "GothamBold",
 						TextColor3 = Color3.new(1, 1, 1),
 						Size = UDim2.new(0.5, 0, 0, 24),
-						BackgroundTransparency = 1,
 						TextXAlignment = "Left",
 						TextYAlignment = "Center",
+						BackgroundTransparency = 1,
 					}),
 					Roact.createElement("TextLabel", {
 						Text = "Max: " .. tostring(maxResults),
@@ -2971,6 +3008,7 @@ local function Inspection()
 					Size = UDim2.new(1, 0, 0, 34),
 					PlaceholderText = "Search results...",
 					Text = searchQuery,
+					BackgroundTransparency = 0.6,
 					TextSize = 13,
 					Font = "Gotham",
 					TextColor3 = Color3.new(1, 1, 1),
@@ -4058,7 +4096,8 @@ local function Script()
 	return Roact.createElement(Container, {}, {
 		Roact.createElement("ScrollingFrame", {
 			Size = UDim2.new(1, 0, 1, 0),
-			BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+			BackgroundColor3 = Color3.fromRGB(245, 245, 245),
+			BackgroundTransparency = 0.96,
 			BorderSizePixel = 0,
 			ScrollBarThickness = 1,
 			ScrollBarImageTransparency = 0.6,
@@ -5385,6 +5424,7 @@ local function FunctionTree()
 	end
 	local _attributes = {
 		size = upperSize,
+		clipChildren = true,
 	}
 	local _children = {
 		Roact.createElement(TitleBar, {
@@ -5642,6 +5682,7 @@ local function InspectionConstants()
 	local _attributes = {
 		size = lowerSize,
 		position = lowerPosition,
+		clipChildren = true,
 	}
 	local _children = {
 		Roact.createElement(TitleBar, {
@@ -5962,6 +6003,7 @@ local function InspectionMetadata()
 	end
 	local _attributes = {
 		size = upperSize,
+		clipChildren = true,
 	}
 	local _children = {
 		Roact.createElement(TitleBar, {
@@ -6142,6 +6184,7 @@ local function InspectionUpvalues()
 	local _attributes = {
 		size = middleSize,
 		position = middlePosition,
+		clipChildren = true,
 	}
 	local _children = {
 		Roact.createElement(TitleBar, {
@@ -6221,6 +6264,7 @@ local function Peek()
 	return Roact.createElement(Container, {
 		size = middleSize,
 		position = middlePosition,
+		clipChildren = true,
 	}, {
 		Roact.createElement(TitleBar, {
 			caption = "Peek",
@@ -6632,6 +6676,7 @@ local function Traceback()
 	local _attributes = {
 		size = lowerSize,
 		position = lowerPosition,
+		clipChildren = true,
 	}
 	local _children = {
 		Roact.createElement(TitleBar, {

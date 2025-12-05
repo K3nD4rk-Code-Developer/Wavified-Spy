@@ -54,8 +54,8 @@ const ScannerButton = withHooksPure(({ scanner, isSelected, onClick }: ScannerBu
 			onHover={() => !isSelected && setBackground(SCANNER_HOVERED)}
 			onHoverEnd={() => !isSelected && setBackground(SCANNER_DEFAULT)}
 			size={new UDim2(0.32, 0, 0, 64)}
-			background={background.map((value) => new Color3(value, value, value))}
-			transparency={0}
+			background={background.map((value) => new Color3(0.96, 0.96, 0.96))}
+			transparency={0.96}
 			cornerRadius={new UDim(0, 10)}
 		>
 			<uipadding PaddingLeft={new UDim(0, 12)} PaddingRight={new UDim(0, 12)} />
@@ -140,7 +140,7 @@ const ResultItem = withHooksPure(({ result, isSelected, onClick }: ResultItemPro
 			onHoverEnd={() => !isSelected && setBackground(RESULT_DEFAULT)}
 			size={new UDim2(1, -6, 0, 64)}
 			background={background.map((value) => new Color3(value, value, value))}
-			transparency={0}
+			transparency={0.45}
 			cornerRadius={new UDim(0, 8)}
 		>
 			<uipadding PaddingLeft={new UDim(0, 12)} PaddingTop={new UDim(0, 8)} PaddingRight={new UDim(0, 12)} />
@@ -465,9 +465,9 @@ function Inspection() {
 									Font="GothamBold"
 									TextColor3={new Color3(1, 1, 1)}
 									Size={new UDim2(0.5, 0, 0, 24)}
-									BackgroundTransparency={1}
 									TextXAlignment="Left"
 									TextYAlignment="Center"
+									BackgroundTransparency={1}
 								/>
 
 								<textlabel
@@ -486,6 +486,7 @@ function Inspection() {
 								Size={new UDim2(1, 0, 0, 34)}
 								PlaceholderText="Search results..."
 								Text={searchQuery}
+								BackgroundTransparency={0.6}
 								TextSize={13}
 								Font="Gotham"
 								TextColor3={new Color3(1, 1, 1)}
@@ -555,6 +556,7 @@ function Inspection() {
 								BorderSizePixel={0}
 								ScrollBarThickness={1}
 								ScrollBarImageTransparency={0.6}
+								BackgroundTransparency={0.8}
 								CanvasSize={new UDim2(0, 0, 0, filteredResults.size() * 70)}
 							>
 								<uicorner CornerRadius={new UDim(0, 10)} />

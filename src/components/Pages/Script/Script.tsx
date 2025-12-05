@@ -27,7 +27,8 @@ function Script() {
 		<Container>
 			<scrollingframe
 				Size={new UDim2(1, 0, 1, 0)}
-				BackgroundColor3={Color3.fromRGB(20, 20, 20)}
+				BackgroundColor3={Color3.fromRGB(245, 245, 245)}
+				BackgroundTransparency={0.96}
 				BorderSizePixel={0}
 				ScrollBarThickness={1}
 				ScrollBarImageTransparency={0.6}

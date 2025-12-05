@@ -100,8 +100,8 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 			<frame
 				Size={new UDim2(1, -40, 1, 0)}
 				Position={new UDim2(0, 40, 0, 0)}
-				BackgroundColor3={new Color3(1, 1, 1)}
-				BackgroundTransparency={0.92}
+				BackgroundColor3={new Color3(0.89, 0.89, 0.89)}
+				BackgroundTransparency={0.96}
 				BorderSizePixel={0}
 			>
 				<uicorner CornerRadius={new UDim(0, 6)} />
@@ -126,7 +126,7 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 				BackgroundTransparency={highlight}
 			>
 				<uicorner CornerRadius={new UDim(0, 6)} />
-			</frame>
+			</frame> 
 
 			{/* Multi-select indicator (blue border) */}
 			{multiSelected && (

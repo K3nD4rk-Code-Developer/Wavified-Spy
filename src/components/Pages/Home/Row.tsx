@@ -82,17 +82,17 @@ function Row({ onClick, id, order, selected, multiSelected }: Props) {
 			cornerRadius={new UDim(0, 4)}
 			layoutOrder={order}
 		>
-			{/* Order number - outside the box */}
+			{/* Order number - outside the box, static (no animation) */}
 			<textlabel
 				Text={`${order + 1}.`}
 				Font="GothamBold"
 				TextColor3={new Color3(1, 1, 1)}
-				TextTransparency={foregroundTransparency.map((t) => multiply(t, 0.4))}
+				TextTransparency={0.4}
 				TextSize={15}
 				TextXAlignment="Right"
 				TextYAlignment="Center"
-				Size={new UDim2(0, 32, 1, 0)}
-				Position={new UDim2(0, 0, 0, 0)}
+				Size={new UDim2(0, 28, 1, 0)}
+				Position={new UDim2(0, -8, 0, 0)}
 				BackgroundTransparency={1}
 			/>
 

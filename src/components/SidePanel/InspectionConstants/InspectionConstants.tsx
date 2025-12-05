@@ -27,7 +27,7 @@ function InspectionConstants() {
 				toggleHidden={() => setLowerHidden(!lowerHidden)}
 			/>
 
-			{!isEmpty ? (
+			{!lowerHidden && (!isEmpty ? (
 				<scrollingframe
 					Size={new UDim2(1, 0, 1, -30)}
 					Position={new UDim2(0, 0, 0, 30)}
@@ -151,7 +151,7 @@ function InspectionConstants() {
 						BackgroundTransparency={1}
 					/>
 				</frame>
-			)}
+			))}
 		</Container>
 	);
 }

@@ -135,7 +135,7 @@ function FunctionTree() {
 				toggleHidden={() => setUpperHidden(!upperHidden)}
 			/>
 
-			{hasTraceback && signal.direction === "outgoing" ? (
+			{!upperHidden && (hasTraceback && signal.direction === "outgoing" ? (
 				<scrollingframe
 					Size={new UDim2(1, 0, 1, -30)}
 					Position={new UDim2(0, 0, 0, 30)}
@@ -189,7 +189,7 @@ function FunctionTree() {
 						BackgroundTransparency={1}
 					/>
 				</frame>
-			)}
+			))}
 		</Container>
 	);
 }

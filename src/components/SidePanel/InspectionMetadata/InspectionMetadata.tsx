@@ -21,7 +21,7 @@ function InspectionMetadata() {
 				toggleHidden={() => setUpperHidden(!upperHidden)}
 			/>
 
-			{!isEmpty ? (
+			{!upperHidden && (!isEmpty ? (
 				<scrollingframe
 					Size={new UDim2(1, 0, 1, -30)}
 					Position={new UDim2(0, 0, 0, 30)}
@@ -216,7 +216,7 @@ function InspectionMetadata() {
 						BackgroundTransparency={1}
 					/>
 				</frame>
-			)}
+			))}
 		</Container>
 	);
 }

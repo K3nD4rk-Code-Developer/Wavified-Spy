@@ -94,7 +94,7 @@ function Traceback() {
 				toggleHidden={() => setLowerHidden(!lowerHidden)}
 			/>
 
-			{!isEmpty && signal ? (
+			{!lowerHidden && (!isEmpty && signal ? (
 				<scrollingframe
 					Size={new UDim2(1, 0, 1, -30)}
 					Position={new UDim2(0, 0, 0, 30)}
@@ -197,7 +197,7 @@ function Traceback() {
 						BackgroundTransparency={1}
 					/>
 				</frame>
-			)}
+			))}
 		</Container>
 	);
 }

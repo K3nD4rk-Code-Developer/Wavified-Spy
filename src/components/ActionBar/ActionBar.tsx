@@ -61,7 +61,7 @@ export default function ActionBar() {
 					VerticalAlignment="Center"
 				/>
 
-				<uipadding PaddingLeft={new UDim(0, 3)} />
+				<uipadding PaddingLeft={new UDim(0, 3)} PaddingRight={new UDim(0, 3)} />
 			</scrollingframe>
 
 		</>

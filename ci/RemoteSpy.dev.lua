@@ -576,6 +576,7 @@ local function ActionBar()
 			}),
 			Roact.createElement("UIPadding", {
 				PaddingLeft = UDim.new(0, 3),
+				PaddingRight = UDim.new(0, 3),
 			}),
 		}),
 	})
